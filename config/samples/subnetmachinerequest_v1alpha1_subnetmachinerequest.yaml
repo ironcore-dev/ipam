@@ -1,0 +1,8 @@
+apiVersion: subnetmachinerequest.onmetal.de/v1alpha1
+kind: SubnetMachineRequest
+metadata:
+  name: subnetmachinerequest1
+spec:
+  # Add fields here
+  subnet: subnet1
+  machineRequest: machinerequest1
