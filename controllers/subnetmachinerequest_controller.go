@@ -66,9 +66,77 @@ func (r *SubnetMachineRequestReconciler) Reconcile(ctx context.Context, req ctrl
 		subnetMachineRequest.Status.Message = "MachineRequest is not found"
 		return r.updateStatus(log, ctx, subnetMachineRequest)
 	}
+	if subnetMachineRequest.Spec.IP != "" {
+		if !r.isIPFree() {
+			subnetMachineRequest.Status.Status = "failed"
+			subnetMachineRequest.Status.Message = "IP is already allocated"
+			return r.updateStatus(log, ctx, subnetMachineRequest)
+		}
+	} else {
+		ip, err := r.getFreeIP(ctx, subnetMachineRequest.Namespace, subnetMachineRequest.Spec.Subnet)
+		if err != nil {
+			log.Error(err, "unable to get free IP for SubnetMachineRequest")
+			return ctrl.Result{}, err
+		}
+		subnetMachineRequest.Spec.IP = ip
+		err = r.Update(ctx, subnetMachineRequest)
+		if err != nil {
+			log.Error(err, "unable to update SubnetMachineRequest")
+			return ctrl.Result{}, err
+		}
+	}
 	subnetMachineRequest.Status.Message = ""
 	subnetMachineRequest.Status.Status = "ready"
 	return r.updateStatus(log, ctx, subnetMachineRequest)
+}
+
+func (r *SubnetMachineRequestReconciler) isIPFree() bool {
+	// TODO do actual check
+	return true
+}
+
+// TODO both ipv4 and ipv6
+func (r *SubnetMachineRequestReconciler) getFreeIP(ctx context.Context, namespace string, subnetName string) (string, error) {
+	_, err := r.findChildrenSubnetRanges(ctx, namespace, subnetName)
+	if err != nil {
+		return "", err
+	}
+	_, err = r.findReservedIPs(ctx, namespace, subnetName)
+	if err != nil {
+		return "", err
+	}
+	// TODO calculate all ranges - all ips
+	return "10.10.10.10", nil
+}
+
+func (r *SubnetMachineRequestReconciler) findChildrenSubnetRanges(ctx context.Context, namespace string, subnetName string) ([]string, error) {
+	subnets := []string{}
+	subnetList := &subnetv1alpha1.SubnetList{}
+	err := r.List(ctx, subnetList, &client.ListOptions{Namespace: namespace})
+	if err != nil {
+		return nil, err
+	}
+	for index, subnet := range subnetList.Items {
+		if subnet.Spec.SubnetParentID == subnetName {
+			subnets = append(subnets, subnetList.Items[index].Spec.CIDR)
+		}
+	}
+	return subnets, nil
+}
+
+func (r *SubnetMachineRequestReconciler) findReservedIPs(ctx context.Context, namespace string, subnetName string) ([]string, error) {
+	reservedIPs := []string{}
+	subnetMachineRequestList := &subnetmachinerequestv1alpha1.SubnetMachineRequestList{}
+	err := r.List(ctx, subnetMachineRequestList, &client.ListOptions{Namespace: namespace})
+	if err != nil {
+		return nil, err
+	}
+	for index, subnetMachineRequest := range subnetMachineRequestList.Items {
+		if subnetMachineRequest.Spec.Subnet == subnetName && subnetMachineRequest.Spec.IP != "" {
+			reservedIPs = append(reservedIPs, subnetMachineRequestList.Items[index].Spec.IP)
+		}
+	}
+	return reservedIPs, nil
 }
 
 func (r *SubnetMachineRequestReconciler) updateStatus(log logr.Logger, ctx context.Context, subnetMachineRequest *subnetmachinerequestv1alpha1.SubnetMachineRequest) (ctrl.Result, error) {

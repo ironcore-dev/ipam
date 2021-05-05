@@ -17,8 +17,14 @@ limitations under the License.
 package controllers
 
 import (
+	"go/build"
+	"golang.org/x/mod/modfile"
+	"io/ioutil"
 	"path/filepath"
+	"reflect"
+	"strings"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -43,6 +49,13 @@ var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
 
+const (
+	Namespace  = "default"
+	ApiVersion = "subnetmachinerequest.onmetal.de/v1alpha1"
+	timeout    = time.Second * 10
+	interval   = time.Millisecond * 100
+)
+
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
 
@@ -51,12 +64,33 @@ func TestAPIs(t *testing.T) {
 		[]Reporter{printer.NewlineReporter{}})
 }
 
+func getCrdPath(crdPackageSchema interface{}) string {
+	packagePath := reflect.TypeOf(crdPackageSchema).PkgPath()
+	goModData, err := ioutil.ReadFile(filepath.Join("..", "go.mod"))
+	Expect(err).NotTo(HaveOccurred())
+	goModFile, err := modfile.Parse("", goModData, nil)
+	Expect(err).NotTo(HaveOccurred())
+	modulePath := ""
+	for _, req := range goModFile.Require {
+		if strings.HasPrefix(packagePath, req.Mod.Path) {
+			modulePath = req.Mod.String()
+		}
+	}
+	Expect(modulePath).NotTo(BeZero())
+	// https://github.com/kubernetes-sigs/kubebuilder/issues/1999
+	return filepath.Join(build.Default.GOPATH, "pkg", "mod", modulePath, "config", "crd", "bases")
+}
+
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "bases")},
+		CRDDirectoryPaths: []string{
+			filepath.Join("..", "config", "crd", "bases"),
+			getCrdPath(subnetv1alpha1.Subnet{}),
+			getCrdPath(machinerequestv1alpha1.MachineRequest{}),
+		},
 		ErrorIfCRDPathMissing: true,
 	}
 
