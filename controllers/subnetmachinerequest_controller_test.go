@@ -142,5 +142,36 @@ var _ = Describe("SubnetMachineRequest controller", func() {
 				return subnetMachineRequest.Status.Status == "failed" && subnetMachineRequest.Status.Message == "IP is already allocated"
 			}, timeout, interval).Should(BeTrue())
 		})
+
+		It("Should not allow to use IP from child subnet", func() {
+			ctx := context.Background()
+			subnetMachineRequest := &v1alpha1.SubnetMachineRequest{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: ApiVersion,
+					Kind:       "SubnetMachineRequest",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "subnetmachinerequest3",
+					Namespace: Namespace,
+				},
+				Spec: v1alpha1.SubnetMachineRequestSpec{
+					Subnet:         "subnet1",
+					MachineRequest: "machinerequest1",
+					IP:             "10.12.34.255",
+				},
+			}
+			By("Expecting SubnetMachineRequest Create Successful")
+			Expect(k8sClient.Create(ctx, subnetMachineRequest)).Should(Succeed())
+
+			key := types.NamespacedName{
+				Name:      "subnetmachinerequest3",
+				Namespace: Namespace,
+			}
+			Eventually(func() bool {
+				subnetMachineRequest := &v1alpha1.SubnetMachineRequest{}
+				_ = k8sClient.Get(context.Background(), key, subnetMachineRequest)
+				return subnetMachineRequest.Status.Status == "failed" && subnetMachineRequest.Status.Message == "IP is already allocated"
+			}, timeout, interval).Should(BeTrue())
+		})
 	})
 })
