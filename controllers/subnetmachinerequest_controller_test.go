@@ -58,9 +58,9 @@ var _ = Describe("SubnetMachineRequest controller", func() {
 					Namespace: Namespace,
 				},
 				Spec: subnetv1alpha1.SubnetSpec{
-					Type:        "ipv4",
-					CIDR:        "10.12.34.0/26",
-					PartitionID: "subnet1",
+					Type:           "ipv4",
+					CIDR:           "10.12.34.0/26",
+					SubnetParentID: "subnet1",
 				},
 			}
 			By("Expecting Subnet 2 Create Successful")
@@ -76,9 +76,9 @@ var _ = Describe("SubnetMachineRequest controller", func() {
 					Namespace: Namespace,
 				},
 				Spec: subnetv1alpha1.SubnetSpec{
-					Type:        "ipv4",
-					CIDR:        "10.12.34.128/25",
-					PartitionID: "subnet1",
+					Type:           "ipv4",
+					CIDR:           "10.12.34.128/25",
+					SubnetParentID: "subnet1",
 				},
 			}
 			By("Expecting Subnet 3 Create Successful")
