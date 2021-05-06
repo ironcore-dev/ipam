@@ -8,6 +8,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("SubnetMachineRequest controller", func() {
@@ -89,7 +90,7 @@ var _ = Describe("SubnetMachineRequest controller", func() {
 					Kind:       "SubnetMachineRequest",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "subnet3",
+					Name:      "subnetmachinerequest1",
 					Namespace: Namespace,
 				},
 				Spec: v1alpha1.SubnetMachineRequestSpec{
@@ -99,6 +100,16 @@ var _ = Describe("SubnetMachineRequest controller", func() {
 			}
 			By("Expecting SubnetMachineRequest Create Successful")
 			Expect(k8sClient.Create(ctx, subnetMachineRequest)).Should(Succeed())
+
+			key := types.NamespacedName{
+				Name:      "subnetmachinerequest1",
+				Namespace: Namespace,
+			}
+			Eventually(func() bool {
+				securityGroup := &v1alpha1.SubnetMachineRequest{}
+				_ = k8sClient.Get(context.Background(), key, securityGroup)
+				return securityGroup.Spec.IP == "10.12.34.64"
+			}, timeout, interval).Should(BeTrue())
 		})
 	})
 })

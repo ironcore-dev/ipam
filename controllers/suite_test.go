@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"strings"
 	"testing"
 	"time"
@@ -108,6 +109,22 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:scheme
+
+	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
+		Scheme: scheme.Scheme,
+	})
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&SubnetMachineRequestReconciler{
+		Client: k8sManager.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("SubnetMachineRequest"),
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	go func() {
+		err = k8sManager.Start(ctrl.SetupSignalHandler())
+		Expect(err).ToNot(HaveOccurred())
+	}()
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	Expect(err).NotTo(HaveOccurred())

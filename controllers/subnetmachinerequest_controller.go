@@ -18,7 +18,7 @@ package controllers
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -67,13 +67,18 @@ func (r *SubnetMachineRequestReconciler) Reconcile(ctx context.Context, req ctrl
 		return r.updateStatus(log, ctx, subnetMachineRequest)
 	}
 	if subnetMachineRequest.Spec.IP != "" {
-		if !r.isIPFree() {
+		free, err := r.isIPFree(ctx, subnetMachineRequest.Spec.IP, subnetMachineRequest.Namespace, subnetMachineRequest.Spec.Subnet)
+		if err != nil {
+			log.Error(err, "unable to check if IP is free")
+			return ctrl.Result{}, err
+		}
+		if !free {
 			subnetMachineRequest.Status.Status = "failed"
 			subnetMachineRequest.Status.Message = "IP is already allocated"
 			return r.updateStatus(log, ctx, subnetMachineRequest)
 		}
 	} else {
-		ip, err := r.getFreeIP(ctx, subnetMachineRequest.Namespace, subnetMachineRequest.Spec.Subnet)
+		ip, err := r.getFreeIP(ctx, subnet.Spec.CIDR, subnetMachineRequest.Namespace, subnetMachineRequest.Spec.Subnet)
 		if err != nil {
 			log.Error(err, "unable to get free IP for SubnetMachineRequest")
 			return ctrl.Result{}, err
@@ -90,23 +95,36 @@ func (r *SubnetMachineRequestReconciler) Reconcile(ctx context.Context, req ctrl
 	return r.updateStatus(log, ctx, subnetMachineRequest)
 }
 
-func (r *SubnetMachineRequestReconciler) isIPFree() bool {
-	// TODO do actual check
-	return true
+func (r *SubnetMachineRequestReconciler) isIPFree(ctx context.Context, ip string, namespace string, subnetName string) (bool, error) {
+	ranges, err := r.findChildrenSubnetRanges(ctx, namespace, subnetName)
+	if err != nil {
+		return false, fmt.Errorf("unable to get children ranges: %w", err)
+	}
+	reserved, err := r.findReservedIPs(ctx, namespace, subnetName)
+	if err != nil {
+		return false, fmt.Errorf("unable to get reserved IPs: %w", err)
+	}
+	free, err := IsIpFree(ranges, reserved, ip)
+	if err != nil {
+		return false, fmt.Errorf("unable to get free IP: %w", err)
+	}
+	return free, nil
 }
 
-// TODO both ipv4 and ipv6
-func (r *SubnetMachineRequestReconciler) getFreeIP(ctx context.Context, namespace string, subnetName string) (string, error) {
-	_, err := r.findChildrenSubnetRanges(ctx, namespace, subnetName)
+func (r *SubnetMachineRequestReconciler) getFreeIP(ctx context.Context, rootCidr string, namespace string, subnetName string) (string, error) {
+	ranges, err := r.findChildrenSubnetRanges(ctx, namespace, subnetName)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("unable to get children ranges: %w", err)
 	}
-	_, err = r.findReservedIPs(ctx, namespace, subnetName)
+	reserved, err := r.findReservedIPs(ctx, namespace, subnetName)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("unable to get reserved IPs: %w", err)
 	}
-	// TODO calculate all ranges - all ips
-	return "10.10.10.10", nil
+	ip, err := GetFirstFreeIP(rootCidr, ranges, reserved)
+	if err != nil {
+		return "", fmt.Errorf("unable to get free IP: %w", err)
+	}
+	return ip, nil
 }
 
 func (r *SubnetMachineRequestReconciler) findChildrenSubnetRanges(ctx context.Context, namespace string, subnetName string) ([]string, error) {
