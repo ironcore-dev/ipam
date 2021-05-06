@@ -40,5 +40,24 @@ func TestCidr(t *testing.T) {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(free5).To(Equal(false))
 
-	// TODO ipv6
+	// IPv6
+	ipv61, err := GetFirstFreeIP("2001:db8:123:4567:89ab:cdef:1234:5678/100", []string{"2001:db8:123:4567:89ab:cdef:1234:5600/120"}, []string{})
+	Expect(err).NotTo(HaveOccurred())
+	Expect(ipv61).To(Equal("2001:db8:123:4567:89ab:cdef:1000:0"))
+
+	ipv62, err := GetFirstFreeIP("2001:db8:123:4567:89ab:cdef:1234:5678/100", []string{"2001:db8:123:4567:89ab:cdef:1234:5600/120"}, []string{"2001:db8:123:4567:89ab:cdef:1000:0"})
+	Expect(err).NotTo(HaveOccurred())
+	Expect(ipv62).To(Equal("2001:db8:123:4567:89ab:cdef:1000:1"))
+
+	freeipv61, err := IsIpFree([]string{"2001:db8:123:4567:89ab:cdef:1234:5600/120"}, []string{}, "2001:db8:123:4567:89ab:cdef:1000:1")
+	Expect(err).NotTo(HaveOccurred())
+	Expect(freeipv61).To(Equal(true))
+
+	freeipv62, err := IsIpFree([]string{"2001:db8:123:4567:89ab:cdef:1234:5600/120"}, []string{}, "2001:db8:123:4567:89ab:cdef:1234:5601")
+	Expect(err).NotTo(HaveOccurred())
+	Expect(freeipv62).To(Equal(false))
+
+	freeipv63, err := IsIpFree([]string{"2001:db8:123:4567:89ab:cdef:1234:5600/120"}, []string{"2001:db8:123:4567:89ab:cdef:1000:1"}, "2001:db8:123:4567:89ab:cdef:1000:1")
+	Expect(err).NotTo(HaveOccurred())
+	Expect(freeipv63).To(Equal(false))
 }
