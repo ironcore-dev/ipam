@@ -66,33 +66,37 @@ func (r *SubnetMachineRequestReconciler) Reconcile(ctx context.Context, req ctrl
 		subnetMachineRequest.Status.Message = "MachineRequest is not found"
 		return r.updateStatus(log, ctx, subnetMachineRequest)
 	}
-	if subnetMachineRequest.Spec.IP != "" {
-		free, err := r.isIPFree(ctx, subnetMachineRequest.Spec.IP, subnetMachineRequest.Namespace, subnetMachineRequest.Spec.Subnet)
-		if err != nil {
-			log.Error(err, "unable to check if IP is free")
-			return ctrl.Result{}, err
+	// Only check new objects
+	if subnetMachineRequest.Status.Status == "" {
+		if subnetMachineRequest.Spec.IP != "" {
+			free, err := r.isIPFree(ctx, subnetMachineRequest.Spec.IP, subnetMachineRequest.Namespace, subnetMachineRequest.Spec.Subnet)
+			if err != nil {
+				log.Error(err, "unable to check if IP is free")
+				return ctrl.Result{}, err
+			}
+			if !free {
+				subnetMachineRequest.Status.Status = "failed"
+				subnetMachineRequest.Status.Message = "IP is already allocated"
+				return r.updateStatus(log, ctx, subnetMachineRequest)
+			}
+		} else {
+			ip, err := r.getFreeIP(ctx, subnet.Spec.CIDR, subnetMachineRequest.Namespace, subnetMachineRequest.Spec.Subnet)
+			if err != nil {
+				log.Error(err, "unable to get free IP for SubnetMachineRequest")
+				return ctrl.Result{}, err
+			}
+			subnetMachineRequest.Spec.IP = ip
+			err = r.Update(ctx, subnetMachineRequest)
+			if err != nil {
+				log.Error(err, "unable to update SubnetMachineRequest")
+				return ctrl.Result{}, err
+			}
 		}
-		if !free {
-			subnetMachineRequest.Status.Status = "failed"
-			subnetMachineRequest.Status.Message = "IP is already allocated"
-			return r.updateStatus(log, ctx, subnetMachineRequest)
-		}
-	} else {
-		ip, err := r.getFreeIP(ctx, subnet.Spec.CIDR, subnetMachineRequest.Namespace, subnetMachineRequest.Spec.Subnet)
-		if err != nil {
-			log.Error(err, "unable to get free IP for SubnetMachineRequest")
-			return ctrl.Result{}, err
-		}
-		subnetMachineRequest.Spec.IP = ip
-		err = r.Update(ctx, subnetMachineRequest)
-		if err != nil {
-			log.Error(err, "unable to update SubnetMachineRequest")
-			return ctrl.Result{}, err
-		}
+		subnetMachineRequest.Status.Message = ""
+		subnetMachineRequest.Status.Status = "ready"
+		return r.updateStatus(log, ctx, subnetMachineRequest)
 	}
-	subnetMachineRequest.Status.Message = ""
-	subnetMachineRequest.Status.Status = "ready"
-	return r.updateStatus(log, ctx, subnetMachineRequest)
+	return ctrl.Result{}, nil
 }
 
 func (r *SubnetMachineRequestReconciler) isIPFree(ctx context.Context, ip string, namespace string, subnetName string) (bool, error) {

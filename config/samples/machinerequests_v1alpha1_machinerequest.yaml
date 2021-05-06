@@ -1,0 +1,14 @@
+apiVersion: machinerequests.onmetal.de/v1alpha1
+kind: MachineRequest
+metadata:
+  name: machinerequest1
+spec:
+  id: "machine-request1"
+  name: "machinerequest_ubuntu"
+  hostname: "host1"
+  sizeid: "size1"
+  image: debian-10.0.20200824
+  networkglobalid: "customer1"
+  subnets: ["sub1234"]
+  sshpubkeys: ["sshkey1"]
+  ignition: '{"id":"one"}'

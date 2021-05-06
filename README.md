@@ -7,9 +7,13 @@ k8s operator for SubnetMachineRequest CRD
 | ------------- | ------------- | ------------- | ------------- |
 | subnet | Subnet reference | subnet | Should exist |
 | machineRequest | Machine Request reference | machinerequest1 | Should exist |
-| ip | IP to request | 10.12.34.64 | IPv4 or IPv6 - should be available in specified subnet |
+| ip | IP to request | 10.12.34.64 | Optional, if not specified it will be assigned automatically in the specified subnet if any IPs are available |
 
 ## Getting started
+
+This repo references other CRDs and you need to install them to proceed:
+- Subnet https://github.com/onmetal/k8s-subnet
+- Machine Requests https://github.com/onmetal/k8s-machine-requests
 
 ### Required tools
 
@@ -29,10 +33,6 @@ Following tools are required to make changes on that package.
 In order to build and deploy, execute following command set: `make install`
 
 ### Development
-
-This repo references other CRDs and you need to install them to proceed:
-- Subnet https://github.com/onmetal/k8s-subnet
-- Machine Requests https://github.com/onmetal/k8s-machine-requests
 
 So you might need to run `go env -w GOPRIVATE='github.com/onmetal/*'` first to build it.
 
@@ -63,9 +63,14 @@ TODO
 `./config/samples/` directory contains examples of manifests. They can be used to try out the controller.
 
 ```
-# Create 
+# Create subnets
+kubectl apply -f config/samples/machine_v1alpha1_subnet.yaml
+# Create machine request
+kubectl apply -f config/samples/machinerequests_v1alpha1_machinerequest.yaml
+# Create subnet machine request
 kubectl apply -f config/samples/subnetmachinerequest_v1alpha1_subnetmachinerequest.yaml
-TODO
+# Check that IP was assigned -> should be 10.12.34.64
+kubectl describe subnetmachinerequests subnetmachinerequest1
 ```
 
 ### Cleanup
@@ -80,7 +85,6 @@ cd controllers
 
 # Run tests
 go test . -v -ginkgo.v
-
 ```
 
 ## Project created with operator SDK (go - kubebuilder)
