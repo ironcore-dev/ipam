@@ -65,4 +65,9 @@ func TestCidr(t *testing.T) {
 	bigRange, err := GetFirstFreeIP("::/0", []string{"2001:db8:123:4567:89ab:cdef:1234:5600/120"}, []string{"::"})
 	Expect(err).NotTo(HaveOccurred())
 	Expect(bigRange).To(Equal("::1"))
+
+	// Check actual range traversal with super big range
+	bigRange2, err := GetFirstFreeIP("2000:0db8:0123:4567:89ab:cdef:1234:5600/8", []string{"2000:0db8:0123:4567:89ab:cdef:1234:5600/12"}, []string{"2010::"})
+	Expect(err).NotTo(HaveOccurred())
+	Expect(bigRange2).To(Equal("2010::1"))
 }
