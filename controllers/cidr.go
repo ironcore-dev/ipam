@@ -5,6 +5,8 @@ import (
 	"net"
 )
 
+const maxIterations = 1000000
+
 func IsIpFree(childRanges []string, excludes []string, ipStr string) (bool, error) {
 	networks, err := getNetworks(childRanges)
 	if err != nil {
@@ -27,7 +29,7 @@ func GetFirstFreeIP(rootRange string, childRanges []string, excludes []string) (
 	}
 	// Iterate over IPs util free is found
 	nextIp := first
-	for i := 0; i < addressCount(root); i++ {
+	for i := uint64(0); i < addressCount(root); i++ {
 		if isIpFree(networks, excludes, nextIp) {
 			return nextIp.String(), nil
 		}
@@ -87,7 +89,11 @@ func incrementIP(ip net.IP) (result net.IP) {
 	return
 }
 
-func addressCount(network *net.IPNet) int {
+func addressCount(network *net.IPNet) uint64 {
 	prefixLen, bits := network.Mask.Size()
-	return 1 << (uint64(bits) - uint64(prefixLen))
+	count := uint64(1) << (uint64(bits) - uint64(prefixLen))
+	if count == 0 {
+		return maxIterations
+	}
+	return count
 }

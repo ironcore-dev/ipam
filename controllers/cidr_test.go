@@ -60,4 +60,9 @@ func TestCidr(t *testing.T) {
 	freeipv63, err := IsIpFree([]string{"2001:db8:123:4567:89ab:cdef:1234:5600/120"}, []string{"2001:db8:123:4567:89ab:cdef:1000:1"}, "2001:db8:123:4567:89ab:cdef:1000:1")
 	Expect(err).NotTo(HaveOccurred())
 	Expect(freeipv63).To(Equal(false))
+
+	// Check some very big range
+	bigRange, err := GetFirstFreeIP("::/0", []string{"2001:db8:123:4567:89ab:cdef:1234:5600/120"}, []string{"::"})
+	Expect(err).NotTo(HaveOccurred())
+	Expect(bigRange).To(Equal("::1"))
 }
