@@ -6,6 +6,8 @@ import (
 	"net"
 )
 
+// Check if specified IP address belongs to one of the specified CIDR ranges
+// and is not part of excluded IP list
 func IsIpFree(childRanges []string, excludes []string, ipStr string) (bool, error) {
 	networks, err := getNetworks(childRanges)
 	if err != nil {
@@ -16,6 +18,8 @@ func IsIpFree(childRanges []string, excludes []string, ipStr string) (bool, erro
 	return !contain && !contains(excludes, ip.String()), nil
 }
 
+// Get first free IP address in root CIDR range which is not part of
+// specified child CIDR ranges and excluded IP list
 func GetFirstFreeIP(rootRange string, childRanges []string, excludes []string) (string, error) {
 	_, root, err := net.ParseCIDR(rootRange)
 	if err != nil {
@@ -45,6 +49,7 @@ func GetFirstFreeIP(rootRange string, childRanges []string, excludes []string) (
 	return "", fmt.Errorf("unable to find free IP")
 }
 
+// Transform string CIDR notations to IPNet list
 func getNetworks(ranges []string) ([]*net.IPNet, error) {
 	// Get networks for all provided child ranges
 	networks := []*net.IPNet{}
@@ -58,6 +63,7 @@ func getNetworks(ranges []string) ([]*net.IPNet, error) {
 	return networks, nil
 }
 
+// Slice contains util
 func contains(slice []string, item string) bool {
 	for _, s := range slice {
 		if s == item {
@@ -67,6 +73,7 @@ func contains(slice []string, item string) bool {
 	return false
 }
 
+// Check if IP belongs to IPNet
 func networksContainIP(networks []*net.IPNet, ip net.IP) (*net.IPNet, bool) {
 	for _, network := range networks {
 		if network.Contains(ip) {
@@ -76,6 +83,7 @@ func networksContainIP(networks []*net.IPNet, ip net.IP) (*net.IPNet, bool) {
 	return nil, false
 }
 
+// Get last IP address from IPNet
 func lastIp(n *net.IPNet) net.IP {
 	last := newIP(len(n.IP))
 	for i := 0; i < len(n.IP); i++ {
