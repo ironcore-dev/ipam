@@ -1,0 +1,33 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "chart.fullname" . }}-manager-role
+  labels:
+  {{- include "chart.labels" . | nindent 4 }}
+rules:
+  - apiGroups:
+      - {{ .Values.crd.group }}
+    resources:
+      - {{ .Values.crd.plural }}
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - {{ .Values.crd.group }}
+    resources:
+      - {{ .Values.crd.plural }}/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - {{ .Values.crd.group }}
+    resources:
+      - {{ .Values.crd.plural }}/status
+    verbs:
+      - get
+      - patch
+      - update

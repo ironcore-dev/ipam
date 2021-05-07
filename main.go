@@ -32,9 +32,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	machinerequestv1alpha1 "github.com/onmetal/k8s-machine-requests/api/v1alpha1"
-	subnetmachinerequestv1alpha1 "github.com/onmetal/k8s-subnet-machine-request/api/v1alpha1"
-	"github.com/onmetal/k8s-subnet-machine-request/controllers"
 	subnetv1alpha1 "github.com/onmetal/k8s-subnet/api/v1alpha1"
+
+	subnetmachinerequestv1alpha1 "github.com/onmetal/k8s-subnet-machine-request/api/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -81,14 +81,11 @@ func main() {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
-
-	if err = (&controllers.SubnetMachineRequestReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("SubnetMachineRequest"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "SubnetMachineRequest")
-		os.Exit(1)
+	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+		if err = (&subnetmachinerequestv1alpha1.SubnetMachineRequest{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "SubnetMachineRequest")
+			os.Exit(1)
+		}
 	}
 	//+kubebuilder:scaffold:builder
 

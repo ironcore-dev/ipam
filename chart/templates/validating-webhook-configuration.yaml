@@ -1,0 +1,30 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: {{ include "chart.fullname" . }}-validating-webhook-configuration
+  annotations:
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "chart.fullname" . }}-serving-cert
+  labels:
+  {{- include "chart.labels" . | nindent 4 }}
+webhooks:
+  - admissionReviewVersions:
+      - v1
+      - v1beta1
+    clientConfig:
+      service:
+        name: {{ include "chart.fullname" . }}-webhook-service
+        namespace: {{ .Release.Namespace }}
+        path: /validate-{{ .Values.crd.group | replace "." "-" }}-v1alpha1-{{ .Values.crd.singular }}
+    failurePolicy: Fail
+    name: v{{ .Values.crd.singular }}.kb.io
+    rules:
+      - apiGroups:
+          - {{ .Values.crd.group }}
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - {{ .Values.crd.plural }}
+    sideEffects: None

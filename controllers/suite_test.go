@@ -17,25 +17,22 @@ limitations under the License.
 package controllers
 
 import (
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"go/build"
 	"golang.org/x/mod/modfile"
 	"io/ioutil"
-	"path/filepath"
-	"reflect"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"strings"
-	"testing"
-	"time"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	"path/filepath"
+	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"strings"
+	"testing"
 
 	machinerequestv1alpha1 "github.com/onmetal/k8s-machine-requests/api/v1alpha1"
 	subnetmachinerequestv1alpha1 "github.com/onmetal/k8s-subnet-machine-request/api/v1alpha1"
@@ -49,13 +46,6 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
-
-const (
-	Namespace  = "default"
-	ApiVersion = "subnetmachinerequest.onmetal.de/v1alpha1"
-	timeout    = time.Second * 10
-	interval   = time.Millisecond * 100
-)
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -109,22 +99,6 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:scheme
-
-	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
-		Scheme: scheme.Scheme,
-	})
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&SubnetMachineRequestReconciler{
-		Client: k8sManager.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("SubnetMachineRequest"),
-	}).SetupWithManager(k8sManager)
-	Expect(err).ToNot(HaveOccurred())
-
-	go func() {
-		err = k8sManager.Start(ctrl.SetupSignalHandler())
-		Expect(err).ToNot(HaveOccurred())
-	}()
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	Expect(err).NotTo(HaveOccurred())

@@ -1,4 +1,4 @@
-package controllers
+package cidr
 
 import (
 	. "github.com/onsi/gomega"

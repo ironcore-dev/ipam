@@ -36,7 +36,10 @@ In order to build and deploy, execute following command set: `make install`
 
 So you might need to run `go env -w GOPRIVATE='github.com/onmetal/*'` first to build it.
 
-So to run controller for development without deploy do: `make run`
+This CRD is using webhooks so it can't be run in normal manner until webhooks are disabled.
+To do so `ENABLE_WEBHOOKS=false` environment variable could be set.
+
+So to run controller for development without deploy do: `make run ENABLE_WEBHOOKS=false`
 
 ### Deploy 
 
@@ -56,7 +59,12 @@ make deploy IMG="localhost:5000/k8s-subnet-machine-request:latest"
 
 ### Helm chart
 
-TODO
+```
+# Deploy
+helm install k8s-subnet-machine-request ./chart/ -n k8s-subnet-machine-request --create-namespace
+# Undeploy
+helm uninstall k8s-subnet-machine-request -n k8s-subnet-machine-request
+```
 
 ### Use
 
@@ -80,8 +88,8 @@ kubectl describe subnetmachinerequests subnetmachinerequest1
 ### Testing
 
 ```
-# Go to controller directory
-cd controllers
+# Go to webhook directory
+cd api/v1alpha1
 
 # Run tests
 go test . -v -ginkgo.v
@@ -91,7 +99,8 @@ go test . -v -ginkgo.v
 
 Steps to reproduce: 
 - init ` operator-sdk init --domain onmetal.de --repo github.com/onmetal/k8s-subnet-machine-request`
-- core `operator-sdk create api --group subnetmachinerequest --version v1alpha1 --kind SubnetMachineRequest --resource --controller`
+- crd `operator-sdk create api --group subnetmachinerequest --version v1alpha1 --kind SubnetMachineRequest --controller`
+- webhook `operator-sdk create webhook --group subnetmachinerequest --version v1alpha1 --kind SubnetMachineRequest --defaulting --programmatic-validation`
 
 ## Diagram
 

@@ -1,9 +1,8 @@
-package controllers
+package v1alpha1
 
 import (
 	"context"
 	machinerequestv1alpha1 "github.com/onmetal/k8s-machine-requests/api/v1alpha1"
-	"github.com/onmetal/k8s-subnet-machine-request/api/v1alpha1"
 	subnetv1alpha1 "github.com/onmetal/k8s-subnet/api/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -84,7 +83,7 @@ var _ = Describe("SubnetMachineRequest controller", func() {
 			By("Expecting Subnet 3 Create Successful")
 			Expect(k8sClient.Create(ctx, subnet3)).Should(Succeed())
 
-			subnetMachineRequest := &v1alpha1.SubnetMachineRequest{
+			subnetMachineRequest := &SubnetMachineRequest{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: ApiVersion,
 					Kind:       "SubnetMachineRequest",
@@ -93,7 +92,7 @@ var _ = Describe("SubnetMachineRequest controller", func() {
 					Name:      "subnetmachinerequest1",
 					Namespace: Namespace,
 				},
-				Spec: v1alpha1.SubnetMachineRequestSpec{
+				Spec: SubnetMachineRequestSpec{
 					Subnet:         "subnet1",
 					MachineRequest: "machinerequest1",
 				},
@@ -106,7 +105,7 @@ var _ = Describe("SubnetMachineRequest controller", func() {
 				Namespace: Namespace,
 			}
 			Eventually(func() bool {
-				subnetMachineRequest := &v1alpha1.SubnetMachineRequest{}
+				subnetMachineRequest := &SubnetMachineRequest{}
 				_ = k8sClient.Get(context.Background(), key, subnetMachineRequest)
 				return subnetMachineRequest.Spec.IP == "10.12.34.64"
 			}, timeout, interval).Should(BeTrue())
@@ -114,7 +113,7 @@ var _ = Describe("SubnetMachineRequest controller", func() {
 
 		It("Should not allow to use already allocated IP", func() {
 			ctx := context.Background()
-			subnetMachineRequest := &v1alpha1.SubnetMachineRequest{
+			subnetMachineRequest := &SubnetMachineRequest{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: ApiVersion,
 					Kind:       "SubnetMachineRequest",
@@ -123,29 +122,19 @@ var _ = Describe("SubnetMachineRequest controller", func() {
 					Name:      "subnetmachinerequest2",
 					Namespace: Namespace,
 				},
-				Spec: v1alpha1.SubnetMachineRequestSpec{
+				Spec: SubnetMachineRequestSpec{
 					Subnet:         "subnet1",
 					MachineRequest: "machinerequest1",
 					IP:             "10.12.34.64",
 				},
 			}
 			By("Expecting SubnetMachineRequest Create Successful")
-			Expect(k8sClient.Create(ctx, subnetMachineRequest)).Should(Succeed())
-
-			key := types.NamespacedName{
-				Name:      "subnetmachinerequest2",
-				Namespace: Namespace,
-			}
-			Eventually(func() bool {
-				subnetMachineRequest := &v1alpha1.SubnetMachineRequest{}
-				_ = k8sClient.Get(context.Background(), key, subnetMachineRequest)
-				return subnetMachineRequest.Status.Status == "failed" && subnetMachineRequest.Status.Message == "IP is already allocated"
-			}, timeout, interval).Should(BeTrue())
+			Expect(k8sClient.Create(ctx, subnetMachineRequest)).ShouldNot(Succeed())
 		})
 
 		It("Should not allow to use IP from child subnet", func() {
 			ctx := context.Background()
-			subnetMachineRequest := &v1alpha1.SubnetMachineRequest{
+			subnetMachineRequest := &SubnetMachineRequest{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: ApiVersion,
 					Kind:       "SubnetMachineRequest",
@@ -154,24 +143,14 @@ var _ = Describe("SubnetMachineRequest controller", func() {
 					Name:      "subnetmachinerequest3",
 					Namespace: Namespace,
 				},
-				Spec: v1alpha1.SubnetMachineRequestSpec{
+				Spec: SubnetMachineRequestSpec{
 					Subnet:         "subnet1",
 					MachineRequest: "machinerequest1",
 					IP:             "10.12.34.255",
 				},
 			}
 			By("Expecting SubnetMachineRequest Create Successful")
-			Expect(k8sClient.Create(ctx, subnetMachineRequest)).Should(Succeed())
-
-			key := types.NamespacedName{
-				Name:      "subnetmachinerequest3",
-				Namespace: Namespace,
-			}
-			Eventually(func() bool {
-				subnetMachineRequest := &v1alpha1.SubnetMachineRequest{}
-				_ = k8sClient.Get(context.Background(), key, subnetMachineRequest)
-				return subnetMachineRequest.Status.Status == "failed" && subnetMachineRequest.Status.Message == "IP is already allocated"
-			}, timeout, interval).Should(BeTrue())
+			Expect(k8sClient.Create(ctx, subnetMachineRequest)).ShouldNot(Succeed())
 		})
 	})
 })

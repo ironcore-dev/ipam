@@ -33,9 +33,6 @@ type SubnetMachineRequestSpec struct {
 
 // SubnetMachineRequestStatus defines the observed state of SubnetMachineRequest
 type SubnetMachineRequestStatus struct {
-	// Status and relevant message for error
-	Status  string `json:"status"`
-	Message string `json:"message"`
 }
 
 //+kubebuilder:object:root=true

@@ -1,0 +1,58 @@
+
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  name: mutating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-subnetmachinerequest-onmetal-de-v1alpha1-subnetmachinerequest
+  failurePolicy: Fail
+  name: msubnetmachinerequest.kb.io
+  rules:
+  - apiGroups:
+    - subnetmachinerequest.onmetal.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - subnetmachinerequests
+  sideEffects: None
+
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  name: validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-subnetmachinerequest-onmetal-de-v1alpha1-subnetmachinerequest
+  failurePolicy: Fail
+  name: vsubnetmachinerequest.kb.io
+  rules:
+  - apiGroups:
+    - subnetmachinerequest.onmetal.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - subnetmachinerequests
+  sideEffects: None
