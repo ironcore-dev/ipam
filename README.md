@@ -99,7 +99,7 @@ go test . -v -ginkgo.v
 
 Steps to reproduce: 
 - init ` operator-sdk init --domain onmetal.de --repo github.com/onmetal/k8s-subnet-machine-request`
-- crd `operator-sdk create api --group subnetmachinerequest --version v1alpha1 --kind SubnetMachineRequest --controller`
+- crd `operator-sdk create api --group subnetmachinerequest --version v1alpha1 --kind SubnetMachineRequest --resource`
 - webhook `operator-sdk create webhook --group subnetmachinerequest --version v1alpha1 --kind SubnetMachineRequest --defaulting --programmatic-validation`
 
 ## Diagram
