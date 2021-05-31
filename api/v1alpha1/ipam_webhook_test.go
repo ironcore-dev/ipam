@@ -93,7 +93,11 @@ var _ = Describe("IPAM webhook", func() {
 				},
 				Spec: IpamSpec{
 					Subnet: "subnet1",
-					CRD:    "example1",
+					CRD: &CRD{
+						GroupVersion: ApiVersion,
+						Kind:         "Example",
+						Name:         "example1",
+					},
 				},
 			}
 			By("Expecting Ipam Create Successful")
@@ -123,8 +127,12 @@ var _ = Describe("IPAM webhook", func() {
 				},
 				Spec: IpamSpec{
 					Subnet: "subnet1",
-					CRD:    "example1",
-					IP:     "10.12.34.64",
+					CRD: &CRD{
+						GroupVersion: ApiVersion,
+						Kind:         "Example",
+						Name:         "example1",
+					},
+					IP: "10.12.34.64",
 				},
 			}
 			By("Expecting Ipam Create Successful")
@@ -144,8 +152,12 @@ var _ = Describe("IPAM webhook", func() {
 				},
 				Spec: IpamSpec{
 					Subnet: "subnet1",
-					CRD:    "example1",
-					IP:     "10.12.34.255",
+					CRD: &CRD{
+						GroupVersion: ApiVersion,
+						Kind:         "Example",
+						Name:         "example1",
+					},
+					IP: "10.12.34.255",
 				},
 			}
 			By("Expecting Ipam Create Successful")

@@ -22,7 +22,9 @@ import (
 	"fmt"
 	"github.com/onmetal/ipam/api/v1alpha1/cidr"
 	subnetv1alpha1 "github.com/onmetal/k8s-subnet/api/v1alpha1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -93,7 +95,21 @@ func (r *Ipam) validate() error {
 		log.Error(err, "unable to get gateway of Subnet")
 		return errors.New("Subnet is not found: " + r.Spec.Subnet)
 	}
-	// TODO validate related CRD
+	// Lookup related CRD
+	u := &unstructured.Unstructured{}
+	gv, err := schema.ParseGroupVersion(r.Spec.CRD.GroupVersion)
+	if err != nil {
+		return errors.New("unable to parse CRD GroupVersion")
+	}
+	gvk := gv.WithKind(r.Spec.CRD.Kind)
+	u.SetGroupVersionKind(gvk)
+	err = c.Get(context.Background(), client.ObjectKey{
+		Namespace: r.Namespace,
+		Name:      r.Spec.CRD.Name,
+	}, u)
+	if err != nil {
+		return errors.New("unable to find CRD")
+	}
 	if r.Spec.IP != "" {
 		free, err := r.isIPFree(ctx, r.Spec.IP, r.Namespace, r.Spec.Subnet)
 		if err != nil {

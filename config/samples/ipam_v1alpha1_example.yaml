@@ -1,7 +1,6 @@
 apiVersion: ipam.onmetal.de/v1alpha1
 kind: Example
 metadata:
-  name: example-sample
+  name: example1
 spec:
-  # Add fields here
   foo: bar

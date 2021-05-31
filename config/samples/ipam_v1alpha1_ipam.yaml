@@ -4,4 +4,7 @@ metadata:
   name: ipam1
 spec:
   subnet: subnet1
-  someOtherCRD: someOtherCRD
+  crd:
+    groupVersion: ipam.onmetal.de/v1alpha1
+    kind: Example
+    name: example1

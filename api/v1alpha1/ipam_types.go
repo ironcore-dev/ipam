@@ -25,10 +25,19 @@ type IpamSpec struct {
 	// Subnet to get IP from
 	Subnet string `json:"subnet,omitempty"`
 	// CRD find IP for
-	CRD string `json:"crd,omitempty"`
+	CRD *CRD `json:"crd,omitempty"`
 	// IP to request, if not specified - will be added automatically
 	// +kubebuilder:validation:Optional
 	IP string `json:"ip,omitempty"`
+}
+
+type CRD struct {
+	// Kind is CRD Kind for lookup
+	GroupVersion string `json:"groupVersion,omitempty"`
+	// Kind is CRD Kind for lookup
+	Kind string `json:"kind,omitempty"`
+	// Name is CRD Name for lookup
+	Name string `json:"name,omitempty"`
 }
 
 // IpamStatus defines the observed state of Ipam
