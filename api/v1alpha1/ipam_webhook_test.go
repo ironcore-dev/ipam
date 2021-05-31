@@ -11,6 +11,30 @@ import (
 
 var _ = Describe("IPAM webhook", func() {
 	Context("IPAM webhook test", func() {
+		It("Should fail with nonexistent related CRD", func() {
+			ctx := context.Background()
+			ipam := &Ipam{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: ApiVersion,
+					Kind:       "Ipam",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "ipam0",
+					Namespace: Namespace,
+				},
+				Spec: IpamSpec{
+					Subnet: "subnet1",
+					CRD: &CRD{
+						GroupVersion: ApiVersion,
+						Kind:         "Example",
+						Name:         "example2",
+					},
+					IP: "1.12.12.123",
+				},
+			}
+			Expect(k8sClient.Create(ctx, ipam)).ShouldNot(Succeed())
+		})
+
 		It("Should allocate free IP", func() {
 
 			example := &Example{
