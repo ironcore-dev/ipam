@@ -20,42 +20,40 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// IpamSpec defines the desired state of Ipam
-type IpamSpec struct {
-	// Subnet to get IP from
-	Subnet string `json:"subnet,omitempty"`
-	// CRD find IP for
-	CRD string `json:"crd,omitempty"`
-	// IP to request, if not specified - will be added automatically
-	// +kubebuilder:validation:Optional
-	IP string `json:"ip,omitempty"`
+// Example is testing CRD which can be used to in conjunction with IPAM
+// but it can be used with any other CRD
+
+// ExampleSpec defines the desired state of Example
+type ExampleSpec struct {
+	// Foo is an example field of Example. Edit example_types.go to remove/update
+	Foo string `json:"foo,omitempty"`
 }
 
-// IpamStatus defines the observed state of Ipam
-type IpamStatus struct {
+// ExampleStatus defines the observed state of Example
+type ExampleStatus struct {
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// Ipam is the Schema for the ipams API
-type Ipam struct {
+// Example is the Schema for the examples API
+type Example struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   IpamSpec   `json:"spec,omitempty"`
-	Status IpamStatus `json:"status,omitempty"`
+	Spec   ExampleSpec   `json:"spec,omitempty"`
+	Status ExampleStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// IpamList contains a list of Ipam
-type IpamList struct {
+// ExampleList contains a list of Example
+type ExampleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Ipam `json:"items"`
+	Items           []Example `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Ipam{}, &IpamList{})
+	SchemeBuilder.Register(&Example{}, &ExampleList{})
 }

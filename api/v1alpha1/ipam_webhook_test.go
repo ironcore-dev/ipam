@@ -12,7 +12,22 @@ import (
 var _ = Describe("IPAM webhook", func() {
 	Context("IPAM webhook test", func() {
 		It("Should allocate free IP", func() {
-			// TODO related CRD
+
+			example := &Example{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: ApiVersion,
+					Kind:       "Example",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "example1",
+					Namespace: Namespace,
+				},
+				Spec: ExampleSpec{
+					Foo: "bar",
+				},
+			}
+			By("Expecting Example Create Successful")
+			Expect(k8sClient.Create(ctx, example)).Should(Succeed())
 
 			subnet := &subnetv1alpha1.Subnet{
 				TypeMeta: metav1.TypeMeta{
@@ -78,7 +93,7 @@ var _ = Describe("IPAM webhook", func() {
 				},
 				Spec: IpamSpec{
 					Subnet: "subnet1",
-					//MachineRequest: "machinerequest1",
+					CRD:    "example1",
 				},
 			}
 			By("Expecting Ipam Create Successful")
@@ -108,8 +123,8 @@ var _ = Describe("IPAM webhook", func() {
 				},
 				Spec: IpamSpec{
 					Subnet: "subnet1",
-					//MachineRequest: "machinerequest1",
-					IP: "10.12.34.64",
+					CRD:    "example1",
+					IP:     "10.12.34.64",
 				},
 			}
 			By("Expecting Ipam Create Successful")
@@ -129,8 +144,8 @@ var _ = Describe("IPAM webhook", func() {
 				},
 				Spec: IpamSpec{
 					Subnet: "subnet1",
-					//MachineRequest: "machinerequest1",
-					IP: "10.12.34.255",
+					CRD:    "example1",
+					IP:     "10.12.34.255",
 				},
 			}
 			By("Expecting Ipam Create Successful")

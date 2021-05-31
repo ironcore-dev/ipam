@@ -93,11 +93,6 @@ func (r *Ipam) validate() error {
 		log.Error(err, "unable to get gateway of Subnet")
 		return errors.New("Subnet is not found: " + r.Spec.Subnet)
 	}
-	//var machineRequest machinerequestv1alpha1.MachineRequest
-	//if err := c.Get(ctx, client.ObjectKey{Namespace: r.Namespace, Name: r.Spec.MachineRequest}, &machineRequest); err != nil {
-	//	log.Error(err, "unable to fetch MachineRequest")
-	//	return errors.New("MachineRequest is not found: " + r.Spec.Subnet)
-	//}
 	// TODO validate related CRD
 	if r.Spec.IP != "" {
 		free, err := r.isIPFree(ctx, r.Spec.IP, r.Namespace, r.Spec.Subnet)
