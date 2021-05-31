@@ -7,9 +7,25 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - ipam.onmetal.de
+  - machine.onmetal.de
   resources:
-  - ipams
+  - networkglobals
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - machine.onmetal.de
+  resources:
+  - networkglobals/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - machine.onmetal.de
+  resources:
+  - subnets
   verbs:
   - create
   - delete
@@ -19,15 +35,15 @@ rules:
   - update
   - watch
 - apiGroups:
-  - ipam.onmetal.de
+  - machine.onmetal.de
   resources:
-  - ipams/finalizers
+  - subnets/finalizers
   verbs:
   - update
 - apiGroups:
-  - ipam.onmetal.de
+  - machine.onmetal.de
   resources:
-  - ipams/status
+  - subnets/status
   verbs:
   - get
   - patch

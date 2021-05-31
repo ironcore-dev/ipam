@@ -56,3 +56,24 @@ webhooks:
     resources:
     - ipams
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-machine-onmetal-de-v1alpha1-subnet
+  failurePolicy: Fail
+  name: vsubnet.kb.io
+  rules:
+  - apiGroups:
+    - machine.onmetal.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - subnets
+  sideEffects: None

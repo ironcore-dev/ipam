@@ -6,20 +6,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: ipams.ipam.onmetal.de
+  name: examples.ipam.onmetal.de
 spec:
   group: ipam.onmetal.de
   names:
-    kind: Ipam
-    listKind: IpamList
-    plural: ipams
-    singular: ipam
+    kind: Example
+    listKind: ExampleList
+    plural: examples
+    singular: example
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Ipam is the Schema for the ipams API
+        description: Example is the Schema for the examples API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -34,30 +34,15 @@ spec:
           metadata:
             type: object
           spec:
-            description: IpamSpec defines the desired state of Ipam
+            description: ExampleSpec defines the desired state of Example
             properties:
-              crd:
-                description: CRD find IP for
-                properties:
-                  groupVersion:
-                    description: Kind is CRD Kind for lookup
-                    type: string
-                  kind:
-                    description: Kind is CRD Kind for lookup
-                    type: string
-                  name:
-                    description: Name is CRD Name for lookup
-                    type: string
-                type: object
-              ip:
-                description: IP to request, if not specified - will be added automatically
-                type: string
-              subnet:
-                description: Subnet to get IP from
+              foo:
+                description: Foo is an example field of Example. Edit example_types.go
+                  to remove/update
                 type: string
             type: object
           status:
-            description: IpamStatus defines the observed state of Ipam
+            description: ExampleStatus defines the observed state of Example
             type: object
         type: object
     served: true

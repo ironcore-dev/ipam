@@ -34,6 +34,7 @@ import (
 	subnetv1alpha1 "github.com/onmetal/k8s-subnet/api/v1alpha1"
 
 	ipamv1alpha1 "github.com/onmetal/ipam/api/v1alpha1"
+	"github.com/onmetal/ipam/controllers"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -79,12 +80,26 @@ func main() {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
+
+	if err = (&controllers.SubnetReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("Subnet"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Subnet")
+		os.Exit(1)
+	}
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
 		if err = (&ipamv1alpha1.Ipam{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Ipam")
 			os.Exit(1)
 		}
+		if err = (&ipamv1alpha1.Subnet{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Subnet")
+			os.Exit(1)
+		}
 	}
+
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

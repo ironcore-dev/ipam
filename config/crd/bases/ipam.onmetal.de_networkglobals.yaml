@@ -6,20 +6,29 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: ipams.ipam.onmetal.de
+  name: networkglobals.ipam.onmetal.de
 spec:
   group: ipam.onmetal.de
   names:
-    kind: Ipam
-    listKind: IpamList
-    plural: ipams
-    singular: ipam
+    kind: NetworkGlobal
+    listKind: NetworkGlobalList
+    plural: networkglobals
+    singular: networkglobal
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Total address capacity in all ranges
+      jsonPath: .status.capacity
+      name: Capacity
+      type: string
+    - description: Description
+      jsonPath: .spec.description
+      name: Description
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Ipam is the Schema for the ipams API
+        description: NetworkGlobal is the Schema for the networkglobals API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -34,30 +43,28 @@ spec:
           metadata:
             type: object
           spec:
-            description: IpamSpec defines the desired state of Ipam
+            description: NetworkGlobalSpec defines the desired state of NetworkGlobal
             properties:
-              crd:
-                description: CRD find IP for
-                properties:
-                  groupVersion:
-                    description: Kind is CRD Kind for lookup
-                    type: string
-                  kind:
-                    description: Kind is CRD Kind for lookup
-                    type: string
-                  name:
-                    description: Name is CRD Name for lookup
-                    type: string
-                type: object
-              ip:
-                description: IP to request, if not specified - will be added automatically
-                type: string
-              subnet:
-                description: Subnet to get IP from
+              description:
+                description: Description contains a human readable description of
+                  network
                 type: string
             type: object
           status:
-            description: IpamStatus defines the observed state of Ipam
+            description: NetworkGlobalStatus defines the observed state of NetworkGlobal
+            properties:
+              capacity:
+                anyOf:
+                - type: integer
+                - type: string
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
+              ranges:
+                items:
+                  type: string
+                type: array
+            required:
+            - ranges
             type: object
         type: object
     served: true
