@@ -1,34 +1,20 @@
-
----
+# permissions for end users to view ipams.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
-  name: manager-role
+  name: ipam-viewer-role
 rules:
 - apiGroups:
   - ipam.onmetal.de
   resources:
   - ipams
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
-- apiGroups:
-  - ipam.onmetal.de
-  resources:
-  - ipams/finalizers
-  verbs:
-  - update
 - apiGroups:
   - ipam.onmetal.de
   resources:
   - ipams/status
   verbs:
   - get
-  - patch
-  - update

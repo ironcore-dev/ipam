@@ -20,42 +20,40 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// SubnetMachineRequestSpec defines the desired state of SubnetMachineRequest
-type SubnetMachineRequestSpec struct {
+// IpamSpec defines the desired state of Ipam
+type IpamSpec struct {
 	// Subnet to get IP from
 	Subnet string `json:"subnet,omitempty"`
-	// MachineRequest for subnet to get the IP
-	MachineRequest string `json:"machineRequest,omitempty"`
 	// IP to request, if not specified - will be added automatically
 	// +kubebuilder:validation:Optional
 	IP string `json:"ip,omitempty"`
 }
 
-// SubnetMachineRequestStatus defines the observed state of SubnetMachineRequest
-type SubnetMachineRequestStatus struct {
+// IpamStatus defines the observed state of Ipam
+type IpamStatus struct {
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// SubnetMachineRequest is the Schema for the subnetmachinerequests API
-type SubnetMachineRequest struct {
+// Ipam is the Schema for the ipams API
+type Ipam struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   SubnetMachineRequestSpec   `json:"spec,omitempty"`
-	Status SubnetMachineRequestStatus `json:"status,omitempty"`
+	Spec   IpamSpec   `json:"spec,omitempty"`
+	Status IpamStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// SubnetMachineRequestList contains a list of SubnetMachineRequest
-type SubnetMachineRequestList struct {
+// IpamList contains a list of Ipam
+type IpamList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []SubnetMachineRequest `json:"items"`
+	Items           []Ipam `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&SubnetMachineRequest{}, &SubnetMachineRequestList{})
+	SchemeBuilder.Register(&Ipam{}, &IpamList{})
 }

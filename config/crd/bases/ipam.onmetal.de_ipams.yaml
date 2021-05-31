@@ -6,21 +6,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: subnetmachinerequests.subnetmachinerequest.onmetal.de
+  name: ipams.ipam.onmetal.de
 spec:
-  group: subnetmachinerequest.onmetal.de
+  group: ipam.onmetal.de
   names:
-    kind: SubnetMachineRequest
-    listKind: SubnetMachineRequestList
-    plural: subnetmachinerequests
-    singular: subnetmachinerequest
+    kind: Ipam
+    listKind: IpamList
+    plural: ipams
+    singular: ipam
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: SubnetMachineRequest is the Schema for the subnetmachinerequests
-          API
+        description: Ipam is the Schema for the ipams API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -35,21 +34,17 @@ spec:
           metadata:
             type: object
           spec:
-            description: SubnetMachineRequestSpec defines the desired state of SubnetMachineRequest
+            description: IpamSpec defines the desired state of Ipam
             properties:
               ip:
                 description: IP to request, if not specified - will be added automatically
-                type: string
-              machineRequest:
-                description: MachineRequest for subnet to get the IP
                 type: string
               subnet:
                 description: Subnet to get IP from
                 type: string
             type: object
           status:
-            description: SubnetMachineRequestStatus defines the observed state of
-              SubnetMachineRequest
+            description: IpamStatus defines the observed state of Ipam
             type: object
         type: object
     served: true

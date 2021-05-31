@@ -1,4 +1,4 @@
-module github.com/onmetal/k8s-subnet-machine-request
+module github.com/onmetal/ipam
 
 go 1.15
 

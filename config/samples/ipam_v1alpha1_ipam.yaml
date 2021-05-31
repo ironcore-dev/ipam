@@ -1,0 +1,7 @@
+apiVersion: ipam.onmetal.de/v1alpha1
+kind: Ipam
+metadata:
+  name: ipam1
+spec:
+  subnet: subnet1
+  someOtherCRD: someOtherCRD

@@ -34,8 +34,7 @@ import (
 	"strings"
 	"testing"
 
-	machinerequestv1alpha1 "github.com/onmetal/k8s-machine-requests/api/v1alpha1"
-	subnetmachinerequestv1alpha1 "github.com/onmetal/k8s-subnet-machine-request/api/v1alpha1"
+	ipamv1alpha1 "github.com/onmetal/ipam/api/v1alpha1"
 	subnetv1alpha1 "github.com/onmetal/k8s-subnet/api/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
@@ -80,7 +79,6 @@ var _ = BeforeSuite(func() {
 		CRDDirectoryPaths: []string{
 			filepath.Join("..", "config", "crd", "bases"),
 			getCrdPath(subnetv1alpha1.Subnet{}),
-			getCrdPath(machinerequestv1alpha1.MachineRequest{}),
 		},
 		ErrorIfCRDPathMissing: true,
 	}
@@ -89,15 +87,11 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = subnetmachinerequestv1alpha1.AddToScheme(scheme.Scheme)
+	err = ipamv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = subnetv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
-
-	err = machinerequestv1alpha1.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
-
 	//+kubebuilder:scaffold:scheme
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})

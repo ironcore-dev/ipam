@@ -13,19 +13,19 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-subnetmachinerequest-onmetal-de-v1alpha1-subnetmachinerequest
+      path: /mutate-ipam-onmetal-de-v1alpha1-ipam
   failurePolicy: Fail
-  name: msubnetmachinerequest.kb.io
+  name: mipam.kb.io
   rules:
   - apiGroups:
-    - subnetmachinerequest.onmetal.de
+    - ipam.onmetal.de
     apiVersions:
     - v1alpha1
     operations:
     - CREATE
     - UPDATE
     resources:
-    - subnetmachinerequests
+    - ipams
   sideEffects: None
 
 ---
@@ -42,17 +42,17 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-subnetmachinerequest-onmetal-de-v1alpha1-subnetmachinerequest
+      path: /validate-ipam-onmetal-de-v1alpha1-ipam
   failurePolicy: Fail
-  name: vsubnetmachinerequest.kb.io
+  name: vipam.kb.io
   rules:
   - apiGroups:
-    - subnetmachinerequest.onmetal.de
+    - ipam.onmetal.de
     apiVersions:
     - v1alpha1
     operations:
     - CREATE
     - UPDATE
     resources:
-    - subnetmachinerequests
+    - ipams
   sideEffects: None

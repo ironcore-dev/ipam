@@ -20,7 +20,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	machinerequestv1alpha1 "github.com/onmetal/k8s-machine-requests/api/v1alpha1"
 	subnetv1alpha1 "github.com/onmetal/k8s-subnet/api/v1alpha1"
 	"go/build"
 	"golang.org/x/mod/modfile"
@@ -58,7 +57,7 @@ var cancel context.CancelFunc
 
 const (
 	Namespace  = "default"
-	ApiVersion = "subnetmachinerequest.onmetal.de/v1alpha1"
+	ApiVersion = "ipam.onmetal.de/v1alpha1"
 	timeout    = time.Second * 10
 	interval   = time.Millisecond * 100
 )
@@ -98,7 +97,6 @@ var _ = BeforeSuite(func() {
 		CRDDirectoryPaths: []string{
 			filepath.Join("..", "..", "config", "crd", "bases"),
 			getCrdPath(subnetv1alpha1.Subnet{}),
-			getCrdPath(machinerequestv1alpha1.MachineRequest{}),
 		},
 		ErrorIfCRDPathMissing: false,
 		WebhookInstallOptions: envtest.WebhookInstallOptions{
@@ -120,9 +118,6 @@ var _ = BeforeSuite(func() {
 	err = subnetv1alpha1.AddToScheme(scheme)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = machinerequestv1alpha1.AddToScheme(scheme)
-	Expect(err).NotTo(HaveOccurred())
-
 	//+kubebuilder:scaffold:scheme
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
@@ -141,7 +136,7 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&SubnetMachineRequest{}).SetupWebhookWithManager(mgr)
+	err = (&Ipam{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:webhook

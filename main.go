@@ -31,10 +31,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	machinerequestv1alpha1 "github.com/onmetal/k8s-machine-requests/api/v1alpha1"
 	subnetv1alpha1 "github.com/onmetal/k8s-subnet/api/v1alpha1"
 
-	subnetmachinerequestv1alpha1 "github.com/onmetal/k8s-subnet-machine-request/api/v1alpha1"
+	ipamv1alpha1 "github.com/onmetal/ipam/api/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -46,9 +45,8 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(subnetmachinerequestv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(ipamv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(subnetv1alpha1.AddToScheme(scheme))
-	utilruntime.Must(machinerequestv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -82,8 +80,8 @@ func main() {
 		os.Exit(1)
 	}
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
-		if err = (&subnetmachinerequestv1alpha1.SubnetMachineRequest{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "SubnetMachineRequest")
+		if err = (&ipamv1alpha1.Ipam{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Ipam")
 			os.Exit(1)
 		}
 	}

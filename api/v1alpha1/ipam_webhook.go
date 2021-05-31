@@ -20,8 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	machinerequestv1alpha1 "github.com/onmetal/k8s-machine-requests/api/v1alpha1"
-	"github.com/onmetal/k8s-subnet-machine-request/api/v1alpha1/cidr"
+	"github.com/onmetal/ipam/api/v1alpha1/cidr"
 	subnetv1alpha1 "github.com/onmetal/k8s-subnet/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -31,22 +30,22 @@ import (
 )
 
 // log is for logging in this package.
-var log = logf.Log.WithName("subnetmachinerequest-resource")
+var log = logf.Log.WithName("ipam-resource")
 var c client.Client
 
-func (r *SubnetMachineRequest) SetupWebhookWithManager(mgr ctrl.Manager) error {
+func (r *Ipam) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	c = mgr.GetClient()
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
 }
 
-//+kubebuilder:webhook:path=/mutate-subnetmachinerequest-onmetal-de-v1alpha1-subnetmachinerequest,mutating=true,failurePolicy=fail,sideEffects=None,groups=subnetmachinerequest.onmetal.de,resources=subnetmachinerequests,verbs=create;update,versions=v1alpha1,name=msubnetmachinerequest.kb.io,admissionReviewVersions={v1,v1beta1}
+//+kubebuilder:webhook:path=/mutate-ipam-onmetal-de-v1alpha1-ipam,mutating=true,failurePolicy=fail,sideEffects=None,groups=ipam.onmetal.de,resources=ipams,verbs=create;update,versions=v1alpha1,name=mipam.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Defaulter = &SubnetMachineRequest{}
+var _ webhook.Defaulter = &Ipam{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *SubnetMachineRequest) Default() {
+func (r *Ipam) Default() {
 	log.Info("default", "name", r.Name)
 
 	if r.Spec.IP == "" {
@@ -58,47 +57,48 @@ func (r *SubnetMachineRequest) Default() {
 		}
 		ip, err := r.getFreeIP(context.Background(), subnet.Spec.CIDR, r.Namespace, r.Spec.Subnet)
 		if err != nil {
-			log.Error(err, "unable to get free IP for SubnetMachineRequest")
+			log.Error(err, "unable to get free IP for Ipam")
 			return
 		}
 		r.Spec.IP = ip
 	}
 }
 
-//+kubebuilder:webhook:path=/validate-subnetmachinerequest-onmetal-de-v1alpha1-subnetmachinerequest,mutating=false,failurePolicy=fail,sideEffects=None,groups=subnetmachinerequest.onmetal.de,resources=subnetmachinerequests,verbs=create;update,versions=v1alpha1,name=vsubnetmachinerequest.kb.io,admissionReviewVersions={v1,v1beta1}
+//+kubebuilder:webhook:path=/validate-ipam-onmetal-de-v1alpha1-ipam,mutating=false,failurePolicy=fail,sideEffects=None,groups=ipam.onmetal.de,resources=ipams,verbs=create;update,versions=v1alpha1,name=vipam.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Validator = &SubnetMachineRequest{}
+var _ webhook.Validator = &Ipam{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *SubnetMachineRequest) ValidateCreate() error {
+func (r *Ipam) ValidateCreate() error {
 	log.Info("validate create", "name", r.Name)
 	return r.validate()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *SubnetMachineRequest) ValidateUpdate(old runtime.Object) error {
+func (r *Ipam) ValidateUpdate(old runtime.Object) error {
 	log.Info("validate update", "name", r.Name)
 	return r.validate()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *SubnetMachineRequest) ValidateDelete() error {
+func (r *Ipam) ValidateDelete() error {
 	log.Info("validate delete", "name", r.Name)
 	return nil
 }
 
-func (r *SubnetMachineRequest) validate() error {
+func (r *Ipam) validate() error {
 	ctx := context.Background()
 	var subnet subnetv1alpha1.Subnet
 	if err := c.Get(ctx, client.ObjectKey{Namespace: r.Namespace, Name: r.Spec.Subnet}, &subnet); err != nil {
 		log.Error(err, "unable to get gateway of Subnet")
 		return errors.New("Subnet is not found: " + r.Spec.Subnet)
 	}
-	var machineRequest machinerequestv1alpha1.MachineRequest
-	if err := c.Get(ctx, client.ObjectKey{Namespace: r.Namespace, Name: r.Spec.MachineRequest}, &machineRequest); err != nil {
-		log.Error(err, "unable to fetch MachineRequest")
-		return errors.New("MachineRequest is not found: " + r.Spec.Subnet)
-	}
+	//var machineRequest machinerequestv1alpha1.MachineRequest
+	//if err := c.Get(ctx, client.ObjectKey{Namespace: r.Namespace, Name: r.Spec.MachineRequest}, &machineRequest); err != nil {
+	//	log.Error(err, "unable to fetch MachineRequest")
+	//	return errors.New("MachineRequest is not found: " + r.Spec.Subnet)
+	//}
+	// TODO validate related CRD
 	if r.Spec.IP != "" {
 		free, err := r.isIPFree(ctx, r.Spec.IP, r.Namespace, r.Spec.Subnet)
 		if err != nil {
@@ -112,7 +112,7 @@ func (r *SubnetMachineRequest) validate() error {
 	return nil
 }
 
-func (r *SubnetMachineRequest) isIPFree(ctx context.Context, ip string, namespace string, subnetName string) (bool, error) {
+func (r *Ipam) isIPFree(ctx context.Context, ip string, namespace string, subnetName string) (bool, error) {
 	ranges, err := r.findChildrenSubnetRanges(ctx, namespace, subnetName)
 	if err != nil {
 		return false, fmt.Errorf("unable to get children ranges: %w", err)
@@ -128,7 +128,7 @@ func (r *SubnetMachineRequest) isIPFree(ctx context.Context, ip string, namespac
 	return free, nil
 }
 
-func (r *SubnetMachineRequest) getFreeIP(ctx context.Context, rootCidr string, namespace string, subnetName string) (string, error) {
+func (r *Ipam) getFreeIP(ctx context.Context, rootCidr string, namespace string, subnetName string) (string, error) {
 	ranges, err := r.findChildrenSubnetRanges(ctx, namespace, subnetName)
 	if err != nil {
 		return "", fmt.Errorf("unable to get children ranges: %w", err)
@@ -144,7 +144,7 @@ func (r *SubnetMachineRequest) getFreeIP(ctx context.Context, rootCidr string, n
 	return ip, nil
 }
 
-func (r *SubnetMachineRequest) findChildrenSubnetRanges(ctx context.Context, namespace string, subnetName string) ([]string, error) {
+func (r *Ipam) findChildrenSubnetRanges(ctx context.Context, namespace string, subnetName string) ([]string, error) {
 	subnets := []string{}
 	subnetList := &subnetv1alpha1.SubnetList{}
 	err := c.List(ctx, subnetList, &client.ListOptions{Namespace: namespace})
@@ -159,16 +159,16 @@ func (r *SubnetMachineRequest) findChildrenSubnetRanges(ctx context.Context, nam
 	return subnets, nil
 }
 
-func (r *SubnetMachineRequest) findReservedIPs(ctx context.Context, namespace string, subnetName string) ([]string, error) {
+func (r *Ipam) findReservedIPs(ctx context.Context, namespace string, subnetName string) ([]string, error) {
 	reservedIPs := []string{}
-	subnetMachineRequestList := &SubnetMachineRequestList{}
-	err := c.List(ctx, subnetMachineRequestList, &client.ListOptions{Namespace: namespace})
+	ipamList := &IpamList{}
+	err := c.List(ctx, ipamList, &client.ListOptions{Namespace: namespace})
 	if err != nil {
 		return nil, err
 	}
-	for index, subnetMachineRequest := range subnetMachineRequestList.Items {
-		if subnetMachineRequest.Spec.Subnet == subnetName && subnetMachineRequest.Spec.IP != "" && subnetMachineRequest.Name != r.Name {
-			reservedIPs = append(reservedIPs, subnetMachineRequestList.Items[index].Spec.IP)
+	for index, ipam := range ipamList.Items {
+		if ipam.Spec.Subnet == subnetName && ipam.Spec.IP != "" && ipam.Name != r.Name {
+			reservedIPs = append(reservedIPs, ipamList.Items[index].Spec.IP)
 		}
 	}
 	return reservedIPs, nil

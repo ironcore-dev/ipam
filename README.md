@@ -1,19 +1,18 @@
-# k8s-subnet-machine-request
-k8s operator for SubnetMachineRequest CRD
+# IPAM
+k8s operator for Ipam CRD
 
 ### CRD parameters
 
 | Parameter  | Description | Example | Validation rules |
 | ------------- | ------------- | ------------- | ------------- |
 | subnet | Subnet reference | subnet | Should exist |
-| machineRequest | Machine Request reference | machinerequest1 | Should exist |
+| someOtherCRD | Some other CRD | someOtherCRD | Should exist |
 | ip | IP to request | 10.12.34.64 | Optional, if not specified it will be assigned automatically in the specified subnet if any IPs are available |
 
 ## Getting started
 
 This repo references other CRDs and you need to install them to proceed:
-- Subnet https://github.com/onmetal/k8s-subnet
-- Machine Requests https://github.com/onmetal/k8s-machine-requests
+- Subnet 
 
 ### Required tools
 
@@ -51,19 +50,19 @@ Replace with your registry if you're using quay or anything else.
 ```
 # ! Be sure to install CRDs first
 # Build and push Docker image
-make docker-build docker-push IMG="localhost:5000/k8s-subnet-machine-request:latest" GIT_USER=yourusername GIT_PASSWORD=youraccesstoken
+make docker-build docker-push IMG="localhost:5000/ipam:latest" GIT_USER=yourusername GIT_PASSWORD=youraccesstoken
 
 # Deploy
-make deploy IMG="localhost:5000/k8s-subnet-machine-request:latest"
+make deploy IMG="localhost:5000/ipam:latest"
 ```
 
 ### Helm chart
 
 ```
 # Deploy
-helm install k8s-subnet-machine-request ./chart/ -n k8s-subnet-machine-request --create-namespace
+helm install ipam ./chart/ -n ipam --create-namespace
 # Undeploy
-helm uninstall k8s-subnet-machine-request -n k8s-subnet-machine-request
+helm uninstall ipam -n ipam
 ```
 
 ### Use
@@ -72,13 +71,10 @@ helm uninstall k8s-subnet-machine-request -n k8s-subnet-machine-request
 
 ```
 # Create subnets
-kubectl apply -f config/samples/machine_v1alpha1_subnet.yaml
-# Create machine request
-kubectl apply -f config/samples/machinerequests_v1alpha1_machinerequest.yaml
-# Create subnet machine request
-kubectl apply -f config/samples/subnetmachinerequest_v1alpha1_subnetmachinerequest.yaml
+# Create IPAM
+kubectl apply -f config/samples/ipam_v1alpha1_ipam.yaml
 # Check that IP was assigned -> should be 10.12.34.64
-kubectl describe subnetmachinerequests subnetmachinerequest1
+kubectl describe ipams ipam1
 ```
 
 ### Cleanup
@@ -94,14 +90,3 @@ cd api/v1alpha1
 # Run tests
 go test . -v -ginkgo.v
 ```
-
-## Project created with operator SDK (go - kubebuilder)
-
-Steps to reproduce: 
-- init ` operator-sdk init --domain onmetal.de --repo github.com/onmetal/k8s-subnet-machine-request`
-- crd `operator-sdk create api --group subnetmachinerequest --version v1alpha1 --kind SubnetMachineRequest --resource`
-- webhook `operator-sdk create webhook --group subnetmachinerequest --version v1alpha1 --kind SubnetMachineRequest --defaulting --programmatic-validation`
-
-## Diagram
-
-![Diagram](./docs/subnetmr.jpg)

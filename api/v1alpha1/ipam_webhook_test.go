@@ -2,7 +2,6 @@ package v1alpha1
 
 import (
 	"context"
-	machinerequestv1alpha1 "github.com/onmetal/k8s-machine-requests/api/v1alpha1"
 	subnetv1alpha1 "github.com/onmetal/k8s-subnet/api/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -10,25 +9,10 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("SubnetMachineRequest controller", func() {
-	Context("SubnetMachineRequest controller test", func() {
+var _ = Describe("IPAM webhook", func() {
+	Context("IPAM webhook test", func() {
 		It("Should allocate free IP", func() {
-			machine := &machinerequestv1alpha1.MachineRequest{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: ApiVersion,
-					Kind:       "MachineRequest",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "machinerequest1",
-					Namespace: Namespace,
-				},
-				Spec: machinerequestv1alpha1.MachineRequestSpec{
-					Name: "machinerequest1",
-				},
-			}
-			By("Expecting Machine Request Create Successful")
-			ctx := context.Background()
-			Expect(k8sClient.Create(ctx, machine)).Should(Succeed())
+			// TODO related CRD
 
 			subnet := &subnetv1alpha1.Subnet{
 				TypeMeta: metav1.TypeMeta{
@@ -83,74 +67,74 @@ var _ = Describe("SubnetMachineRequest controller", func() {
 			By("Expecting Subnet 3 Create Successful")
 			Expect(k8sClient.Create(ctx, subnet3)).Should(Succeed())
 
-			subnetMachineRequest := &SubnetMachineRequest{
+			ipam := &Ipam{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: ApiVersion,
-					Kind:       "SubnetMachineRequest",
+					Kind:       "Ipam",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "subnetmachinerequest1",
+					Name:      "ipam1",
 					Namespace: Namespace,
 				},
-				Spec: SubnetMachineRequestSpec{
-					Subnet:         "subnet1",
-					MachineRequest: "machinerequest1",
+				Spec: IpamSpec{
+					Subnet: "subnet1",
+					//MachineRequest: "machinerequest1",
 				},
 			}
-			By("Expecting SubnetMachineRequest Create Successful")
-			Expect(k8sClient.Create(ctx, subnetMachineRequest)).Should(Succeed())
+			By("Expecting Ipam Create Successful")
+			Expect(k8sClient.Create(ctx, ipam)).Should(Succeed())
 
 			key := types.NamespacedName{
-				Name:      "subnetmachinerequest1",
+				Name:      "ipam1",
 				Namespace: Namespace,
 			}
 			Eventually(func() bool {
-				subnetMachineRequest := &SubnetMachineRequest{}
-				_ = k8sClient.Get(context.Background(), key, subnetMachineRequest)
-				return subnetMachineRequest.Spec.IP == "10.12.34.64"
+				ipam := &Ipam{}
+				_ = k8sClient.Get(context.Background(), key, ipam)
+				return ipam.Spec.IP == "10.12.34.64"
 			}, timeout, interval).Should(BeTrue())
 		})
 
 		It("Should not allow to use already allocated IP", func() {
 			ctx := context.Background()
-			subnetMachineRequest := &SubnetMachineRequest{
+			ipam := &Ipam{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: ApiVersion,
-					Kind:       "SubnetMachineRequest",
+					Kind:       "Ipam",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "subnetmachinerequest2",
+					Name:      "ipam2",
 					Namespace: Namespace,
 				},
-				Spec: SubnetMachineRequestSpec{
-					Subnet:         "subnet1",
-					MachineRequest: "machinerequest1",
-					IP:             "10.12.34.64",
+				Spec: IpamSpec{
+					Subnet: "subnet1",
+					//MachineRequest: "machinerequest1",
+					IP: "10.12.34.64",
 				},
 			}
-			By("Expecting SubnetMachineRequest Create Successful")
-			Expect(k8sClient.Create(ctx, subnetMachineRequest)).ShouldNot(Succeed())
+			By("Expecting Ipam Create Successful")
+			Expect(k8sClient.Create(ctx, ipam)).ShouldNot(Succeed())
 		})
 
 		It("Should not allow to use IP from child subnet", func() {
 			ctx := context.Background()
-			subnetMachineRequest := &SubnetMachineRequest{
+			ipam := &Ipam{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: ApiVersion,
-					Kind:       "SubnetMachineRequest",
+					Kind:       "Ipam",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "subnetmachinerequest3",
+					Name:      "ipam3",
 					Namespace: Namespace,
 				},
-				Spec: SubnetMachineRequestSpec{
-					Subnet:         "subnet1",
-					MachineRequest: "machinerequest1",
-					IP:             "10.12.34.255",
+				Spec: IpamSpec{
+					Subnet: "subnet1",
+					//MachineRequest: "machinerequest1",
+					IP: "10.12.34.255",
 				},
 			}
-			By("Expecting SubnetMachineRequest Create Successful")
-			Expect(k8sClient.Create(ctx, subnetMachineRequest)).ShouldNot(Succeed())
+			By("Expecting Ipam Create Successful")
+			Expect(k8sClient.Create(ctx, ipam)).ShouldNot(Succeed())
 		})
 	})
 })

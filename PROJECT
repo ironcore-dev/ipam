@@ -3,17 +3,17 @@ layout: go.kubebuilder.io/v3
 plugins:
   manifests.sdk.operatorframework.io/v2: {}
   scorecard.sdk.operatorframework.io/v2: {}
-projectName: k8s-subnet-machine-request
-repo: github.com/onmetal/k8s-subnet-machine-request
+projectName: ipam
+repo: github.com/onmetal/ipam
 resources:
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
   domain: onmetal.de
-  group: subnetmachinerequest
-  kind: SubnetMachineRequest
-  path: github.com/onmetal/k8s-subnet-machine-request/api/v1alpha1
+  group: ipam
+  kind: Ipam
+  path: github.com/onmetal/ipam/api/v1alpha1
   version: v1alpha1
   webhooks:
     defaulting: true
