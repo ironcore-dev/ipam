@@ -6,7 +6,7 @@ k8s operator for Ipam CRD
 | Parameter  | Description | Example | Validation rules |
 | ------------- | ------------- | ------------- | ------------- |
 | subnet | Subnet reference | subnet | Should exist |
-| someOtherCRD | Some other CRD | someOtherCRD | Should exist |
+| crd | Some other CRD | groupVersion, kind and name for CRD too lookup | Should exist |
 | ip | IP to request | 10.12.34.64 | Optional, if not specified it will be assigned automatically in the specified subnet if any IPs are available |
 
 ## Getting started
