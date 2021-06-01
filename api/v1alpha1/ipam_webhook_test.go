@@ -2,7 +2,7 @@ package v1alpha1
 
 import (
 	"context"
-	subnetv1alpha1 "github.com/onmetal/k8s-subnet/api/v1alpha1"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -10,6 +10,14 @@ import (
 )
 
 var _ = Describe("IPAM webhook", func() {
+	cidrMustParse := func(cidrString string) *CIDR {
+		cidr, err := CIDRFromString(cidrString)
+		if err != nil {
+			panic(err)
+		}
+		return cidr
+	}
+
 	Context("IPAM webhook test", func() {
 		It("Should fail with nonexistent related CRD", func() {
 			ctx := context.Background()
@@ -53,7 +61,7 @@ var _ = Describe("IPAM webhook", func() {
 			By("Expecting Example Create Successful")
 			Expect(k8sClient.Create(ctx, example)).Should(Succeed())
 
-			subnet := &subnetv1alpha1.Subnet{
+			subnet := &Subnet{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: ApiVersion,
 					Kind:       "Subnet",
@@ -62,15 +70,20 @@ var _ = Describe("IPAM webhook", func() {
 					Name:      "subnet1",
 					Namespace: Namespace,
 				},
-				Spec: subnetv1alpha1.SubnetSpec{
-					Type: "ipv4",
-					CIDR: "10.12.34.0/24",
+				Spec: SubnetSpec{
+					CIDR:              *cidrMustParse("10.12.34.0/24"),
+					NetworkGlobalName: "ng1",
+					Regions:           []string{"euw"},
+					AvailabilityZones: []string{"a"},
+				},
+				Status: SubnetStatus{
+					Type: CIPv4SubnetType,
 				},
 			}
 			By("Expecting Subnet 1 Create Successful")
 			Expect(k8sClient.Create(ctx, subnet)).Should(Succeed())
 
-			subnet2 := &subnetv1alpha1.Subnet{
+			subnet2 := &Subnet{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: ApiVersion,
 					Kind:       "Subnet",
@@ -79,16 +92,21 @@ var _ = Describe("IPAM webhook", func() {
 					Name:      "subnet2",
 					Namespace: Namespace,
 				},
-				Spec: subnetv1alpha1.SubnetSpec{
-					Type:           "ipv4",
-					CIDR:           "10.12.34.0/26",
-					SubnetParentID: "subnet1",
+				Spec: SubnetSpec{
+					CIDR:              *cidrMustParse("10.12.34.0/26"),
+					ParentSubnetName:  "subnet1",
+					NetworkGlobalName: "ng1",
+					Regions:           []string{"euw"},
+					AvailabilityZones: []string{"a"},
+				},
+				Status: SubnetStatus{
+					Type: CIPv4SubnetType,
 				},
 			}
 			By("Expecting Subnet 2 Create Successful")
 			Expect(k8sClient.Create(ctx, subnet2)).Should(Succeed())
 
-			subnet3 := &subnetv1alpha1.Subnet{
+			subnet3 := &Subnet{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: ApiVersion,
 					Kind:       "Subnet",
@@ -97,10 +115,15 @@ var _ = Describe("IPAM webhook", func() {
 					Name:      "subnet3",
 					Namespace: Namespace,
 				},
-				Spec: subnetv1alpha1.SubnetSpec{
-					Type:           "ipv4",
-					CIDR:           "10.12.34.128/25",
-					SubnetParentID: "subnet1",
+				Spec: SubnetSpec{
+					CIDR:              *cidrMustParse("10.12.34.128/25"),
+					ParentSubnetName:  "subnet1",
+					NetworkGlobalName: "ng1",
+					Regions:           []string{"euw"},
+					AvailabilityZones: []string{"a"},
+				},
+				Status: SubnetStatus{
+					Type: CIPv4SubnetType,
 				},
 			}
 			By("Expecting Subnet 3 Create Successful")

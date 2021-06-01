@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/onmetal/ipam/api/v1alpha1/cidr"
-	subnetv1alpha1 "github.com/onmetal/k8s-subnet/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -52,12 +51,12 @@ func (r *Ipam) Default() {
 
 	if r.Spec.IP == "" {
 		ctx := context.Background()
-		var subnet subnetv1alpha1.Subnet
+		var subnet Subnet
 		if err := c.Get(ctx, client.ObjectKey{Namespace: r.Namespace, Name: r.Spec.Subnet}, &subnet); err != nil {
 			log.Error(err, "unable to get gateway of Subnet")
 			return
 		}
-		ip, err := r.getFreeIP(context.Background(), subnet.Spec.CIDR, r.Namespace, r.Spec.Subnet)
+		ip, err := r.getFreeIP(context.Background(), subnet.Spec.CIDR.String(), r.Namespace, r.Spec.Subnet)
 		if err != nil {
 			log.Error(err, "unable to get free IP for Ipam")
 			return
@@ -90,7 +89,7 @@ func (r *Ipam) ValidateDelete() error {
 
 func (r *Ipam) validate() error {
 	ctx := context.Background()
-	var subnet subnetv1alpha1.Subnet
+	var subnet Subnet
 	if err := c.Get(ctx, client.ObjectKey{Namespace: r.Namespace, Name: r.Spec.Subnet}, &subnet); err != nil {
 		log.Error(err, "unable to get gateway of Subnet")
 		return errors.New("Subnet is not found: " + r.Spec.Subnet)
@@ -157,14 +156,14 @@ func (r *Ipam) getFreeIP(ctx context.Context, rootCidr string, namespace string,
 
 func (r *Ipam) findChildrenSubnetRanges(ctx context.Context, namespace string, subnetName string) ([]string, error) {
 	subnets := []string{}
-	subnetList := &subnetv1alpha1.SubnetList{}
+	subnetList := &SubnetList{}
 	err := c.List(ctx, subnetList, &client.ListOptions{Namespace: namespace})
 	if err != nil {
 		return nil, err
 	}
 	for index, subnet := range subnetList.Items {
-		if subnet.Spec.SubnetParentID == subnetName {
-			subnets = append(subnets, subnetList.Items[index].Spec.CIDR)
+		if subnet.Spec.ParentSubnetName == subnetName {
+			subnets = append(subnets, subnetList.Items[index].Spec.CIDR.String())
 		}
 	}
 	return subnets, nil

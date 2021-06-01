@@ -31,11 +31,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	subnetv1alpha1 "github.com/onmetal/k8s-subnet/api/v1alpha1"
-
 	ipamv1alpha1 "github.com/onmetal/ipam/api/v1alpha1"
 	"github.com/onmetal/ipam/controllers"
-	//+kubebuilder:scaffold:imports
+	// +kubebuilder:scaffold:imports
 )
 
 var (
@@ -47,7 +45,6 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(ipamv1alpha1.AddToScheme(scheme))
-	utilruntime.Must(subnetv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 

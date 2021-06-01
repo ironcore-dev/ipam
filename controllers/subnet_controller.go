@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	CSubnetFinalizer = "subnet.machine.onmetal.de/finalizer"
+	CSubnetFinalizer = "subnet.ipam.onmetal.de/finalizer"
 )
 
 // SubnetReconciler reconciles a Subnet object
@@ -41,12 +41,12 @@ type SubnetReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=machine.onmetal.de,resources=subnets,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=machine.onmetal.de,resources=subnets/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=machine.onmetal.de,resources=subnets/finalizers,verbs=update
+// +kubebuilder:rbac:groups=ipam.onmetal.de,resources=subnets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=ipam.onmetal.de,resources=subnets/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=ipam.onmetal.de,resources=subnets/finalizers,verbs=update
 
-// +kubebuilder:rbac:groups=machine.onmetal.de,resources=networkglobals,verbs=get;update;patch
-// +kubebuilder:rbac:groups=machine.onmetal.de,resources=networkglobals/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=ipam.onmetal.de,resources=networkglobals,verbs=get;update;patch
+// +kubebuilder:rbac:groups=ipam.onmetal.de,resources=networkglobals/status,verbs=get;update;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

@@ -4,7 +4,6 @@ go 1.15
 
 require (
 	github.com/go-logr/logr v0.4.0
-	github.com/onmetal/k8s-subnet v0.0.0-20210505091130-5e9d66d20feb
 	github.com/onsi/ginkgo v1.16.1
 	github.com/onsi/gomega v1.11.0
 	github.com/pkg/errors v0.9.1

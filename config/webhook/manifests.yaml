@@ -68,7 +68,7 @@ webhooks:
   name: vsubnet.kb.io
   rules:
   - apiGroups:
-    - machine.onmetal.de
+    - ipam.onmetal.de
     apiVersions:
     - v1alpha1
     operations:
