@@ -8,7 +8,7 @@ proxy:
     tag: "v0.5.0"
 manager:
   image:
-    repository: localhost:5000/ipam
+    repository: localhost:5000/onmetal/ipam
     pullPolicy: IfNotPresent
     tag: "latest"
   resources:
@@ -46,9 +46,36 @@ cluster:
   domain: cluster.local
 
 crd:
-  group: ipam.onmetal.de
-  plural: ipams
-  singular: ipam
-  kind: Ipam
-  listKind: IpamList
-  scope: Namespaced
+  ipam:
+    group: ipam.onmetal.de
+    plural: ipams
+    singular: ipam
+    kind: Ipam
+    listKind: IpamList
+    scope: Namespaced
+  ng:
+    group: ipam.onmetal.de
+    plural: networkglobals
+    singular: networkglobal
+    kind: NetworkGlobal
+    listKind: NetworkGlobalList
+    scope: Namespaced
+  subnet:
+    group: ipam.onmetal.de
+    plural: subnets
+    singular: subnet
+    kind: Subnet
+    listKind: SubnetList
+    scope: Namespaced
+  example:
+    group: ipam.onmetal.de
+    plural: examples
+    singular: example
+    kind: Example
+    listKind: ExampleList
+    scope: Namespaced
+
+
+leaderElection:
+  leaderElect: true
+  resourceName: f42c18d5.onmetal.de
