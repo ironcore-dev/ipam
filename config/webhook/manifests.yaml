@@ -63,7 +63,7 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-machine-onmetal-de-v1alpha1-subnet
+      path: /validate-ipam-onmetal-de-v1alpha1-subnet
   failurePolicy: Fail
   name: vsubnet.kb.io
   rules:
