@@ -9,7 +9,23 @@ rules:
 - apiGroups:
   - ipam.onmetal.de
   resources:
-  - ipams
+  - networkglobals
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ipam.onmetal.de
+  resources:
+  - networkglobals/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ipam.onmetal.de
+  resources:
+  - subnets
   verbs:
   - create
   - delete
@@ -21,13 +37,13 @@ rules:
 - apiGroups:
   - ipam.onmetal.de
   resources:
-  - ipams/finalizers
+  - subnets/finalizers
   verbs:
   - update
 - apiGroups:
   - ipam.onmetal.de
   resources:
-  - ipams/status
+  - subnets/status
   verbs:
   - get
   - patch

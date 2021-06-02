@@ -17,26 +17,22 @@ limitations under the License.
 package controllers
 
 import (
+	"path/filepath"
+	"testing"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"go/build"
-	"golang.org/x/mod/modfile"
-	"io/ioutil"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	"path/filepath"
-	"reflect"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	"strings"
-	"testing"
 
-	ipamv1alpha1 "github.com/onmetal/ipam/api/v1alpha1"
-	subnetv1alpha1 "github.com/onmetal/k8s-subnet/api/v1alpha1"
-	//+kubebuilder:scaffold:imports
+	"github.com/onmetal/ipam/api/v1alpha1"
+	// +kubebuilder:scaffold:imports
 )
 
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
@@ -54,50 +50,43 @@ func TestAPIs(t *testing.T) {
 		[]Reporter{printer.NewlineReporter{}})
 }
 
-func getCrdPath(crdPackageSchema interface{}) string {
-	packagePath := reflect.TypeOf(crdPackageSchema).PkgPath()
-	goModData, err := ioutil.ReadFile(filepath.Join("..", "go.mod"))
-	Expect(err).NotTo(HaveOccurred())
-	goModFile, err := modfile.Parse("", goModData, nil)
-	Expect(err).NotTo(HaveOccurred())
-	modulePath := ""
-	for _, req := range goModFile.Require {
-		if strings.HasPrefix(packagePath, req.Mod.Path) {
-			modulePath = req.Mod.String()
-		}
-	}
-	Expect(modulePath).NotTo(BeZero())
-	// https://github.com/kubernetes-sigs/kubebuilder/issues/1999
-	return filepath.Join(build.Default.GOPATH, "pkg", "mod", modulePath, "config", "crd", "bases")
-}
-
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
 	By("bootstrapping test environment")
+	localCrdPaths := filepath.Join("..", "config", "crd", "bases")
+
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths: []string{
-			filepath.Join("..", "config", "crd", "bases"),
-			getCrdPath(subnetv1alpha1.Subnet{}),
-		},
-		ErrorIfCRDPathMissing: true,
+		CRDDirectoryPaths: []string{localCrdPaths},
 	}
 
-	cfg, err := testEnv.Start()
+	var err error
+	cfg, err = testEnv.Start()
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = ipamv1alpha1.AddToScheme(scheme.Scheme)
+	err = v1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = subnetv1alpha1.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
-	//+kubebuilder:scaffold:scheme
+	// +kubebuilder:scaffold:scheme
+	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
+		Scheme: scheme.Scheme,
+	})
+	Expect(err).ToNot(HaveOccurred())
 
-	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
-	Expect(err).NotTo(HaveOccurred())
+	err = (&SubnetReconciler{
+		Client: k8sManager.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("Subnet"),
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	go func() {
+		err = k8sManager.Start(ctrl.SetupSignalHandler())
+		Expect(err).ToNot(HaveOccurred())
+	}()
+
+	k8sClient = k8sManager.GetClient()
 	Expect(k8sClient).NotTo(BeNil())
-
 }, 60)
 
 var _ = AfterSuite(func() {

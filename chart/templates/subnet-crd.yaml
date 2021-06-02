@@ -1,0 +1,148 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: {{ .Values.crd.subnet.plural }}.{{ .Values.crd.subnet.group }}
+spec:
+  group: {{ .Values.crd.subnet.group }}
+  names:
+    kind: {{ .Values.crd.subnet.kind }}
+    listKind: {{ .Values.crd.subnet.listKind }}
+    plural: {{ .Values.crd.subnet.plural }}
+    singular: {{ .Values.crd.subnet.singular }}
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: CIDR
+          jsonPath: .spec.cidr
+          name: CIDR
+          type: string
+        - description: Parent Subnet
+          jsonPath: .spec.parentSubnetName
+          name: Parent Subnet
+          type: string
+        - description: Parent NetworkGlobal
+          jsonPath: .spec.networkGlobalName
+          name: Parent NetworkGlobal
+          type: string
+        - description: Address Type
+          jsonPath: .status.type
+          name: Address Type
+          type: string
+        - description: Locality
+          jsonPath: .status.locality
+          name: Locality
+          type: string
+        - description: Capacity
+          jsonPath: .status.capacity
+          name: Capacity
+          type: string
+        - description: Capacity Left
+          jsonPath: .status.capacityLeft
+          name: Capacity Left
+          type: string
+        - description: State
+          jsonPath: .status.state
+          name: State
+          type: string
+        - description: Message
+          jsonPath: .status.message
+          name: Message
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: Subnet is the Schema for the subnets API
+          properties:
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: SubnetSpec defines the desired state of Subnet
+              properties:
+                availabilityZones:
+                  description: AvailabilityZones represents the locality of the network
+                    segment
+                  items:
+                    type: string
+                  minItems: 1
+                  type: array
+                cidr:
+                  description: CIDR represents the IP Address Range
+                  type: string
+                networkGlobalName:
+                  description: NetworkGlobalName contains a reference (name) to the
+                    global network
+                  type: string
+                parentSubnetName:
+                  description: ParentSubnetName contains a reference (name) to the parent
+                    subent
+                  type: string
+                regions:
+                  description: Regions represents the network service location
+                  items:
+                    type: string
+                  minItems: 1
+                  type: array
+              required:
+                - availabilityZones
+                - regions
+              type: object
+            status:
+              description: SubnetStatus defines the observed state of Subnet
+              properties:
+                capacity:
+                  anyOf:
+                    - type: integer
+                    - type: string
+                  description: Capacity shows total capacity of CIDR
+                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                  x-kubernetes-int-or-string: true
+                capacityLeft:
+                  anyOf:
+                    - type: integer
+                    - type: string
+                  description: CapacityLeft shows remaining capacity (excluding capacity
+                    of child subnets)
+                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                  x-kubernetes-int-or-string: true
+                locality:
+                  description: Locality represents subnet regional coverated
+                  type: string
+                message:
+                  description: Message contains an error string for the failed State
+                  type: string
+                state:
+                  description: State represents the cunnet processing state
+                  type: string
+                type:
+                  description: Type represents whether CIDR is an IPv4 or IPv6
+                  type: string
+                vacant:
+                  description: Vacant shows CIDR ranges available for booking
+                  items:
+                    type: string
+                  type: array
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

@@ -15,5 +15,5 @@ data:
     webhook:
       port: 9443
     leaderElection:
-      leaderElect: true
-      resourceName: 86f835c3.onmetal.de
+      leaderElect: {{ .Values.leaderElection.leaderElect }}
+      resourceName: {{ .Values.leaderElection.resourceName }}

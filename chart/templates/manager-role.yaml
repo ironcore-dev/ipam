@@ -6,9 +6,9 @@ metadata:
   {{- include "chart.labels" . | nindent 4 }}
 rules:
   - apiGroups:
-      - {{ .Values.crd.group }}
+      - {{ .Values.crd.ipam.group }}
     resources:
-      - {{ .Values.crd.plural }}
+      - {{ .Values.crd.ipam.plural }}
     verbs:
       - create
       - delete
@@ -18,15 +18,57 @@ rules:
       - update
       - watch
   - apiGroups:
-      - {{ .Values.crd.group }}
+      - {{ .Values.crd.ipam.group }}
     resources:
-      - {{ .Values.crd.plural }}/finalizers
+      - {{ .Values.crd.ipam.plural }}/finalizers
     verbs:
       - update
   - apiGroups:
-      - {{ .Values.crd.group }}
+      - {{ .Values.crd.ipam.group }}
     resources:
-      - {{ .Values.crd.plural }}/status
+      - {{ .Values.crd.ipam.plural }}/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - {{ .Values.crd.ng.group }}
+    resources:
+      - {{ .Values.crd.ng.plural }}
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - {{ .Values.crd.ng.group }}
+    resources:
+      - {{ .Values.crd.ng.plural }}/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - {{ .Values.crd.subnet.group }}
+    resources:
+      - {{ .Values.crd.subnet.plural }}
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - {{ .Values.crd.subnet.group }}
+    resources:
+      - {{ .Values.crd.subnet.plural }}/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - {{ .Values.crd.subnet.group }}
+    resources:
+      - {{ .Values.crd.subnet.plural }}/status
     verbs:
       - get
       - patch

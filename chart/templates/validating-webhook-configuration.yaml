@@ -14,17 +14,38 @@ webhooks:
       service:
         name: {{ include "chart.fullname" . }}-webhook-service
         namespace: {{ .Release.Namespace }}
-        path: /validate-{{ .Values.crd.group | replace "." "-" }}-v1alpha1-{{ .Values.crd.singular }}
+        path: /validate-{{ .Values.crd.ipam.group | replace "." "-" }}-v1alpha1-{{ .Values.crd.ipam.singular }}
     failurePolicy: Fail
-    name: v{{ .Values.crd.singular }}.kb.io
+    name: v{{ .Values.crd.ipam.singular }}.kb.io
     rules:
       - apiGroups:
-          - {{ .Values.crd.group }}
+          - {{ .Values.crd.ipam.group }}
         apiVersions:
           - v1alpha1
         operations:
           - CREATE
           - UPDATE
         resources:
-          - {{ .Values.crd.plural }}
+          - {{ .Values.crd.ipam.plural }}
+    sideEffects: None
+  - admissionReviewVersions:
+      - v1
+      - v1beta1
+    clientConfig:
+      service:
+        name: {{ include "chart.fullname" . }}-webhook-service
+        namespace: {{ .Release.Namespace }}
+        path: /validate-{{ .Values.crd.subnet.group | replace "." "-" }}-v1alpha1-{{ .Values.crd.subnet.singular }}
+    failurePolicy: Fail
+    name: v{{ .Values.crd.subnet.singular }}.kb.io
+    rules:
+      - apiGroups:
+          - {{ .Values.crd.subnet.group }}
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - subnets
     sideEffects: None

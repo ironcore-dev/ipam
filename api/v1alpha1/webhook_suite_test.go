@@ -20,9 +20,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	subnetv1alpha1 "github.com/onmetal/k8s-subnet/api/v1alpha1"
 	"go/build"
-	"golang.org/x/mod/modfile"
 	"io/ioutil"
 	"net"
 	"path/filepath"
@@ -31,11 +29,13 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/mod/modfile"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
-	//+kubebuilder:scaffold:imports
+	// +kubebuilder:scaffold:imports
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -72,6 +72,7 @@ func getCrdPath(crdPackageSchema interface{}) string {
 	for _, req := range goModFile.Require {
 		if strings.HasPrefix(packagePath, req.Mod.Path) {
 			modulePath = req.Mod.String()
+			break
 		}
 	}
 	Expect(modulePath).NotTo(BeZero())
@@ -96,7 +97,6 @@ var _ = BeforeSuite(func() {
 	testEnv = &envtest.Environment{
 		CRDDirectoryPaths: []string{
 			filepath.Join("..", "..", "config", "crd", "bases"),
-			getCrdPath(subnetv1alpha1.Subnet{}),
 		},
 		ErrorIfCRDPathMissing: false,
 		WebhookInstallOptions: envtest.WebhookInstallOptions{
@@ -115,9 +115,6 @@ var _ = BeforeSuite(func() {
 	err = admissionv1beta1.AddToScheme(scheme)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = subnetv1alpha1.AddToScheme(scheme)
-	Expect(err).NotTo(HaveOccurred())
-
 	//+kubebuilder:scaffold:scheme
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
@@ -134,6 +131,9 @@ var _ = BeforeSuite(func() {
 		LeaderElection:     false,
 		MetricsBindAddress: "0",
 	})
+	Expect(err).NotTo(HaveOccurred())
+
+	err = (&Subnet{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = (&Ipam{}).SetupWebhookWithManager(mgr)
