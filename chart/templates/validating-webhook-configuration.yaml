@@ -33,8 +33,8 @@ webhooks:
       - v1beta1
     clientConfig:
       service:
-        name: ipam-webhook-service
-        namespace: ipam-system
+        name: {{ include "chart.fullname" . }}-webhook-service
+        namespace: {{ .Release.Namespace }}
         path: /validate-{{ .Values.crd.subnet.group | replace "." "-" }}-v1alpha1-{{ .Values.crd.subnet.singular }}
     failurePolicy: Fail
     name: v{{ .Values.crd.subnet.singular }}.kb.io
