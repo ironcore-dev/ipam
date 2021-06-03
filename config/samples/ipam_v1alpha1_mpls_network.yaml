@@ -1,0 +1,6 @@
+apiVersion: ipam.onmetal.de/v1alpha1
+kind: Network
+metadata:
+  name: mpls-network-sample
+spec:
+  type: MPLS

@@ -86,6 +86,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Subnet")
 		os.Exit(1)
 	}
+	if err = (&controllers.NetworkReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("Network"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Network")
+		os.Exit(1)
+	}
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
 		if err = (&ipamv1alpha1.Ipam{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Ipam")
@@ -93,6 +101,10 @@ func main() {
 		}
 		if err = (&ipamv1alpha1.Subnet{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Subnet")
+			os.Exit(1)
+		}
+		if err = (&ipamv1alpha1.Network{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Network")
 			os.Exit(1)
 		}
 	}

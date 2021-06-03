@@ -133,6 +133,9 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
+	err = (&Network{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
 	err = (&Subnet{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 

@@ -45,7 +45,7 @@ type SubnetReconciler struct {
 // +kubebuilder:rbac:groups=ipam.onmetal.de,resources=subnets/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=ipam.onmetal.de,resources=subnets/finalizers,verbs=update
 
-// +kubebuilder:rbac:groups=ipam.onmetal.de,resources=networkglobals,verbs=get;update;patch
+// +kubebuilder:rbac:groups=ipam.onmetal.de,resources=networkglobals,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=ipam.onmetal.de,resources=networkglobals/status,verbs=get;update;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
