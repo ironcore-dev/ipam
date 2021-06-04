@@ -47,5 +47,26 @@ webhooks:
           - CREATE
           - UPDATE
         resources:
-          - subnets
+          - {{ .Values.crd.subnet.plural }}
+    sideEffects: None
+  - admissionReviewVersions:
+      - v1
+      - v1beta1
+    clientConfig:
+      service:
+        name: {{ include "chart.fullname" . }}-webhook-service
+        namespace: {{ .Release.Namespace }}
+        path: /validate-{{ .Values.crd.network.group | replace "." "-" }}-v1alpha1-{{ .Values.crd.network.singular }}
+    failurePolicy: Fail
+    name: v{{ .Values.crd.network.singular }}.kb.io
+    rules:
+      - apiGroups:
+          - {{ .Values.crd.network.group }}
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - {{ .Values.crd.network.plural }}
     sideEffects: None

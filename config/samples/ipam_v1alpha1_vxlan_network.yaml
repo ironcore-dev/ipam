@@ -1,0 +1,7 @@
+apiVersion: ipam.onmetal.de/v1alpha1
+kind: Network
+metadata:
+  name: vxlan-network-sample
+spec:
+  type: VXLAN
+  id: "101"

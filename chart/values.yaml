@@ -67,6 +67,20 @@ crd:
     kind: Subnet
     listKind: SubnetList
     scope: Namespaced
+  network:
+    group: ipam.onmetal.de
+    plural: networks
+    singular: network
+    kind: Network
+    listKind: NetworkList
+    scope: Namespaced
+  networkcounter:
+    group: ipam.onmetal.de
+    plural: networkcounters
+    singular: networkcounter
+    kind: NetworkCounter
+    listKind: NetworkCounterList
+    scope: Namespaced
   example:
     group: ipam.onmetal.de
     plural: examples
