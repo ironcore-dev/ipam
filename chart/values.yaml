@@ -53,13 +53,6 @@ crd:
     kind: Ipam
     listKind: IpamList
     scope: Namespaced
-  ng:
-    group: ipam.onmetal.de
-    plural: networkglobals
-    singular: networkglobal
-    kind: NetworkGlobal
-    listKind: NetworkGlobalList
-    scope: Namespaced
   subnet:
     group: ipam.onmetal.de
     plural: subnets

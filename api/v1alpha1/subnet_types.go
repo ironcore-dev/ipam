@@ -30,9 +30,9 @@ type SubnetSpec struct {
 	// ParentSubnetName contains a reference (name) to the parent subent
 	// +kubebuilder:validation:Optional
 	ParentSubnetName string `json:"parentSubnetName,omitempty"`
-	// NetworkGlobalName contains a reference (name) to the global network
+	// NetworkName contains a reference (name) to the network
 	// +kubebuilder:validation:Required
-	NetworkGlobalName string `json:"networkGlobalName,omitempty"`
+	NetworkName string `json:"networkName,omitempty"`
 	// Regions represents the network service location
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
@@ -87,7 +87,7 @@ type SubnetStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="CIDR",type=string,JSONPath=`.spec.cidr`,description="CIDR"
 // +kubebuilder:printcolumn:name="Parent Subnet",type=string,JSONPath=`.spec.parentSubnetName`,description="Parent Subnet"
-// +kubebuilder:printcolumn:name="Parent NetworkGlobal",type=string,JSONPath=`.spec.networkGlobalName`,description="Parent NetworkGlobal"
+// +kubebuilder:printcolumn:name="Parent Network",type=string,JSONPath=`.spec.networkName`,description="Parent Network"
 // +kubebuilder:printcolumn:name="Address Type",type=string,JSONPath=`.status.type`,description="Address Type"
 // +kubebuilder:printcolumn:name="Locality",type=string,JSONPath=`.status.locality`,description="Locality"
 // +kubebuilder:printcolumn:name="Capacity",type=string,JSONPath=`.status.capacity`,description="Capacity"

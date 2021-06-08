@@ -67,8 +67,8 @@ func (r *Subnet) ValidateUpdate(old runtime.Object) error {
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.parentSubnetName"), r.Spec.CIDR, "Parent Subnet change is disallowed"))
 	}
 
-	if oldSubnet.Spec.NetworkGlobalName != r.Spec.NetworkGlobalName {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.networkGlobalName"), r.Spec.CIDR, "NetworkGlobal change is disallowed"))
+	if oldSubnet.Spec.NetworkName != r.Spec.NetworkName {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.networkName"), r.Spec.CIDR, "Network change is disallowed"))
 	}
 
 	if !reflect.DeepEqual(oldSubnet.Spec.Regions, r.Spec.Regions) {

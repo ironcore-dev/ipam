@@ -45,9 +45,6 @@ type SubnetReconciler struct {
 // +kubebuilder:rbac:groups=ipam.onmetal.de,resources=subnets/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=ipam.onmetal.de,resources=subnets/finalizers,verbs=update
 
-// +kubebuilder:rbac:groups=ipam.onmetal.de,resources=networkglobals,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=ipam.onmetal.de,resources=networkglobals/status,verbs=get;update;patch
-
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // For more details, check Reconcile and its Result here:
@@ -119,25 +116,25 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	}
 
 	// If parent subnet is not set, then CIDR should be reserved in
-	// global network resource.
+	// network resource.
 	if subnet.Spec.ParentSubnetName == "" {
-		networkGlobalNamespacedName := types.NamespacedName{
+		networkNamespacedName := types.NamespacedName{
 			Namespace: subnet.Namespace,
-			Name:      subnet.Spec.NetworkGlobalName,
+			Name:      subnet.Spec.NetworkName,
 		}
 
-		networkGlobal := &v1alpha1.NetworkGlobal{}
+		network := &v1alpha1.Network{}
 
-		if err := r.Get(ctx, networkGlobalNamespacedName, networkGlobal); err != nil {
-			log.Error(err, "unable to get network global", "name", req.NamespacedName, "network global name", networkGlobalNamespacedName)
+		if err := r.Get(ctx, networkNamespacedName, network); err != nil {
+			log.Error(err, "unable to get network", "name", req.NamespacedName, "network name", networkNamespacedName)
 			return ctrl.Result{}, err
 		}
 
-		// If it is not possible to reserve subnet's CIDR in global network,
+		// If it is not possible to reserve subnet's CIDR in  network,
 		// then CIDR (or its part) is already reserved,
 		// and CIDR allocation has failed.
-		if err := networkGlobal.Reserve(&subnet.Spec.CIDR); err != nil {
-			log.Error(err, "unable to reserve subnet in network global", "name", req.NamespacedName, "network global name", networkGlobalNamespacedName)
+		if err := network.Reserve(&subnet.Spec.CIDR); err != nil {
+			log.Error(err, "unable to reserve subnet in network", "name", req.NamespacedName, "network name", networkNamespacedName)
 			subnet.Status.State = v1alpha1.CFailedSubnetState
 			subnet.Status.Message = err.Error()
 			if err := r.Status().Update(ctx, subnet); err != nil {
@@ -147,8 +144,8 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			return ctrl.Result{}, err
 		}
 
-		if err := r.Status().Update(ctx, networkGlobal); err != nil {
-			log.Error(err, "unable to update network global", "name", req.NamespacedName, "network global name", networkGlobalNamespacedName)
+		if err := r.Status().Update(ctx, network); err != nil {
+			log.Error(err, "unable to update network", "name", req.NamespacedName, "network name", networkNamespacedName)
 			return ctrl.Result{}, err
 		}
 
@@ -209,23 +206,23 @@ func (r *SubnetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// finalizeSubnet releases subnet CIDR from parent subnet of network global.
+// finalizeSubnet releases subnet CIDR from parent subnet of network.
 func (r *SubnetReconciler) finalizeSubnet(ctx context.Context, log logr.Logger, namespacedName types.NamespacedName, subnet *v1alpha1.Subnet) error {
-	// If subnet has no parent subnet, then it should be released from global network.
+	// If subnet has no parent subnet, then it should be released from network.
 	// Otherwise, release from parent subnet
 	if subnet.Spec.ParentSubnetName == "" {
-		networkGlobalNamespacedName := types.NamespacedName{
+		networkNamespacedName := types.NamespacedName{
 			Namespace: subnet.Namespace,
-			Name:      subnet.Spec.NetworkGlobalName,
+			Name:      subnet.Spec.NetworkName,
 		}
 
-		networkGlobal := &v1alpha1.NetworkGlobal{}
+		network := &v1alpha1.Network{}
 
 		// If parent entity is not found, then it is possible to release CIDR.
-		if err := r.Get(ctx, networkGlobalNamespacedName, networkGlobal); err != nil {
-			log.Error(err, "unable to get network global", "name", namespacedName, "network global name", networkGlobalNamespacedName)
+		if err := r.Get(ctx, networkNamespacedName, network); err != nil {
+			log.Error(err, "unable to get network", "name", namespacedName, "network name", networkNamespacedName)
 			if apierrors.IsNotFound(err) {
-				log.Error(err, "network global not found, going to complete finalizer", "name", namespacedName, "network global name", networkGlobalNamespacedName)
+				log.Error(err, "network not found, going to complete finalizer", "name", namespacedName, "network name", networkNamespacedName)
 				return nil
 			}
 			return err
@@ -233,17 +230,17 @@ func (r *SubnetReconciler) finalizeSubnet(ctx context.Context, log logr.Logger, 
 
 		// If release fails and it is possible to reserve the same CIDR,
 		// then it can be considered as already released by 3rd party.
-		if err := networkGlobal.Release(&subnet.Spec.CIDR); err != nil {
-			log.Error(err, "unable to release subnet in network global", "name", namespacedName, "network global name", networkGlobalNamespacedName)
-			if networkGlobal.CanReserve(&subnet.Spec.CIDR) {
-				log.Error(err, "seems that CIDR was released beforehand", "name", namespacedName, "network global name", networkGlobalNamespacedName)
+		if err := network.Release(&subnet.Spec.CIDR); err != nil {
+			log.Error(err, "unable to release subnet in network", "name", namespacedName, "network name", networkNamespacedName)
+			if network.CanReserve(&subnet.Spec.CIDR) {
+				log.Error(err, "seems that CIDR was released beforehand", "name", namespacedName, "network name", networkNamespacedName)
 				return nil
 			}
 			return err
 		}
 
-		if err := r.Status().Update(ctx, networkGlobal); err != nil {
-			log.Error(err, "unable to update network global", "name", namespacedName, "network global name", networkGlobalNamespacedName)
+		if err := r.Status().Update(ctx, network); err != nil {
+			log.Error(err, "unable to update network", "name", namespacedName, "network name", networkNamespacedName)
 			return err
 		}
 	} else {

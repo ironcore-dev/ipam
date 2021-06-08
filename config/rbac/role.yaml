@@ -35,26 +35,6 @@ rules:
 - apiGroups:
   - ipam.onmetal.de
   resources:
-  - networkglobals
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ipam.onmetal.de
-  resources:
-  - networkglobals/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - ipam.onmetal.de
-  resources:
   - networks
   verbs:
   - create
