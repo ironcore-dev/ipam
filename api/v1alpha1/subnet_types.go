@@ -170,7 +170,7 @@ func (s *Subnet) Reserve(cidr *CIDR) error {
 		s.Status.Vacant = released
 	}
 
-	s.Status.CapacityLeft.Add(resource.MustParse(cidr.AddressCapacity().String()))
+	s.Status.CapacityLeft.Sub(resource.MustParse(cidr.AddressCapacity().String()))
 
 	return nil
 }
@@ -195,7 +195,7 @@ func (s *Subnet) Release(cidr *CIDR) error {
 
 	vacantLen := len(s.Status.Vacant)
 	if vacantLen == 0 {
-		s.Status.Vacant = []CIDR{*cidr}
+		s.Status.Vacant = []CIDR{*cidr.DeepCopy()}
 		return nil
 	}
 
@@ -203,12 +203,12 @@ func (s *Subnet) Release(cidr *CIDR) error {
 	if s.Status.Vacant[0].After(cidr) {
 		s.Status.Vacant = append(s.Status.Vacant, CIDR{})
 		copy(s.Status.Vacant[1:], s.Status.Vacant)
-		s.Status.Vacant[0] = *cidr
+		s.Status.Vacant[0] = *cidr.DeepCopy()
 		insertIdx = 0
 	}
 
 	if s.Status.Vacant[vacantLen-1].Before(cidr) {
-		s.Status.Vacant = append(s.Status.Vacant, *cidr)
+		s.Status.Vacant = append(s.Status.Vacant, *cidr.DeepCopy())
 		insertIdx = vacantLen
 	}
 
@@ -218,7 +218,7 @@ func (s *Subnet) Release(cidr *CIDR) error {
 			if s.Status.Vacant[prevIdx].Before(cidr) && s.Status.Vacant[idx].After(cidr) {
 				s.Status.Vacant = append(s.Status.Vacant, CIDR{})
 				copy(s.Status.Vacant[idx+1:], s.Status.Vacant[idx:])
-				s.Status.Vacant[idx] = *cidr
+				s.Status.Vacant[idx] = *cidr.DeepCopy()
 				insertIdx = idx
 				break
 			}
@@ -255,7 +255,7 @@ func (s *Subnet) Release(cidr *CIDR) error {
 		}
 	}
 
-	s.Status.CapacityLeft.Sub(resource.MustParse(cidr.AddressCapacity().String()))
+	s.Status.CapacityLeft.Add(resource.MustParse(cidr.AddressCapacity().String()))
 
 	return nil
 }
