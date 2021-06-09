@@ -19,7 +19,7 @@ var _ = Describe("IP webhook", func() {
 	}
 
 	Context("IP webhook test", func() {
-		FIt("Should fail with nonexistent related CRD", func() {
+		It("Should fail with nonexistent related CRD", func() {
 			ctx := context.Background()
 			ip := &Ip{
 				TypeMeta: metav1.TypeMeta{

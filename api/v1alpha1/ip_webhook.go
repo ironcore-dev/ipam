@@ -41,7 +41,7 @@ func (r *Ip) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-//+kubebuilder:webhook:path=/mutate-ipam-onmetal-de-v1alpha1-ipam,mutating=true,failurePolicy=fail,sideEffects=None,groups=ipam.onmetal.de,resources=ipams,verbs=create;update,versions=v1alpha1,name=mipam.kb.io,admissionReviewVersions={v1,v1beta1}
+//+kubebuilder:webhook:path=/mutate-ipam-onmetal-de-v1alpha1-ip,mutating=true,failurePolicy=fail,sideEffects=None,groups=ipam.onmetal.de,resources=ips,verbs=create;update,versions=v1alpha1,name=mip.kb.io,admissionReviewVersions={v1,v1beta1}
 
 var _ webhook.Defaulter = &Ip{}
 
@@ -65,7 +65,7 @@ func (r *Ip) Default() {
 	}
 }
 
-//+kubebuilder:webhook:path=/validate-ipam-onmetal-de-v1alpha1-ipam,mutating=false,failurePolicy=fail,sideEffects=None,groups=ipam.onmetal.de,resources=ipams,verbs=create;update,versions=v1alpha1,name=vipam.kb.io,admissionReviewVersions={v1,v1beta1}
+//+kubebuilder:webhook:path=/validate-ipam-onmetal-de-v1alpha1-ip,mutating=false,failurePolicy=fail,sideEffects=None,groups=ipam.onmetal.de,resources=ips,verbs=create;update,versions=v1alpha1,name=vip.kb.io,admissionReviewVersions={v1,v1beta1}
 
 var _ webhook.Validator = &Ip{}
 
@@ -94,14 +94,14 @@ func (r *Ip) validate() error {
 		log.Error(err, "unable to get gateway of Subnet")
 		return errors.New("Subnet is not found: " + r.Spec.Subnet)
 	}
-	// Lookup related CRD
-	u := &unstructured.Unstructured{}
-	gv, err := schema.ParseGroupVersion(r.Spec.CRD.GroupVersion)
-	if err != nil {
-		return errors.New("unable to parse CRD GroupVersion")
-	}
 	// Only check for CRD if it is specified
 	if r.Spec.CRD != nil {
+		// Lookup related CRD
+		u := &unstructured.Unstructured{}
+		gv, err := schema.ParseGroupVersion(r.Spec.CRD.GroupVersion)
+		if err != nil {
+			return errors.New("unable to parse CRD GroupVersion")
+		}
 		gvk := gv.WithKind(r.Spec.CRD.Kind)
 		u.SetGroupVersionKind(gvk)
 		err = c.Get(context.Background(), client.ObjectKey{

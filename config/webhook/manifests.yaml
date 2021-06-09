@@ -13,9 +13,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-ipam-onmetal-de-v1alpha1-ipam
+      path: /mutate-ipam-onmetal-de-v1alpha1-ip
   failurePolicy: Fail
-  name: mipam.kb.io
+  name: mip.kb.io
   rules:
   - apiGroups:
     - ipam.onmetal.de
@@ -25,7 +25,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - ipams
+    - ips
   sideEffects: None
 
 ---
@@ -42,9 +42,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-ipam-onmetal-de-v1alpha1-ipam
+      path: /validate-ipam-onmetal-de-v1alpha1-ip
   failurePolicy: Fail
-  name: vipam.kb.io
+  name: vip.kb.io
   rules:
   - apiGroups:
     - ipam.onmetal.de
@@ -54,7 +54,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - ipams
+    - ips
   sideEffects: None
 - admissionReviewVersions:
   - v1
