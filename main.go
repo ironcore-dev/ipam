@@ -94,8 +94,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Network")
 		os.Exit(1)
 	}
-
-	if err = (&controllers.IpamReconciler{
+	if err = (&controllers.IpReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("Ipam"),
 		Scheme: mgr.GetScheme(),
@@ -104,7 +103,7 @@ func main() {
 		os.Exit(1)
 	}
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
-		if err = (&ipamv1alpha1.Ipam{}).SetupWebhookWithManager(mgr); err != nil {
+		if err = (&ipamv1alpha1.Ip{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Ipam")
 			os.Exit(1)
 		}

@@ -34,67 +34,67 @@ const (
 	IpamFinalizer = "ipam.ipam.onmetal.de/finalizer"
 )
 
-// IpamReconciler reconciles a Ipam object
-type IpamReconciler struct {
+// IpReconciler reconciles a Ip object
+type IpReconciler struct {
 	client.Client
 	Log    logr.Logger
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=ipam.onmetal.de,resources=ipams,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=ipam.onmetal.de,resources=ipams/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=ipam.onmetal.de,resources=ipams/finalizers,verbs=update
+//+kubebuilder:rbac:groups=ipam.onmetal.de,resources=ips,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=ipam.onmetal.de,resources=ips/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=ipam.onmetal.de,resources=ips/finalizers,verbs=update
 
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.2/pkg/reconcile
-func (r *IpamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := r.Log.WithValues("ipam", req.NamespacedName)
+// Reconcile is part of the main kubernetes reconciliation loop which aims to
+// move the current state of the cluster closer to the desired state.
+func (r *IpReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	log := r.Log.WithValues("ip", req.NamespacedName)
 
-	ipam := &v1alpha1.Ipam{}
-	err := r.Get(ctx, req.NamespacedName, ipam)
+	ip := &v1alpha1.Ip{}
+	err := r.Get(ctx, req.NamespacedName, ip)
 	if apierrors.IsNotFound(err) {
-		log.Error(err, "requested ipam resource not found", "name", req.NamespacedName)
+		log.Error(err, "requested ip resource not found", "name", req.NamespacedName)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	if err != nil {
-		log.Error(err, "unable to get ipam resource", "name", req.NamespacedName)
+		log.Error(err, "unable to get ip resource", "name", req.NamespacedName)
 		return ctrl.Result{}, err
 	}
 
-	if ipam.GetDeletionTimestamp() != nil {
-		if controllerutil.ContainsFinalizer(ipam, IpamFinalizer) {
+	if ip.GetDeletionTimestamp() != nil {
+		if controllerutil.ContainsFinalizer(ip, IpamFinalizer) {
 			// Free IP on resource deletion
-			if err := r.finalizeIpam(ctx, ipam); err != nil {
-				log.Error(err, "unable to finalize ipam resource", "name", req.NamespacedName)
+			if err := r.finalizeIp(ctx, ip); err != nil {
+				log.Error(err, "unable to finalize ip resource", "name", req.NamespacedName)
 				return ctrl.Result{}, err
 			}
-			controllerutil.RemoveFinalizer(ipam, IpamFinalizer)
-			err := r.Update(ctx, ipam)
+			controllerutil.RemoveFinalizer(ip, IpamFinalizer)
+			err := r.Update(ctx, ip)
 			if err != nil {
-				log.Error(err, "unable to update ipam resource on finalizer removal", "name", req.NamespacedName)
+				log.Error(err, "unable to update ip resource on finalizer removal", "name", req.NamespacedName)
 				return ctrl.Result{}, err
 			}
 		}
 		return ctrl.Result{}, nil
 	}
-	if !controllerutil.ContainsFinalizer(ipam, IpamFinalizer) {
-		controllerutil.AddFinalizer(ipam, IpamFinalizer)
-		err = r.Update(ctx, ipam)
+	if !controllerutil.ContainsFinalizer(ip, IpamFinalizer) {
+		controllerutil.AddFinalizer(ip, IpamFinalizer)
+		err = r.Update(ctx, ip)
 		if err != nil {
-			log.Error(err, "unable to update ipam resource with finalizer", "name", req.NamespacedName)
+			log.Error(err, "unable to update ip resource with finalizer", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
 	}
 
 	// Resource created
-	if ipam.Status.LastUsedIP == "" {
-		subnet, err := r.findSubnet(ctx, ipam)
+	if ip.Status.LastUsedIP == "" {
+		subnet, err := r.findSubnet(ctx, ip)
 		if err != nil {
-			log.Error(err, "unable to find ipam subnet", "name", req.NamespacedName)
+			log.Error(err, "unable to find ip subnet", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
-		newCidr, err := r.getIpAsCidr(ipam.Spec.IP)
+		newCidr, err := r.getIpAsCidr(ip.Spec.IP)
 		if err != nil {
 			log.Error(err, "unable to get ip as cidr", "name", req.NamespacedName)
 			return ctrl.Result{}, err
@@ -109,20 +109,20 @@ func (r *IpamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 			log.Error(err, "unable to update subnet state", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
-		ipam.Status.LastUsedIP = ipam.Spec.IP
-		if err := r.Update(ctx, ipam); err != nil {
-			log.Error(err, "unable to update ipam state", "name", req.NamespacedName)
+		ip.Status.LastUsedIP = ip.Spec.IP
+		if err := r.Update(ctx, ip); err != nil {
+			log.Error(err, "unable to update ip state", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
 		// Resource was updated - e.g. IP changed
-	} else if ipam.Status.LastUsedIP != ipam.Spec.IP {
+	} else if ip.Status.LastUsedIP != ip.Spec.IP {
 		// Free old IP
-		subnet, err := r.findSubnet(ctx, ipam)
+		subnet, err := r.findSubnet(ctx, ip)
 		if err != nil {
-			log.Error(err, "unable to find ipam subnet", "name", req.NamespacedName)
+			log.Error(err, "unable to find ip subnet", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
-		lastCidr, err := r.getIpAsCidr(ipam.Status.LastUsedIP)
+		lastCidr, err := r.getIpAsCidr(ip.Status.LastUsedIP)
 		if err != nil {
 			log.Error(err, "unable to get ip as cidr", "name", req.NamespacedName)
 			return ctrl.Result{}, err
@@ -133,7 +133,7 @@ func (r *IpamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 			return ctrl.Result{}, err
 		}
 		// Occupy new IP
-		newCidr, err := r.getIpAsCidr(ipam.Spec.IP)
+		newCidr, err := r.getIpAsCidr(ip.Spec.IP)
 		if err != nil {
 			log.Error(err, "unable to get ip as cidr", "name", req.NamespacedName)
 			return ctrl.Result{}, err
@@ -147,16 +147,16 @@ func (r *IpamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 			log.Error(err, "unable to update subnet state", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
-		ipam.Status.LastUsedIP = ipam.Spec.IP
-		if err := r.Update(ctx, ipam); err != nil {
-			log.Error(err, "unable to update ipam state", "name", req.NamespacedName)
+		ip.Status.LastUsedIP = ip.Spec.IP
+		if err := r.Update(ctx, ip); err != nil {
+			log.Error(err, "unable to update ip state", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
 	}
 	return ctrl.Result{}, nil
 }
 
-func (r *IpamReconciler) finalizeIpam(ctx context.Context, ipam *v1alpha1.Ipam) error {
+func (r *IpReconciler) finalizeIp(ctx context.Context, ipam *v1alpha1.Ip) error {
 	// Free subnet IP
 	subnet, err := r.findSubnet(ctx, ipam)
 	if err != nil {
@@ -176,7 +176,7 @@ func (r *IpamReconciler) finalizeIpam(ctx context.Context, ipam *v1alpha1.Ipam) 
 	return nil
 }
 
-func (r *IpamReconciler) getIpAsCidr(ipStr string) (*v1alpha1.CIDR, error) {
+func (r *IpReconciler) getIpAsCidr(ipStr string) (*v1alpha1.CIDR, error) {
 	ip := net.ParseIP(ipStr)
 	cidrRange := "/32"
 	if ip.To4() == nil {
@@ -189,7 +189,7 @@ func (r *IpamReconciler) getIpAsCidr(ipStr string) (*v1alpha1.CIDR, error) {
 	return cidr, nil
 }
 
-func (r *IpamReconciler) findSubnet(ctx context.Context, ipam *v1alpha1.Ipam) (*v1alpha1.Subnet, error) {
+func (r *IpReconciler) findSubnet(ctx context.Context, ipam *v1alpha1.Ip) (*v1alpha1.Subnet, error) {
 	subnet := &v1alpha1.Subnet{}
 	if err := r.Get(ctx, client.ObjectKey{Namespace: ipam.Namespace, Name: ipam.Spec.Subnet}, subnet); err != nil {
 		return nil, fmt.Errorf("unable to get gateway of Subnet: %w", err)
@@ -198,9 +198,8 @@ func (r *IpamReconciler) findSubnet(ctx context.Context, ipam *v1alpha1.Ipam) (*
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *IpamReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *IpReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		// Uncomment the following line adding a pointer to an instance of the controlled resource as an argument
-		For(&v1alpha1.Ipam{}).
+		For(&v1alpha1.Ip{}).
 		Complete(r)
 }

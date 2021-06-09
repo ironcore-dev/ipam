@@ -71,10 +71,10 @@ helm uninstall ipam -n ipam
 
 ```
 # Create subnets
-# Create IPAM
-kubectl apply -f config/samples/ipam_v1alpha1_ipam.yaml
+# Create IP
+kubectl apply -f config/samples/ipam_v1alpha1_ip.yaml
 # Check that IP was assigned -> should be 10.12.34.64
-kubectl describe ipams ipam1
+kubectl describe ips ip1
 ```
 
 ### Cleanup
