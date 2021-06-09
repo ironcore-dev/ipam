@@ -32,7 +32,7 @@ var _ = Describe("Subnet webhook", func() {
 				Spec: SubnetSpec{
 					CIDR:              *testCidr,
 					ParentSubnetName:  "ps",
-					NetworkGlobalName: "ng",
+					NetworkName:       "ng",
 					Regions:           []string{"euw"},
 					AvailabilityZones: []string{"a"},
 				},

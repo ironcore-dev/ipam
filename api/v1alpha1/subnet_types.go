@@ -30,9 +30,9 @@ type SubnetSpec struct {
 	// ParentSubnetName contains a reference (name) to the parent subent
 	// +kubebuilder:validation:Optional
 	ParentSubnetName string `json:"parentSubnetName,omitempty"`
-	// NetworkGlobalName contains a reference (name) to the global network
+	// NetworkName contains a reference (name) to the network
 	// +kubebuilder:validation:Required
-	NetworkGlobalName string `json:"networkGlobalName,omitempty"`
+	NetworkName string `json:"networkName,omitempty"`
 	// Regions represents the network service location
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
@@ -87,7 +87,7 @@ type SubnetStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="CIDR",type=string,JSONPath=`.spec.cidr`,description="CIDR"
 // +kubebuilder:printcolumn:name="Parent Subnet",type=string,JSONPath=`.spec.parentSubnetName`,description="Parent Subnet"
-// +kubebuilder:printcolumn:name="Parent NetworkGlobal",type=string,JSONPath=`.spec.networkGlobalName`,description="Parent NetworkGlobal"
+// +kubebuilder:printcolumn:name="Parent Network",type=string,JSONPath=`.spec.networkName`,description="Parent Network"
 // +kubebuilder:printcolumn:name="Address Type",type=string,JSONPath=`.status.type`,description="Address Type"
 // +kubebuilder:printcolumn:name="Locality",type=string,JSONPath=`.status.locality`,description="Locality"
 // +kubebuilder:printcolumn:name="Capacity",type=string,JSONPath=`.status.capacity`,description="Capacity"
@@ -170,7 +170,7 @@ func (s *Subnet) Reserve(cidr *CIDR) error {
 		s.Status.Vacant = released
 	}
 
-	s.Status.CapacityLeft.Add(resource.MustParse(cidr.AddressCapacity().String()))
+	s.Status.CapacityLeft.Sub(resource.MustParse(cidr.AddressCapacity().String()))
 
 	return nil
 }
@@ -195,7 +195,7 @@ func (s *Subnet) Release(cidr *CIDR) error {
 
 	vacantLen := len(s.Status.Vacant)
 	if vacantLen == 0 {
-		s.Status.Vacant = []CIDR{*cidr}
+		s.Status.Vacant = []CIDR{*cidr.DeepCopy()}
 		return nil
 	}
 
@@ -203,12 +203,12 @@ func (s *Subnet) Release(cidr *CIDR) error {
 	if s.Status.Vacant[0].After(cidr) {
 		s.Status.Vacant = append(s.Status.Vacant, CIDR{})
 		copy(s.Status.Vacant[1:], s.Status.Vacant)
-		s.Status.Vacant[0] = *cidr
+		s.Status.Vacant[0] = *cidr.DeepCopy()
 		insertIdx = 0
 	}
 
 	if s.Status.Vacant[vacantLen-1].Before(cidr) {
-		s.Status.Vacant = append(s.Status.Vacant, *cidr)
+		s.Status.Vacant = append(s.Status.Vacant, *cidr.DeepCopy())
 		insertIdx = vacantLen
 	}
 
@@ -218,7 +218,7 @@ func (s *Subnet) Release(cidr *CIDR) error {
 			if s.Status.Vacant[prevIdx].Before(cidr) && s.Status.Vacant[idx].After(cidr) {
 				s.Status.Vacant = append(s.Status.Vacant, CIDR{})
 				copy(s.Status.Vacant[idx+1:], s.Status.Vacant[idx:])
-				s.Status.Vacant[idx] = *cidr
+				s.Status.Vacant[idx] = *cidr.DeepCopy()
 				insertIdx = idx
 				break
 			}
@@ -255,7 +255,7 @@ func (s *Subnet) Release(cidr *CIDR) error {
 		}
 	}
 
-	s.Status.CapacityLeft.Sub(resource.MustParse(cidr.AddressCapacity().String()))
+	s.Status.CapacityLeft.Add(resource.MustParse(cidr.AddressCapacity().String()))
 
 	return nil
 }

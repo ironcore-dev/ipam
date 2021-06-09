@@ -117,6 +117,16 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
+	if network.Spec.Type == "" {
+		log.Error(err, "network does not specify type, nothing to do for now", "name", req.NamespacedName)
+		network.Status.State = machinev1alpha1.CFinishedRequestState
+		if err := r.Status().Update(ctx, network); err != nil {
+			log.Error(err, "unable to update network status", "name", req.NamespacedName)
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
 	counterName, err := r.typeToCounterName(network.Spec.Type)
 	if err != nil {
 		log.Error(err, "unable to get counter name", "name", req.NamespacedName)
@@ -188,6 +198,10 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 
 func (r *NetworkReconciler) finalizeNetwork(ctx context.Context, log logr.Logger, network *machinev1alpha1.Network) error {
+	if network.Spec.Type == "" {
+		return nil
+	}
+
 	counterName, err := r.typeToCounterName(network.Spec.Type)
 	if err != nil {
 		return err

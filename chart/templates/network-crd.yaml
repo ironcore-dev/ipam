@@ -23,6 +23,14 @@ spec:
           jsonPath: .spec.id
           name: ID
           type: string
+        - description: Total address capacity in all ranges
+          jsonPath: .status.capacity
+          name: Capacity
+          type: string
+        - description: Description
+          jsonPath: .spec.description
+          name: Description
+          type: string
         - description: Request state
           jsonPath: .status.state
           name: State
@@ -51,6 +59,10 @@ spec:
             spec:
               description: NetworkSpec defines the desired state of Network
               properties:
+                description:
+                  description: Description contains a human readable description of
+                    network
+                  type: string
                 id:
                   description: ID is a unique network identifier. For VXLAN it is a
                     single 24 bit value. First 100 values are reserved. For MLPS it
@@ -67,10 +79,27 @@ spec:
             status:
               description: NetworkStatus defines the observed state of Network
               properties:
+                capacity:
+                  anyOf:
+                    - type: integer
+                    - type: string
+                  description: Capacity is a total address capacity of all CIDRs in
+                    Ranges
+                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                  x-kubernetes-int-or-string: true
                 message:
+                  description: Message contains error details if the one has occurred
                   type: string
+                ranges:
+                  description: Ranges is a list of ranges booked by child subnets
+                  items:
+                    type: string
+                  type: array
                 state:
+                  description: State is a network creation request processing state
                   type: string
+              required:
+                - ranges
               type: object
           type: object
       served: true

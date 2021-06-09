@@ -23,9 +23,9 @@ spec:
           jsonPath: .spec.parentSubnetName
           name: Parent Subnet
           type: string
-        - description: Parent NetworkGlobal
-          jsonPath: .spec.networkGlobalName
-          name: Parent NetworkGlobal
+        - description: Parent Network
+          jsonPath: .spec.networkName
+          name: Parent Network
           type: string
         - description: Address Type
           jsonPath: .status.type
@@ -81,9 +81,8 @@ spec:
                 cidr:
                   description: CIDR represents the IP Address Range
                   type: string
-                networkGlobalName:
-                  description: NetworkGlobalName contains a reference (name) to the
-                    global network
+                networkName:
+                  description: NetworkName contains a reference (name) to the network
                   type: string
                 parentSubnetName:
                   description: ParentSubnetName contains a reference (name) to the parent
