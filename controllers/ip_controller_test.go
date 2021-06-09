@@ -77,6 +77,16 @@ var _ = Describe("IP controller", func() {
 				}
 				return true
 			}, timeout, interval).Should(BeTrue())
+
+			Expect(k8sClient.Delete(ctx, ip)).Should(Succeed())
+
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, namespacedName, &createdSubnet)
+				if err != nil {
+					return false
+				}
+				return createdSubnet.CanReserve(cidrMustParse("10.12.34.64/32"))
+			}, timeout, interval).Should(BeTrue())
 		})
 	})
 })
