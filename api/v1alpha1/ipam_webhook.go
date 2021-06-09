@@ -100,14 +100,17 @@ func (r *Ipam) validate() error {
 	if err != nil {
 		return errors.New("unable to parse CRD GroupVersion")
 	}
-	gvk := gv.WithKind(r.Spec.CRD.Kind)
-	u.SetGroupVersionKind(gvk)
-	err = c.Get(context.Background(), client.ObjectKey{
-		Namespace: r.Namespace,
-		Name:      r.Spec.CRD.Name,
-	}, u)
-	if err != nil {
-		return errors.New("unable to find CRD")
+	// Only check for CRD if it is specified
+	if r.Spec.CRD != nil {
+		gvk := gv.WithKind(r.Spec.CRD.Kind)
+		u.SetGroupVersionKind(gvk)
+		err = c.Get(context.Background(), client.ObjectKey{
+			Namespace: r.Namespace,
+			Name:      r.Spec.CRD.Name,
+		}, u)
+		if err != nil {
+			return errors.New("unable to find CRD")
+		}
 	}
 	if r.Spec.IP != "" {
 		free, err := r.isIPFree(ctx, r.Spec.IP, r.Namespace, r.Spec.Subnet)
