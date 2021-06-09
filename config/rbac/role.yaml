@@ -9,6 +9,32 @@ rules:
 - apiGroups:
   - ipam.onmetal.de
   resources:
+  - ipams
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ipam.onmetal.de
+  resources:
+  - ipams/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ipam.onmetal.de
+  resources:
+  - ipams/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ipam.onmetal.de
+  resources:
   - networkcounters
   verbs:
   - create
