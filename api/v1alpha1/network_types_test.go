@@ -7,65 +7,65 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("NetworkGlobal operations", func() {
+var _ = Describe("Network operations", func() {
 	cidrMustParse := func(s string) *CIDR {
 		cidr, err := CIDRFromString(s)
 		Expect(err).NotTo(HaveOccurred())
 		return cidr
 	}
 
-	networkGlobalFromCidrs := func(cidrStrings ...string) *NetworkGlobal {
+	networkFromCidrs := func(cidrStrings ...string) *Network {
 		cidrs := make([]CIDR, len(cidrStrings))
 		for i, cidrString := range cidrStrings {
 			cidrs[i] = *cidrMustParse(cidrString)
 		}
 
-		return &NetworkGlobal{
-			Status: NetworkGlobalStatus{
+		return &Network{
+			Status: NetworkStatus{
 				Ranges: cidrs,
 			},
 		}
 	}
 
-	Context("When Subnet is reserved on NetworkGlobal", func() {
+	Context("When Subnet is reserved on Network", func() {
 		It("Should update list of reserved Subnets", func() {
 			testCases := []struct {
-				networkGlobal  *NetworkGlobal
+				network        *Network
 				cidrToReserve  *CIDR
 				resultingCidrs []CIDR
 			}{
 				{
-					networkGlobal: networkGlobalFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
+					network:       networkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
 					cidrToReserve: cidrMustParse("10.0.0.0/8"),
 					resultingCidrs: []CIDR{*cidrMustParse("10.0.0.0/8"), *cidrMustParse("192.168.0.0/24"),
 						*cidrMustParse("192.168.2.0/24")},
 				},
 				{
-					networkGlobal: networkGlobalFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
+					network:       networkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
 					cidrToReserve: cidrMustParse("200.0.0.0/8"),
 					resultingCidrs: []CIDR{*cidrMustParse("192.168.0.0/24"), *cidrMustParse("192.168.2.0/24"),
 						*cidrMustParse("200.0.0.0/8")},
 				},
 				{
-					networkGlobal: networkGlobalFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
+					network:       networkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
 					cidrToReserve: cidrMustParse("192.167.255.255/32"),
 					resultingCidrs: []CIDR{*cidrMustParse("192.167.255.255/32"), *cidrMustParse("192.168.0.0/24"),
 						*cidrMustParse("192.168.2.0/24")},
 				},
 				{
-					networkGlobal: networkGlobalFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
+					network:       networkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
 					cidrToReserve: cidrMustParse("192.168.1.0/24"),
 					resultingCidrs: []CIDR{*cidrMustParse("192.168.0.0/24"), *cidrMustParse("192.168.1.0/24"),
 						*cidrMustParse("192.168.2.0/24")},
 				},
 				{
-					networkGlobal: networkGlobalFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
+					network:       networkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
 					cidrToReserve: cidrMustParse("192.168.3.0/25"),
 					resultingCidrs: []CIDR{*cidrMustParse("192.168.0.0/24"), *cidrMustParse("192.168.2.0/24"),
 						*cidrMustParse("192.168.3.0/25")},
 				},
 				{
-					networkGlobal:  networkGlobalFromCidrs(),
+					network:        networkFromCidrs(),
 					cidrToReserve:  cidrMustParse("0.0.0.0/0"),
 					resultingCidrs: []CIDR{*cidrMustParse("0.0.0.0/0")},
 				},
@@ -73,68 +73,68 @@ var _ = Describe("NetworkGlobal operations", func() {
 
 			for i, testCase := range testCases {
 				By(fmt.Sprintf("Reserving %s in %d", testCase.cidrToReserve.String(), i))
-				Expect(testCase.networkGlobal.CanReserve(testCase.cidrToReserve)).To(BeTrue())
-				Expect(testCase.networkGlobal.CanRelease(testCase.cidrToReserve)).To(BeFalse())
-				Expect(testCase.networkGlobal.Reserve(testCase.cidrToReserve)).To(Succeed())
-				Expect(testCase.networkGlobal.Status.Ranges).To(Equal(testCase.resultingCidrs))
+				Expect(testCase.network.CanReserve(testCase.cidrToReserve)).To(BeTrue())
+				Expect(testCase.network.CanRelease(testCase.cidrToReserve)).To(BeFalse())
+				Expect(testCase.network.Reserve(testCase.cidrToReserve)).To(Succeed())
+				Expect(testCase.network.Status.Ranges).To(Equal(testCase.resultingCidrs))
 			}
 		})
 	})
 
-	Context("When it is not possible to reserve Subnet in NetworkGlobal", func() {
+	Context("When it is not possible to reserve Subnet in Network", func() {
 		It("Should return an error", func() {
 			testCases := []struct {
-				networkGlobal *NetworkGlobal
+				network       *Network
 				cidrToReserve *CIDR
 			}{
 				{
-					networkGlobal: networkGlobalFromCidrs("0.0.0.0/0"),
+					network:       networkFromCidrs("0.0.0.0/0"),
 					cidrToReserve: cidrMustParse("10.0.0.0/8"),
 				},
 				{
-					networkGlobal: networkGlobalFromCidrs("192.168.0.0/24"),
+					network:       networkFromCidrs("192.168.0.0/24"),
 					cidrToReserve: cidrMustParse("192.168.0.0/23"),
 				},
 				{
-					networkGlobal: networkGlobalFromCidrs("192.168.1.0/24"),
+					network:       networkFromCidrs("192.168.1.0/24"),
 					cidrToReserve: cidrMustParse("192.168.0.0/23"),
 				},
 			}
 
 			for i, testCase := range testCases {
 				By(fmt.Sprintf("Trying to reserve %s in %d", testCase.cidrToReserve.String(), i))
-				Expect(testCase.networkGlobal.CanReserve(testCase.cidrToReserve)).To(BeFalse())
-				networkGlobalCopy := testCase.networkGlobal.DeepCopy()
-				Expect(testCase.networkGlobal.Reserve(testCase.cidrToReserve)).NotTo(Succeed())
-				Expect(testCase.networkGlobal).To(Equal(networkGlobalCopy))
+				Expect(testCase.network.CanReserve(testCase.cidrToReserve)).To(BeFalse())
+				networkCopy := testCase.network.DeepCopy()
+				Expect(testCase.network.Reserve(testCase.cidrToReserve)).NotTo(Succeed())
+				Expect(testCase.network).To(Equal(networkCopy))
 			}
 		})
 	})
 
-	Context("When Subnet is released on NetworkGlobal", func() {
+	Context("When Subnet is released on Network", func() {
 		It("Should update list of reserved subnets", func() {
 			testCases := []struct {
-				networkGlobal  *NetworkGlobal
+				network        *Network
 				cidrToRelease  *CIDR
 				resultingCidrs []CIDR
 			}{
 				{
-					networkGlobal:  networkGlobalFromCidrs("192.168.0.0/24", "192.168.1.0/24", "192.168.2.0/24"),
+					network:        networkFromCidrs("192.168.0.0/24", "192.168.1.0/24", "192.168.2.0/24"),
 					cidrToRelease:  cidrMustParse("192.168.0.0/24"),
 					resultingCidrs: []CIDR{*cidrMustParse("192.168.1.0/24"), *cidrMustParse("192.168.2.0/24")},
 				},
 				{
-					networkGlobal:  networkGlobalFromCidrs("192.168.0.0/24", "192.168.1.0/24", "192.168.2.0/24"),
+					network:        networkFromCidrs("192.168.0.0/24", "192.168.1.0/24", "192.168.2.0/24"),
 					cidrToRelease:  cidrMustParse("192.168.1.0/24"),
 					resultingCidrs: []CIDR{*cidrMustParse("192.168.0.0/24"), *cidrMustParse("192.168.2.0/24")},
 				},
 				{
-					networkGlobal:  networkGlobalFromCidrs("192.168.0.0/24", "192.168.1.0/24", "192.168.2.0/24"),
+					network:        networkFromCidrs("192.168.0.0/24", "192.168.1.0/24", "192.168.2.0/24"),
 					cidrToRelease:  cidrMustParse("192.168.2.0/24"),
 					resultingCidrs: []CIDR{*cidrMustParse("192.168.0.0/24"), *cidrMustParse("192.168.1.0/24")},
 				},
 				{
-					networkGlobal:  networkGlobalFromCidrs("192.168.0.0/24"),
+					network:        networkFromCidrs("192.168.0.0/24"),
 					cidrToRelease:  cidrMustParse("192.168.0.0/24"),
 					resultingCidrs: []CIDR{},
 				},
@@ -142,10 +142,10 @@ var _ = Describe("NetworkGlobal operations", func() {
 
 			for i, testCase := range testCases {
 				By(fmt.Sprintf("Reserving %s in %d", testCase.cidrToRelease.String(), i))
-				Expect(testCase.networkGlobal.CanRelease(testCase.cidrToRelease)).To(BeTrue())
-				Expect(testCase.networkGlobal.CanReserve(testCase.cidrToRelease)).To(BeFalse())
-				Expect(testCase.networkGlobal.Release(testCase.cidrToRelease)).To(Succeed())
-				Expect(testCase.networkGlobal.Status.Ranges).To(Equal(testCase.resultingCidrs))
+				Expect(testCase.network.CanRelease(testCase.cidrToRelease)).To(BeTrue())
+				Expect(testCase.network.CanReserve(testCase.cidrToRelease)).To(BeFalse())
+				Expect(testCase.network.Release(testCase.cidrToRelease)).To(Succeed())
+				Expect(testCase.network.Status.Ranges).To(Equal(testCase.resultingCidrs))
 			}
 		})
 	})
@@ -153,29 +153,29 @@ var _ = Describe("NetworkGlobal operations", func() {
 	Context("When it is not possible to release subnet", func() {
 		It("Should return an error", func() {
 			testCases := []struct {
-				networkGlobal *NetworkGlobal
+				network       *Network
 				cidrToRelease *CIDR
 			}{
 				{
-					networkGlobal: networkGlobalFromCidrs(),
+					network:       networkFromCidrs(),
 					cidrToRelease: cidrMustParse("192.168.0.0/24"),
 				},
 				{
-					networkGlobal: networkGlobalFromCidrs("192.168.0.0/16"),
+					network:       networkFromCidrs("192.168.0.0/16"),
 					cidrToRelease: cidrMustParse("192.168.0.0/24"),
 				},
 				{
-					networkGlobal: networkGlobalFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
+					network:       networkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
 					cidrToRelease: cidrMustParse("192.168.1.0/24"),
 				},
 			}
 
 			for i, testCase := range testCases {
 				By(fmt.Sprintf("Trying to reserve %s in %d", testCase.cidrToRelease.String(), i))
-				Expect(testCase.networkGlobal.CanRelease(testCase.cidrToRelease)).To(BeFalse())
-				networkGlobalCopy := testCase.networkGlobal.DeepCopy()
-				Expect(testCase.networkGlobal.Release(testCase.cidrToRelease)).NotTo(Succeed())
-				Expect(testCase.networkGlobal).To(Equal(networkGlobalCopy))
+				Expect(testCase.network.CanRelease(testCase.cidrToRelease)).To(BeFalse())
+				networkCopy := testCase.network.DeepCopy()
+				Expect(testCase.network.Release(testCase.cidrToRelease)).NotTo(Succeed())
+				Expect(testCase.network).To(Equal(networkCopy))
 			}
 		})
 	})

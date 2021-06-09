@@ -4,7 +4,10 @@ import (
 	"math"
 
 	"github.com/pkg/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -26,6 +29,17 @@ var _ webhook.Validator = &Network{}
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (n *Network) ValidateCreate() error {
 	networklog.Info("validate create", "name", n.Name)
+
+	if n.Spec.Type == "" && n.Spec.ID != nil {
+		gvk := n.GroupVersionKind()
+		gk := schema.GroupKind{
+			Group: gvk.Group,
+			Kind:  gvk.Kind,
+		}
+		errs := field.ErrorList{field.Invalid(field.NewPath("spec.id"), n.Spec.ID, "setting network ID without type is disallowed")}
+		return apierrors.NewInvalid(gk, n.Name, errs)
+	}
+
 	return n.validate()
 }
 
@@ -34,16 +48,28 @@ func (n *Network) ValidateUpdate(old runtime.Object) error {
 	networklog.Info("validate update", "name", n.Name)
 	oldNetwork, ok := old.(*Network)
 	if !ok {
-		return errors.New("cannot cast previous object version to Network CR type")
+		return apierrors.NewInternalError(errors.New("cannot cast previous object version to Network CR type"))
 	}
 
-	if oldNetwork.Spec.Type != n.Spec.Type {
-		return errors.New("network type change is disallowed; resource should be released (deleted) first")
+	var allErrs field.ErrorList
+
+	if oldNetwork.Spec.Type != "" &&
+		oldNetwork.Spec.Type != n.Spec.Type {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.type"), n.Spec.ID, "network type change is disallowed; resource should be released (deleted) first"))
 	}
 
 	if oldNetwork.Spec.ID != nil &&
 		oldNetwork.Spec.ID.Cmp(&n.Spec.ID.Int) != 0 {
-		return errors.New("network ID change after assignment is disallowed; resource should be released (deleted) first")
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.id"), n.Spec.ID, "network ID change after assignment is disallowed; resource should be released (deleted) first"))
+	}
+
+	if len(allErrs) > 0 {
+		gvk := n.GroupVersionKind()
+		gk := schema.GroupKind{
+			Group: gvk.Group,
+			Kind:  gvk.Kind,
+		}
+		return apierrors.NewInvalid(gk, n.Name, allErrs)
 	}
 
 	return nil

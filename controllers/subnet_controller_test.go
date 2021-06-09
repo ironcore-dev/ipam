@@ -16,9 +16,9 @@ import (
 
 var _ = Describe("Subnet controller", func() {
 	const (
-		NetworkGlobalName = "test-network-global"
-		ParentSubnetName  = "test-parent-subnet"
-		SubnetName        = "test-subnet"
+		NetworkName      = "test-network"
+		ParentSubnetName = "test-parent-subnet"
+		SubnetName       = "test-subnet"
 
 		SubnetNamespace = "default"
 
@@ -40,9 +40,9 @@ var _ = Describe("Subnet controller", func() {
 			}
 			return true
 		}, timeout, interval).Should(BeTrue())
-		Expect(k8sClient.DeleteAllOf(ctx, &v1alpha1.NetworkGlobal{}, client.InNamespace(SubnetNamespace))).To(Succeed())
+		Expect(k8sClient.DeleteAllOf(ctx, &v1alpha1.Network{}, client.InNamespace(SubnetNamespace))).To(Succeed())
 		Eventually(func() bool {
-			list := v1alpha1.NetworkGlobalList{}
+			list := v1alpha1.NetworkList{}
 			err := k8sClient.List(ctx, &list)
 			if err != nil {
 				return false
@@ -55,29 +55,29 @@ var _ = Describe("Subnet controller", func() {
 	})
 
 	Context("When Subnet CR is created", func() {
-		It("Should reserve CIDR in parent NetworkGlobal", func() {
-			By("NetworkGlobal is installed")
+		It("Should reserve CIDR in parent Network", func() {
+			By("Network is installed")
 			ctx := context.Background()
 
-			testNetworkGlobal := v1alpha1.NetworkGlobal{
+			testNetwork := v1alpha1.Network{
 				ObjectMeta: v1.ObjectMeta{
-					Name:      NetworkGlobalName,
+					Name:      NetworkName,
 					Namespace: SubnetNamespace,
 				},
-				Spec: v1alpha1.NetworkGlobalSpec{
-					Description: "test network global",
+				Spec: v1alpha1.NetworkSpec{
+					Description: "test network",
 				},
 			}
 
-			Expect(k8sClient.Create(ctx, &testNetworkGlobal)).To(Succeed())
+			Expect(k8sClient.Create(ctx, &testNetwork)).To(Succeed())
 
-			createdNetworkGlobal := v1alpha1.NetworkGlobal{}
-			testNetworkGlobalNamespacedName := types.NamespacedName{
+			createdNetwork := v1alpha1.Network{}
+			testNetworkNamespacedName := types.NamespacedName{
 				Namespace: SubnetNamespace,
-				Name:      NetworkGlobalName,
+				Name:      NetworkName,
 			}
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, testNetworkGlobalNamespacedName, &createdNetworkGlobal)
+				err := k8sClient.Get(ctx, testNetworkNamespacedName, &createdNetwork)
 				if err != nil {
 					return false
 				}
@@ -96,7 +96,7 @@ var _ = Describe("Subnet controller", func() {
 				},
 				Spec: v1alpha1.SubnetSpec{
 					CIDR:              *testCidr,
-					NetworkGlobalName: NetworkGlobalName,
+					NetworkName:       NetworkName,
 					Regions:           []string{"euw"},
 					AvailabilityZones: []string{"a"},
 				},
@@ -130,7 +130,7 @@ var _ = Describe("Subnet controller", func() {
 			Expect(createdSubnet.Status.Type).To(Equal(v1alpha1.CIPv4SubnetType))
 			Expect(createdSubnet.Status.Message).To(BeZero())
 
-			By("Subnet CIDR is reserved in Network global")
+			By("Subnet CIDR is reserved in Network")
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, testSubnetNamespacedName, &createdSubnet)
 				if err != nil {
@@ -142,10 +142,10 @@ var _ = Describe("Subnet controller", func() {
 				return true
 			}, timeout, interval).Should(BeTrue())
 
-			Expect(k8sClient.Get(ctx, testNetworkGlobalNamespacedName, &createdNetworkGlobal)).To(Succeed())
+			Expect(k8sClient.Get(ctx, testNetworkNamespacedName, &createdNetwork)).To(Succeed())
 
 			Expect(func() bool {
-				for _, cidr := range createdNetworkGlobal.Status.Ranges {
+				for _, cidr := range createdNetwork.Status.Ranges {
 					if cidr.Equal(testCidr) {
 						return true
 					}
@@ -163,28 +163,28 @@ var _ = Describe("Subnet controller", func() {
 				return true
 			}, timeout, interval).Should(BeTrue())
 
-			By("Subnet CIDR is released in Network global")
-			Expect(k8sClient.Get(ctx, testNetworkGlobalNamespacedName, &createdNetworkGlobal)).To(Succeed())
-			Expect(createdNetworkGlobal.Status.Ranges).To(HaveLen(0))
+			By("Subnet CIDR is released in Network")
+			Expect(k8sClient.Get(ctx, testNetworkNamespacedName, &createdNetwork)).To(Succeed())
+			Expect(createdNetwork.Status.Ranges).To(HaveLen(0))
 		})
 	})
 
 	Context("When Subnet CR is created", func() {
 		It("Should reserve CIDR in parent Subnet", func() {
-			By("NetworkGlobal is installed")
+			By("Network is installed")
 			ctx := context.Background()
 
-			testNetworkGlobal := v1alpha1.NetworkGlobal{
+			testNetwork := v1alpha1.Network{
 				ObjectMeta: v1.ObjectMeta{
-					Name:      NetworkGlobalName,
+					Name:      NetworkName,
 					Namespace: SubnetNamespace,
 				},
-				Spec: v1alpha1.NetworkGlobalSpec{
-					Description: "test network global",
+				Spec: v1alpha1.NetworkSpec{
+					Description: "test network",
 				},
 			}
 
-			Expect(k8sClient.Create(ctx, &testNetworkGlobal)).To(Succeed())
+			Expect(k8sClient.Create(ctx, &testNetwork)).To(Succeed())
 
 			By("Parent subnet is installed")
 			parentSubnetCidr, err := v1alpha1.CIDRFromString("10.0.0.0/8")
@@ -198,7 +198,7 @@ var _ = Describe("Subnet controller", func() {
 				},
 				Spec: v1alpha1.SubnetSpec{
 					CIDR:              *parentSubnetCidr,
-					NetworkGlobalName: NetworkGlobalName,
+					NetworkName:       NetworkName,
 					Regions:           []string{"euw"},
 					AvailabilityZones: []string{"a"},
 				},
@@ -235,7 +235,7 @@ var _ = Describe("Subnet controller", func() {
 				},
 				Spec: v1alpha1.SubnetSpec{
 					CIDR:              *testCidr,
-					NetworkGlobalName: NetworkGlobalName,
+					NetworkName:       NetworkName,
 					ParentSubnetName:  ParentSubnetName,
 					Regions:           []string{"euw"},
 					AvailabilityZones: []string{"a"},
@@ -306,20 +306,20 @@ var _ = Describe("Subnet controller", func() {
 
 	Context("When Subnet CR is created with already booked CIDR", func() {
 		It("Should fall into the failed state", func() {
-			By("NetworkGlobal is installed")
+			By("Network is installed")
 			ctx := context.Background()
 
-			testNetworkGlobal := v1alpha1.NetworkGlobal{
+			testNetwork := v1alpha1.Network{
 				ObjectMeta: v1.ObjectMeta{
-					Name:      NetworkGlobalName,
+					Name:      NetworkName,
 					Namespace: SubnetNamespace,
 				},
-				Spec: v1alpha1.NetworkGlobalSpec{
-					Description: "test network global",
+				Spec: v1alpha1.NetworkSpec{
+					Description: "test network",
 				},
 			}
 
-			Expect(k8sClient.Create(ctx, &testNetworkGlobal)).To(Succeed())
+			Expect(k8sClient.Create(ctx, &testNetwork)).To(Succeed())
 
 			By("Parent subnet is installed")
 			parentSubnetCidr, err := v1alpha1.CIDRFromString("10.0.0.0/8")
@@ -333,7 +333,7 @@ var _ = Describe("Subnet controller", func() {
 				},
 				Spec: v1alpha1.SubnetSpec{
 					CIDR:              *parentSubnetCidr,
-					NetworkGlobalName: NetworkGlobalName,
+					NetworkName:       NetworkName,
 					Regions:           []string{"euw"},
 					AvailabilityZones: []string{"a"},
 				},
@@ -371,7 +371,7 @@ var _ = Describe("Subnet controller", func() {
 				},
 				Spec: v1alpha1.SubnetSpec{
 					CIDR:              *parentSubnetCidr,
-					NetworkGlobalName: NetworkGlobalName,
+					NetworkName:       NetworkName,
 					Regions:           []string{"eun"},
 					AvailabilityZones: []string{"b"},
 				},
@@ -403,7 +403,7 @@ var _ = Describe("Subnet controller", func() {
 				},
 				Spec: v1alpha1.SubnetSpec{
 					CIDR:              *testCidr,
-					NetworkGlobalName: NetworkGlobalName,
+					NetworkName:       NetworkName,
 					ParentSubnetName:  ParentSubnetName,
 					Regions:           []string{"euw"},
 					AvailabilityZones: []string{"a"},
@@ -442,7 +442,7 @@ var _ = Describe("Subnet controller", func() {
 				},
 				Spec: v1alpha1.SubnetSpec{
 					CIDR:              *testCidr,
-					NetworkGlobalName: NetworkGlobalName,
+					NetworkName:       NetworkName,
 					ParentSubnetName:  ParentSubnetName,
 					Regions:           []string{"euw"},
 					AvailabilityZones: []string{"a"},

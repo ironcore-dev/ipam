@@ -72,7 +72,7 @@ var _ = Describe("IP webhook", func() {
 				},
 				Spec: SubnetSpec{
 					CIDR:              *cidrMustParse("10.12.34.0/24"),
-					NetworkGlobalName: "ng1",
+					NetworkName:       "ng1",
 					Regions:           []string{"euw"},
 					AvailabilityZones: []string{"a"},
 				},
@@ -95,7 +95,7 @@ var _ = Describe("IP webhook", func() {
 				Spec: SubnetSpec{
 					CIDR:              *cidrMustParse("10.12.34.0/26"),
 					ParentSubnetName:  "subnet1",
-					NetworkGlobalName: "ng1",
+					NetworkName:       "ng1",
 					Regions:           []string{"euw"},
 					AvailabilityZones: []string{"a"},
 				},
@@ -118,7 +118,7 @@ var _ = Describe("IP webhook", func() {
 				Spec: SubnetSpec{
 					CIDR:              *cidrMustParse("10.12.34.128/25"),
 					ParentSubnetName:  "subnet1",
-					NetworkGlobalName: "ng1",
+					NetworkName:       "ng1",
 					Regions:           []string{"euw"},
 					AvailabilityZones: []string{"a"},
 				},
