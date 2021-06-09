@@ -161,6 +161,26 @@ var _ = Describe("IPAM webhook", func() {
 			}, timeout, interval).Should(BeTrue())
 		})
 
+		It("Should create without CRD specified", func() {
+			ctx := context.Background()
+			ipam := &Ipam{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: ApiVersion,
+					Kind:       "Ipam",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "ipam2",
+					Namespace: Namespace,
+				},
+				Spec: IpamSpec{
+					Subnet: "subnet1",
+					IP:     "0.0.0.1",
+				},
+			}
+			By("Expecting Ipam Create Successful")
+			Expect(k8sClient.Create(ctx, ipam)).ShouldNot(Succeed())
+		})
+
 		It("Should not allow to use already allocated IP", func() {
 			ctx := context.Background()
 			ipam := &Ipam{
