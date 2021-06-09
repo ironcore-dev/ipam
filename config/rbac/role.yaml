@@ -9,7 +9,7 @@ rules:
 - apiGroups:
   - ipam.onmetal.de
   resources:
-  - ipams
+  - ips
   verbs:
   - create
   - delete
@@ -21,13 +21,13 @@ rules:
 - apiGroups:
   - ipam.onmetal.de
   resources:
-  - ipams/finalizers
+  - ips/finalizers
   verbs:
   - update
 - apiGroups:
   - ipam.onmetal.de
   resources:
-  - ipams/status
+  - ips/status
   verbs:
   - get
   - patch
