@@ -9,7 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("IPAM webhook", func() {
+var _ = Describe("IP webhook", func() {
 	cidrMustParse := func(cidrString string) *CIDR {
 		cidr, err := CIDRFromString(cidrString)
 		if err != nil {
@@ -18,19 +18,19 @@ var _ = Describe("IPAM webhook", func() {
 		return cidr
 	}
 
-	Context("IPAM webhook test", func() {
-		It("Should fail with nonexistent related CRD", func() {
+	Context("IP webhook test", func() {
+		FIt("Should fail with nonexistent related CRD", func() {
 			ctx := context.Background()
-			ipam := &Ipam{
+			ip := &Ip{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: ApiVersion,
-					Kind:       "Ipam",
+					Kind:       "Ip",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "ipam0",
+					Name:      "ip0",
 					Namespace: Namespace,
 				},
-				Spec: IpamSpec{
+				Spec: IpSpec{
 					Subnet: "subnet1",
 					CRD: &CRD{
 						GroupVersion: ApiVersion,
@@ -40,7 +40,7 @@ var _ = Describe("IPAM webhook", func() {
 					IP: "1.12.12.123",
 				},
 			}
-			Expect(k8sClient.Create(ctx, ipam)).ShouldNot(Succeed())
+			Expect(k8sClient.Create(ctx, ip)).ShouldNot(Succeed())
 		})
 
 		It("Should allocate free IP", func() {
@@ -129,16 +129,16 @@ var _ = Describe("IPAM webhook", func() {
 			By("Expecting Subnet 3 Create Successful")
 			Expect(k8sClient.Create(ctx, subnet3)).Should(Succeed())
 
-			ipam := &Ipam{
+			ip := &Ip{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: ApiVersion,
-					Kind:       "Ipam",
+					Kind:       "Ip",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "ipam1",
+					Name:      "ip1",
 					Namespace: Namespace,
 				},
-				Spec: IpamSpec{
+				Spec: IpSpec{
 					Subnet: "subnet1",
 					CRD: &CRD{
 						GroupVersion: ApiVersion,
@@ -147,52 +147,52 @@ var _ = Describe("IPAM webhook", func() {
 					},
 				},
 			}
-			By("Expecting Ipam Create Successful")
-			Expect(k8sClient.Create(ctx, ipam)).Should(Succeed())
+			By("Expecting Ip Create Successful")
+			Expect(k8sClient.Create(ctx, ip)).Should(Succeed())
 
 			key := types.NamespacedName{
-				Name:      "ipam1",
+				Name:      "ip1",
 				Namespace: Namespace,
 			}
 			Eventually(func() bool {
-				ipam := &Ipam{}
-				_ = k8sClient.Get(context.Background(), key, ipam)
-				return ipam.Spec.IP == "10.12.34.64"
+				ip := &Ip{}
+				_ = k8sClient.Get(context.Background(), key, ip)
+				return ip.Spec.IP == "10.12.34.64"
 			}, timeout, interval).Should(BeTrue())
 		})
 
 		It("Should create without CRD specified", func() {
 			ctx := context.Background()
-			ipam := &Ipam{
+			ip := &Ip{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: ApiVersion,
-					Kind:       "Ipam",
+					Kind:       "Ip",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "ipam2",
+					Name:      "ip2",
 					Namespace: Namespace,
 				},
-				Spec: IpamSpec{
+				Spec: IpSpec{
 					Subnet: "subnet1",
 					IP:     "0.0.0.1",
 				},
 			}
-			By("Expecting Ipam Create Successful")
-			Expect(k8sClient.Create(ctx, ipam)).ShouldNot(Succeed())
+			By("Expecting Ip Create Successful")
+			Expect(k8sClient.Create(ctx, ip)).Should(Succeed())
 		})
 
 		It("Should not allow to use already allocated IP", func() {
 			ctx := context.Background()
-			ipam := &Ipam{
+			ip := &Ip{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: ApiVersion,
-					Kind:       "Ipam",
+					Kind:       "Ip",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "ipam2",
+					Name:      "ip2",
 					Namespace: Namespace,
 				},
-				Spec: IpamSpec{
+				Spec: IpSpec{
 					Subnet: "subnet1",
 					CRD: &CRD{
 						GroupVersion: ApiVersion,
@@ -202,22 +202,22 @@ var _ = Describe("IPAM webhook", func() {
 					IP: "10.12.34.64",
 				},
 			}
-			By("Expecting Ipam Create Successful")
-			Expect(k8sClient.Create(ctx, ipam)).ShouldNot(Succeed())
+			By("Expecting Ip Create Successful")
+			Expect(k8sClient.Create(ctx, ip)).ShouldNot(Succeed())
 		})
 
 		It("Should not allow to use IP from child subnet", func() {
 			ctx := context.Background()
-			ipam := &Ipam{
+			ip := &Ip{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: ApiVersion,
-					Kind:       "Ipam",
+					Kind:       "Ip",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "ipam3",
+					Name:      "ip3",
 					Namespace: Namespace,
 				},
-				Spec: IpamSpec{
+				Spec: IpSpec{
 					Subnet: "subnet1",
 					CRD: &CRD{
 						GroupVersion: ApiVersion,
@@ -227,8 +227,8 @@ var _ = Describe("IPAM webhook", func() {
 					IP: "10.12.34.255",
 				},
 			}
-			By("Expecting Ipam Create Successful")
-			Expect(k8sClient.Create(ctx, ipam)).ShouldNot(Succeed())
+			By("Expecting Ip Create Successful")
+			Expect(k8sClient.Create(ctx, ip)).ShouldNot(Succeed())
 		})
 	})
 })

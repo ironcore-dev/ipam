@@ -82,7 +82,7 @@ var _ = BeforeSuite(func() {
 		Client: k8sManager.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("Network"),
 	}).SetupWithManager(k8sManager)
-	err = (&IpamReconciler{
+	err = (&IpReconciler{
 		Client: k8sManager.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("Ipam"),
 	}).SetupWithManager(k8sManager)

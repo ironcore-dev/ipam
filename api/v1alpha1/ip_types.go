@@ -20,8 +20,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// IpamSpec defines the desired state of Ipam
-type IpamSpec struct {
+// IpSpec defines the desired state of Ip
+type IpSpec struct {
 	// Subnet to get IP from
 	Subnet string `json:"subnet,omitempty"`
 	// CRD find IP for
@@ -40,32 +40,32 @@ type CRD struct {
 	Name string `json:"name,omitempty"`
 }
 
-// IpamStatus defines the observed state of Ipam
-type IpamStatus struct {
+// IpStatus defines the observed state of Ip
+type IpStatus struct {
 	LastUsedIP string `json:"lastUsedIp,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// Ipam is the Schema for the ipams API
-type Ipam struct {
+// Ip is the Schema for the ips API
+type Ip struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   IpamSpec   `json:"spec,omitempty"`
-	Status IpamStatus `json:"status,omitempty"`
+	Spec   IpSpec   `json:"spec,omitempty"`
+	Status IpStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// IpamList contains a list of Ipam
-type IpamList struct {
+// IpList contains a list of Ip
+type IpList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Ipam `json:"items"`
+	Items           []Ip `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Ipam{}, &IpamList{})
+	SchemeBuilder.Register(&Ip{}, &IpList{})
 }

@@ -31,10 +31,10 @@ import (
 )
 
 // log is for logging in this package.
-var log = logf.Log.WithName("ipam-resource")
+var log = logf.Log.WithName("ip-resource")
 var c client.Client
 
-func (r *Ipam) SetupWebhookWithManager(mgr ctrl.Manager) error {
+func (r *Ip) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	c = mgr.GetClient()
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
@@ -43,10 +43,10 @@ func (r *Ipam) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 //+kubebuilder:webhook:path=/mutate-ipam-onmetal-de-v1alpha1-ipam,mutating=true,failurePolicy=fail,sideEffects=None,groups=ipam.onmetal.de,resources=ipams,verbs=create;update,versions=v1alpha1,name=mipam.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Defaulter = &Ipam{}
+var _ webhook.Defaulter = &Ip{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *Ipam) Default() {
+func (r *Ip) Default() {
 	log.Info("default", "name", r.Name)
 
 	if r.Spec.IP == "" {
@@ -58,7 +58,7 @@ func (r *Ipam) Default() {
 		}
 		ip, err := r.getFreeIP(context.Background(), subnet.Spec.CIDR.String(), r.Namespace, r.Spec.Subnet)
 		if err != nil {
-			log.Error(err, "unable to get free IP for Ipam")
+			log.Error(err, "unable to get free IP")
 			return
 		}
 		r.Spec.IP = ip
@@ -67,27 +67,27 @@ func (r *Ipam) Default() {
 
 //+kubebuilder:webhook:path=/validate-ipam-onmetal-de-v1alpha1-ipam,mutating=false,failurePolicy=fail,sideEffects=None,groups=ipam.onmetal.de,resources=ipams,verbs=create;update,versions=v1alpha1,name=vipam.kb.io,admissionReviewVersions={v1,v1beta1}
 
-var _ webhook.Validator = &Ipam{}
+var _ webhook.Validator = &Ip{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *Ipam) ValidateCreate() error {
+func (r *Ip) ValidateCreate() error {
 	log.Info("validate create", "name", r.Name)
 	return r.validate()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *Ipam) ValidateUpdate(old runtime.Object) error {
+func (r *Ip) ValidateUpdate(old runtime.Object) error {
 	log.Info("validate update", "name", r.Name)
 	return r.validate()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *Ipam) ValidateDelete() error {
+func (r *Ip) ValidateDelete() error {
 	log.Info("validate delete", "name", r.Name)
 	return nil
 }
 
-func (r *Ipam) validate() error {
+func (r *Ip) validate() error {
 	ctx := context.Background()
 	var subnet Subnet
 	if err := c.Get(ctx, client.ObjectKey{Namespace: r.Namespace, Name: r.Spec.Subnet}, &subnet); err != nil {
@@ -125,7 +125,7 @@ func (r *Ipam) validate() error {
 	return nil
 }
 
-func (r *Ipam) isIPFree(ctx context.Context, ip string, namespace string, subnetName string) (bool, error) {
+func (r *Ip) isIPFree(ctx context.Context, ip string, namespace string, subnetName string) (bool, error) {
 	ranges, err := r.findChildrenSubnetRanges(ctx, namespace, subnetName)
 	if err != nil {
 		return false, fmt.Errorf("unable to get children ranges: %w", err)
@@ -141,7 +141,7 @@ func (r *Ipam) isIPFree(ctx context.Context, ip string, namespace string, subnet
 	return free, nil
 }
 
-func (r *Ipam) getFreeIP(ctx context.Context, rootCidr string, namespace string, subnetName string) (string, error) {
+func (r *Ip) getFreeIP(ctx context.Context, rootCidr string, namespace string, subnetName string) (string, error) {
 	ranges, err := r.findChildrenSubnetRanges(ctx, namespace, subnetName)
 	if err != nil {
 		return "", fmt.Errorf("unable to get children ranges: %w", err)
@@ -157,7 +157,7 @@ func (r *Ipam) getFreeIP(ctx context.Context, rootCidr string, namespace string,
 	return ip, nil
 }
 
-func (r *Ipam) findChildrenSubnetRanges(ctx context.Context, namespace string, subnetName string) ([]string, error) {
+func (r *Ip) findChildrenSubnetRanges(ctx context.Context, namespace string, subnetName string) ([]string, error) {
 	subnets := []string{}
 	subnetList := &SubnetList{}
 	err := c.List(ctx, subnetList, &client.ListOptions{Namespace: namespace})
@@ -172,16 +172,16 @@ func (r *Ipam) findChildrenSubnetRanges(ctx context.Context, namespace string, s
 	return subnets, nil
 }
 
-func (r *Ipam) findReservedIPs(ctx context.Context, namespace string, subnetName string) ([]string, error) {
+func (r *Ip) findReservedIPs(ctx context.Context, namespace string, subnetName string) ([]string, error) {
 	reservedIPs := []string{}
-	ipamList := &IpamList{}
-	err := c.List(ctx, ipamList, &client.ListOptions{Namespace: namespace})
+	ipList := &IpList{}
+	err := c.List(ctx, ipList, &client.ListOptions{Namespace: namespace})
 	if err != nil {
 		return nil, err
 	}
-	for index, ipam := range ipamList.Items {
-		if ipam.Spec.Subnet == subnetName && ipam.Spec.IP != "" && ipam.Name != r.Name {
-			reservedIPs = append(reservedIPs, ipamList.Items[index].Spec.IP)
+	for index, ip := range ipList.Items {
+		if ip.Spec.Subnet == subnetName && ip.Spec.IP != "" && ip.Name != r.Name {
+			reservedIPs = append(reservedIPs, ipList.Items[index].Spec.IP)
 		}
 	}
 	return reservedIPs, nil

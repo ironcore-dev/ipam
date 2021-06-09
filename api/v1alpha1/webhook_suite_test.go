@@ -139,7 +139,7 @@ var _ = BeforeSuite(func() {
 	err = (&Subnet{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&Ipam{}).SetupWebhookWithManager(mgr)
+	err = (&Ip{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:webhook
