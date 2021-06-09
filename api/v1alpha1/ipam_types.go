@@ -42,6 +42,7 @@ type CRD struct {
 
 // IpamStatus defines the observed state of Ipam
 type IpamStatus struct {
+	LastUsedIP string `json:"lastUsedIp,omitempty"`
 }
 
 //+kubebuilder:object:root=true
