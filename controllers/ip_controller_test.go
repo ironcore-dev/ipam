@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/onmetal/ipam/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -61,22 +62,21 @@ var _ = Describe("IP controller", func() {
 			By("Expecting Ip Create Successful")
 			Expect(k8sClient.Create(ctx, ip)).Should(Succeed())
 
-			//createdSubnet := v1alpha1.Subnet{}
-			//namespacedName := types.NamespacedName{
-			//	Name:      "subnet1",
-			//	Namespace: Namespace,
-			//}
-			// Do something with vacant?
-			//Eventually(func() bool {
-			//	err := k8sClient.Get(ctx, namespacedName, &createdSubnet)
-			//	if err != nil {
-			//		return false
-			//	}
-			//	if len(createdSubnet.Status.Vacant) != 1 {
-			//		return false
-			//	}
-			//	return true
-			//}, timeout, interval).Should(BeTrue())
+			createdSubnet := v1alpha1.Subnet{}
+			namespacedName := types.NamespacedName{
+				Name:      "subnet1",
+				Namespace: Namespace,
+			}
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, namespacedName, &createdSubnet)
+				if err != nil {
+					return false
+				}
+				if createdSubnet.CanReserve(cidrMustParse("10.12.34.64/32")) {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
 		})
 	})
 })
