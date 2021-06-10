@@ -48,6 +48,24 @@ var _ = Describe("IP controller", func() {
 
 			Expect(k8sClient.Create(ctx, subnet)).Should(Succeed())
 
+			createdSubnet := v1alpha1.Subnet{}
+			namespacedName := types.NamespacedName{
+				Name:      "subnet1",
+				Namespace: Namespace,
+			}
+
+			By("Subnet CIDR is reserved in Network")
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, namespacedName, &createdSubnet)
+				if err != nil {
+					return false
+				}
+				if createdSubnet.Status.State != v1alpha1.CFinishedSubnetState {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+
 			ip := &v1alpha1.Ip{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "ip1",
@@ -61,11 +79,6 @@ var _ = Describe("IP controller", func() {
 			By("Expecting Ip Create Successful")
 			Expect(k8sClient.Create(ctx, ip)).Should(Succeed())
 
-			createdSubnet := v1alpha1.Subnet{}
-			namespacedName := types.NamespacedName{
-				Name:      "subnet1",
-				Namespace: Namespace,
-			}
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, namespacedName, &createdSubnet)
 				if err != nil {
