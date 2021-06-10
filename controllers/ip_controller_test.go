@@ -35,9 +35,8 @@ var _ = Describe("IP controller", func() {
 					Namespace: Namespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              *cidrMustParse("10.12.34.0/24"),
+					CIDR:              *cidrMustParse("10.0.0.0/30"),
 					ParentSubnetName:  "subnet1",
-					NetworkGlobalName: "ng1",
 					Regions:           []string{"euw"},
 					AvailabilityZones: []string{"a"},
 				},
@@ -56,7 +55,7 @@ var _ = Describe("IP controller", func() {
 				},
 				Spec: v1alpha1.IpSpec{
 					Subnet: "subnet1",
-					IP:     "10.12.34.64",
+					IP:     "10.0.0.1",
 				},
 			}
 			By("Expecting Ip Create Successful")
@@ -72,10 +71,7 @@ var _ = Describe("IP controller", func() {
 				if err != nil {
 					return false
 				}
-				if createdSubnet.CanReserve(cidrMustParse("10.12.34.64/32")) {
-					return false
-				}
-				return true
+				return len(createdSubnet.Status.Vacant) == 2
 			}, timeout, interval).Should(BeTrue())
 
 			Expect(k8sClient.Delete(ctx, ip)).Should(Succeed())
@@ -85,7 +81,7 @@ var _ = Describe("IP controller", func() {
 				if err != nil {
 					return false
 				}
-				return createdSubnet.CanReserve(cidrMustParse("10.12.34.64/32"))
+				return len(createdSubnet.Status.Vacant) == 1
 			}, timeout, interval).Should(BeTrue())
 		})
 	})
