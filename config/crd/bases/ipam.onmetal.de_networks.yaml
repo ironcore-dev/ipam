@@ -89,14 +89,21 @@ spec:
                   Ranges
                 pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                 x-kubernetes-int-or-string: true
-              message:
-                description: Message contains error details if the one has occurred
-                type: string
-              ranges:
-                description: Ranges is a list of ranges booked by child subnets
+              ipv4Ranges:
+                description: Ranges is a list of ranges booked by child subnets Ranges
+                  []CIDR `json:"ranges,omitempty"` IPv4Ranges is a list of IPv4 ranges
+                  booked by child subnets
                 items:
                   type: string
                 type: array
+              ipv6Ranges:
+                description: IPv6Ranges is a list of IPv6 ranges booked by child subnets
+                items:
+                  type: string
+                type: array
+              message:
+                description: Message contains error details if the one has occurred
+                type: string
               state:
                 description: State is a network creation request processing state
                 type: string

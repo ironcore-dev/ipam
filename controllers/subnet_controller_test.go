@@ -95,7 +95,7 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              *testCidr,
+					CIDR:              testCidr,
 					NetworkName:       NetworkName,
 					Regions:           []string{"euw"},
 					AvailabilityZones: []string{"a"},
@@ -145,7 +145,7 @@ var _ = Describe("Subnet controller", func() {
 			Expect(k8sClient.Get(ctx, testNetworkNamespacedName, &createdNetwork)).To(Succeed())
 
 			Expect(func() bool {
-				for _, cidr := range createdNetwork.Status.Ranges {
+				for _, cidr := range createdNetwork.Status.IPv4Ranges {
 					if cidr.Equal(testCidr) {
 						return true
 					}
@@ -165,7 +165,7 @@ var _ = Describe("Subnet controller", func() {
 
 			By("Subnet CIDR is released in Network")
 			Expect(k8sClient.Get(ctx, testNetworkNamespacedName, &createdNetwork)).To(Succeed())
-			Expect(createdNetwork.Status.Ranges).To(HaveLen(0))
+			Expect(createdNetwork.Status.IPv4Ranges).To(HaveLen(0))
 		})
 	})
 
@@ -197,7 +197,7 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              *parentSubnetCidr,
+					CIDR:              parentSubnetCidr,
 					NetworkName:       NetworkName,
 					Regions:           []string{"euw"},
 					AvailabilityZones: []string{"a"},
@@ -234,7 +234,7 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              *testCidr,
+					CIDR:              testCidr,
 					NetworkName:       NetworkName,
 					ParentSubnetName:  ParentSubnetName,
 					Regions:           []string{"euw"},
@@ -332,7 +332,7 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              *parentSubnetCidr,
+					CIDR:              parentSubnetCidr,
 					NetworkName:       NetworkName,
 					Regions:           []string{"euw"},
 					AvailabilityZones: []string{"a"},
@@ -370,7 +370,7 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              *parentSubnetCidr,
+					CIDR:              parentSubnetCidr,
 					NetworkName:       NetworkName,
 					Regions:           []string{"eun"},
 					AvailabilityZones: []string{"b"},
@@ -402,7 +402,7 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              *testCidr,
+					CIDR:              testCidr,
 					NetworkName:       NetworkName,
 					ParentSubnetName:  ParentSubnetName,
 					Regions:           []string{"euw"},
@@ -441,7 +441,7 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              *testCidr,
+					CIDR:              testCidr,
 					NetworkName:       NetworkName,
 					ParentSubnetName:  ParentSubnetName,
 					Regions:           []string{"euw"},

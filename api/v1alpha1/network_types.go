@@ -50,7 +50,11 @@ type RequestState string
 // NetworkStatus defines the observed state of Network
 type NetworkStatus struct {
 	// Ranges is a list of ranges booked by child subnets
-	Ranges []CIDR `json:"ranges,omitempty"`
+	// Ranges []CIDR `json:"ranges,omitempty"`
+	// IPv4Ranges is a list of IPv4 ranges booked by child subnets
+	IPv4Ranges []CIDR `json:"ipv4Ranges,omitempty"`
+	// IPv6Ranges is a list of IPv6 ranges booked by child subnets
+	IPv6Ranges []CIDR `json:"ipv6Ranges,omitempty"`
 	// Capacity is a total address capacity of all CIDRs in Ranges
 	Capacity resource.Quantity `json:"capacity,omitempty"`
 	// State is a network creation request processing state
@@ -90,8 +94,9 @@ func init() {
 }
 
 func (s *Network) Release(cidr *CIDR) error {
+	ranges := s.getRangesForCidr(cidr)
 	reservationIdx := -1
-	for i, reservedCidrs := range s.Status.Ranges {
+	for i, reservedCidrs := range ranges {
 		if reservedCidrs.Equal(cidr) {
 			reservationIdx = i
 		}
@@ -101,15 +106,16 @@ func (s *Network) Release(cidr *CIDR) error {
 		return errors.Errorf("unable to find CIRD that includes CIDR %s", cidr.String())
 	}
 
-	s.Status.Ranges = append(s.Status.Ranges[:reservationIdx], s.Status.Ranges[reservationIdx+1:]...)
-
+	ranges = append(ranges[:reservationIdx], ranges[reservationIdx+1:]...)
+	s.setRangesForCidr(cidr, ranges)
 	s.Status.Capacity.Sub(resource.MustParse(cidr.AddressCapacity().String()))
 
 	return nil
 }
 
 func (s *Network) CanRelease(cidr *CIDR) bool {
-	for _, vacantCidr := range s.Status.Ranges {
+	ranges := s.getRangesForCidr(cidr)
+	for _, vacantCidr := range ranges {
 		if vacantCidr.Equal(cidr) {
 			return true
 		}
@@ -119,32 +125,34 @@ func (s *Network) CanRelease(cidr *CIDR) bool {
 }
 
 func (s *Network) Reserve(cidr *CIDR) error {
-	vacantLen := len(s.Status.Ranges)
+	ranges := s.getRangesForCidr(cidr)
+	vacantLen := len(ranges)
 	if vacantLen == 0 {
-		s.Status.Ranges = []CIDR{*cidr}
+		ranges = []CIDR{*cidr}
+		s.setRangesForCidr(cidr, ranges)
 		return nil
 	}
 
 	insertIdx := -1
-	if s.Status.Ranges[0].After(cidr) {
-		s.Status.Ranges = append(s.Status.Ranges, CIDR{})
-		copy(s.Status.Ranges[1:], s.Status.Ranges)
-		s.Status.Ranges[0] = *cidr
+	if ranges[0].After(cidr) {
+		ranges = append(ranges, CIDR{})
+		copy(ranges[1:], ranges)
+		ranges[0] = *cidr
 		insertIdx = 0
 	}
 
-	if s.Status.Ranges[vacantLen-1].Before(cidr) {
-		s.Status.Ranges = append(s.Status.Ranges, *cidr)
+	if ranges[vacantLen-1].Before(cidr) {
+		ranges = append(ranges, *cidr)
 		insertIdx = vacantLen
 	}
 
 	if insertIdx < 0 {
 		for idx := 1; idx < vacantLen; idx++ {
 			prevIdx := idx - 1
-			if s.Status.Ranges[prevIdx].Before(cidr) && s.Status.Ranges[idx].After(cidr) {
-				s.Status.Ranges = append(s.Status.Ranges, CIDR{})
-				copy(s.Status.Ranges[idx+1:], s.Status.Ranges[idx:])
-				s.Status.Ranges[idx] = *cidr
+			if ranges[prevIdx].Before(cidr) && ranges[idx].After(cidr) {
+				ranges = append(ranges, CIDR{})
+				copy(ranges[idx+1:], ranges[idx:])
+				ranges[idx] = *cidr
 				insertIdx = idx
 				break
 			}
@@ -161,29 +169,47 @@ func (s *Network) Reserve(cidr *CIDR) error {
 		s.Status.Capacity.Add(resource.MustParse(cidr.AddressCapacity().String()))
 	}
 
+	s.setRangesForCidr(cidr, ranges)
+
 	return nil
 }
 
 func (s *Network) CanReserve(cidr *CIDR) bool {
-	vacantLen := len(s.Status.Ranges)
+	ranges := s.getRangesForCidr(cidr)
+	vacantLen := len(ranges)
 	if vacantLen == 0 {
 		return true
 	}
 
-	if s.Status.Ranges[0].After(cidr) {
+	if ranges[0].After(cidr) {
 		return true
 	}
 
-	if s.Status.Ranges[vacantLen-1].Before(cidr) {
+	if ranges[vacantLen-1].Before(cidr) {
 		return true
 	}
 
 	for idx := 1; idx < vacantLen; idx++ {
 		prevIdx := idx - 1
-		if s.Status.Ranges[prevIdx].Before(cidr) && s.Status.Ranges[idx].After(cidr) {
+		if ranges[prevIdx].Before(cidr) && ranges[idx].After(cidr) {
 			return true
 		}
 	}
 
 	return false
+}
+
+func (s *Network) getRangesForCidr(cidr *CIDR) []CIDR {
+	if cidr.IsIPv4() {
+		return s.Status.IPv4Ranges
+	}
+	return s.Status.IPv6Ranges
+}
+
+func (s *Network) setRangesForCidr(cidr *CIDR, ranges []CIDR) {
+	if cidr.IsIPv4() {
+		s.Status.IPv4Ranges = ranges
+	} else {
+		s.Status.IPv6Ranges = ranges
+	}
 }

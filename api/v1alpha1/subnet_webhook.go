@@ -17,10 +17,13 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -45,6 +48,42 @@ var _ webhook.Validator = &Subnet{}
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (r *Subnet) ValidateCreate() error {
 	subnetlog.Info("validate create", "name", r.Name)
+
+	var allErrs field.ErrorList
+	rulesCount := r.countCIDRReservationRules()
+	rulesPaths := []string{"spec.cidr", "spec.capacity", "spec.hostIdentifierBits"}
+	minQuantity := resource.NewQuantity(1, resource.DecimalSI)
+	maxQuantity, err := resource.ParseQuantity("340282366920938463463374607431768211456")
+	if err != nil {
+		return apierrors.NewInternalError(err)
+	}
+
+	if rulesCount == 0 || rulesCount > 1 {
+		errMsg := fmt.Sprintf("value should be set for the one of the following fields: %s", strings.Join(rulesPaths, ", "))
+		for _, path := range rulesPaths {
+			allErrs = append(allErrs, field.Invalid(field.NewPath(path), r.Spec.CIDR, errMsg))
+		}
+	}
+
+	if r.Spec.ParentSubnetName == "" &&
+		r.Spec.CIDR == nil {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.cidr"), r.Spec.CIDR, "cidr should be set explicitly if a top level subnet (without parent subnet) is created"))
+	}
+
+	if r.Spec.Capacity != nil && maxQuantity.Cmp(*r.Spec.Capacity) < 0 &&
+		minQuantity.Cmp(*r.Spec.Capacity) > 0 {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.capacity"), r.Spec.CIDR, "if set, capacity value should be between 1 and 2^128"))
+	}
+
+	if len(allErrs) > 0 {
+		gvk := r.GroupVersionKind()
+		gk := schema.GroupKind{
+			Group: gvk.Group,
+			Kind:  gvk.Kind,
+		}
+		return apierrors.NewInvalid(gk, r.Name, allErrs)
+	}
+
 	return nil
 }
 
@@ -59,8 +98,16 @@ func (r *Subnet) ValidateUpdate(old runtime.Object) error {
 
 	var allErrs field.ErrorList
 
-	if !oldSubnet.Spec.CIDR.Equal(&r.Spec.CIDR) {
+	if !oldSubnet.Spec.CIDR.Equal(r.Spec.CIDR) {
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.cidr"), r.Spec.CIDR, "CIDR change is disallowed"))
+	}
+
+	if oldSubnet.Spec.HostIdentifierBits != r.Spec.HostIdentifierBits {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.hostIdentifierBits"), r.Spec.HostIdentifierBits, "Host identifier bits change is disallowed"))
+	}
+
+	if oldSubnet.Spec.Capacity != r.Spec.Capacity {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.capacity"), r.Spec.Capacity, "Capacity change is disallowed"))
 	}
 
 	if oldSubnet.Spec.ParentSubnetName != r.Spec.ParentSubnetName {
@@ -94,4 +141,19 @@ func (r *Subnet) ValidateUpdate(old runtime.Object) error {
 func (r *Subnet) ValidateDelete() error {
 	subnetlog.Info("validate delete", "name", r.Name)
 	return nil
+}
+
+func (r *Subnet) countCIDRReservationRules() int {
+	count := 0
+	if r.Spec.CIDR != nil {
+		count += 1
+	}
+	if r.Spec.Capacity != nil {
+		count += 1
+	}
+	if r.Spec.HostIdentifierBits != nil {
+		count += 1
+	}
+
+	return count
 }

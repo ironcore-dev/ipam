@@ -78,9 +78,23 @@ spec:
                     type: string
                   minItems: 1
                   type: array
+                capacity:
+                  anyOf:
+                    - type: integer
+                    - type: string
+                  description: Capacity is a desired amount of addresses; will be ceiled
+                    to the closest power of 2.
+                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                  x-kubernetes-int-or-string: true
                 cidr:
                   description: CIDR represents the IP Address Range
                   type: string
+                hostIdentifierBits:
+                  description: HostIdentifierBits is an amount of trailing zero bits
+                    in netmask
+                  maximum: 128
+                  minimum: 0
+                  type: integer
                 networkName:
                   description: NetworkName contains a reference (name) to the network
                   type: string

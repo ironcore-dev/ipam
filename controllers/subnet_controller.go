@@ -133,7 +133,7 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		// If it is not possible to reserve subnet's CIDR in  network,
 		// then CIDR (or its part) is already reserved,
 		// and CIDR allocation has failed.
-		if err := network.Reserve(&subnet.Spec.CIDR); err != nil {
+		if err := network.Reserve(subnet.Spec.CIDR); err != nil {
 			log.Error(err, "unable to reserve subnet in network", "name", req.NamespacedName, "network name", networkNamespacedName)
 			subnet.Status.State = v1alpha1.CFailedSubnetState
 			subnet.Status.Message = err.Error()
@@ -174,7 +174,7 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 
 	// If it is not possible to reserve subnet's CIDR in parent subnet,
 	// then CIDR (or its part) is already reserved, and CIDR allocation has failed.
-	if err := parentSubnet.Reserve(&subnet.Spec.CIDR); err != nil {
+	if err := parentSubnet.Reserve(subnet.Spec.CIDR); err != nil {
 		log.Error(err, "unable to reserve cidr in parent subnet", "name", req.NamespacedName, "parent name", parentSubnetNamespacedName)
 		subnet.Status.State = v1alpha1.CFailedSubnetState
 		subnet.Status.Message = err.Error()
@@ -230,9 +230,9 @@ func (r *SubnetReconciler) finalizeSubnet(ctx context.Context, log logr.Logger, 
 
 		// If release fails and it is possible to reserve the same CIDR,
 		// then it can be considered as already released by 3rd party.
-		if err := network.Release(&subnet.Spec.CIDR); err != nil {
+		if err := network.Release(subnet.Spec.CIDR); err != nil {
 			log.Error(err, "unable to release subnet in network", "name", namespacedName, "network name", networkNamespacedName)
-			if network.CanReserve(&subnet.Spec.CIDR) {
+			if network.CanReserve(subnet.Spec.CIDR) {
 				log.Error(err, "seems that CIDR was released beforehand", "name", namespacedName, "network name", networkNamespacedName)
 				return nil
 			}
@@ -260,9 +260,9 @@ func (r *SubnetReconciler) finalizeSubnet(ctx context.Context, log logr.Logger, 
 			return err
 		}
 
-		if err := parentSubnet.Release(&subnet.Spec.CIDR); err != nil {
+		if err := parentSubnet.Release(subnet.Spec.CIDR); err != nil {
 			log.Error(err, "unable to release cidr in parent subnet", "name", namespacedName, "parent name", parentSubnetNamespacedName)
-			if parentSubnet.CanReserve(&subnet.Spec.CIDR) {
+			if parentSubnet.CanReserve(subnet.Spec.CIDR) {
 				log.Error(err, "seems that CIDR was released beforehand", "name", namespacedName, "parent name", parentSubnetNamespacedName)
 				return nil
 			}

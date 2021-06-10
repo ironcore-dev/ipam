@@ -17,7 +17,7 @@ var _ = Describe("Subnet operations", func() {
 	emptySubnetFromCidr := func(mainCidr string) *Subnet {
 		return &Subnet{
 			Spec: SubnetSpec{
-				CIDR: *cidrMustParse(mainCidr),
+				CIDR: cidrMustParse(mainCidr),
 			},
 			Status: SubnetStatus{
 				Vacant: []CIDR{},
@@ -37,7 +37,7 @@ var _ = Describe("Subnet operations", func() {
 
 		return &Subnet{
 			Spec: SubnetSpec{
-				CIDR: *cidrMustParse(mainCidr),
+				CIDR: cidrMustParse(mainCidr),
 			},
 			Status: SubnetStatus{
 				Vacant: cidrs,
@@ -269,7 +269,7 @@ var _ = Describe("Subnet operations", func() {
 
 	Context("When Subnet spec is filled", func() {
 		It("Should correctly populate state", func() {
-			localCidr := *cidrMustParse("0.0.0.0/1")
+			localCidr := cidrMustParse("0.0.0.0/1")
 			localSubnet := Subnet{
 				Spec: SubnetSpec{
 					CIDR:              localCidr,
@@ -284,11 +284,11 @@ var _ = Describe("Subnet operations", func() {
 			Expect(localSubnet.Status.CapacityLeft.Value()).To(Equal(localCidr.AddressCapacity().Int64()))
 			Expect(localSubnet.Status.Locality).To(Equal(CLocalSubnetLocalityType))
 			Expect(localSubnet.Status.Vacant).To(HaveLen(1))
-			Expect(localSubnet.Status.Vacant[0].Equal(&localCidr)).To(BeTrue())
+			Expect(localSubnet.Status.Vacant[0].Equal(localCidr)).To(BeTrue())
 			Expect(localSubnet.Status.Type).To(Equal(CIPv4SubnetType))
 			Expect(localSubnet.Status.Message).To(BeZero())
 
-			regionalCidr := *cidrMustParse("::/1")
+			regionalCidr := cidrMustParse("::/1")
 			regionalSubnet := Subnet{
 				Spec: SubnetSpec{
 					CIDR:              regionalCidr,
@@ -303,11 +303,11 @@ var _ = Describe("Subnet operations", func() {
 			Expect(regionalSubnet.Status.CapacityLeft.Value()).To(Equal(regionalCidr.AddressCapacity().Int64()))
 			Expect(regionalSubnet.Status.Locality).To(Equal(CRegionalSubnetLocalityType))
 			Expect(regionalSubnet.Status.Vacant).To(HaveLen(1))
-			Expect(regionalSubnet.Status.Vacant[0].Equal(&regionalCidr)).To(BeTrue())
+			Expect(regionalSubnet.Status.Vacant[0].Equal(regionalCidr)).To(BeTrue())
 			Expect(regionalSubnet.Status.Type).To(Equal(CIPv6SubnetType))
 			Expect(regionalSubnet.Status.Message).To(BeZero())
 
-			multiregionalCidr := *cidrMustParse("::/1")
+			multiregionalCidr := cidrMustParse("::/1")
 			multiregionalSubnet := Subnet{
 				Spec: SubnetSpec{
 					CIDR:              multiregionalCidr,
@@ -322,7 +322,7 @@ var _ = Describe("Subnet operations", func() {
 			Expect(multiregionalSubnet.Status.CapacityLeft.Value()).To(Equal(multiregionalCidr.AddressCapacity().Int64()))
 			Expect(multiregionalSubnet.Status.Locality).To(Equal(CMultiregionalSubnetLocalityType))
 			Expect(multiregionalSubnet.Status.Vacant).To(HaveLen(1))
-			Expect(multiregionalSubnet.Status.Vacant[0].Equal(&multiregionalCidr)).To(BeTrue())
+			Expect(multiregionalSubnet.Status.Vacant[0].Equal(multiregionalCidr)).To(BeTrue())
 			Expect(multiregionalSubnet.Status.Type).To(Equal(CIPv6SubnetType))
 			Expect(multiregionalSubnet.Status.Message).To(BeZero())
 		})

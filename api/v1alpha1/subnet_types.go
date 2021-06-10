@@ -25,8 +25,16 @@ import (
 // SubnetSpec defines the desired state of Subnet
 type SubnetSpec struct {
 	// CIDR represents the IP Address Range
-	// +kubebuilder:validation:Required
-	CIDR CIDR `json:"cidr,omitempty"`
+	// +kubebuilder:validation:Optional
+	CIDR *CIDR `json:"cidr,omitempty"`
+	// HostIdentifierBits is an amount of trailing zero bits in netmask
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=128
+	HostIdentifierBits *byte `json:"hostIdentifierBits,omitempty"`
+	// Capacity is a desired amount of addresses; will be ceiled to the closest power of 2.
+	// +kubebuilder:validation:Optional
+	Capacity *resource.Quantity `json:"capacity,omitempty"`
 	// ParentSubnetName contains a reference (name) to the parent subent
 	// +kubebuilder:validation:Optional
 	ParentSubnetName string `json:"parentSubnetName,omitempty"`
@@ -124,7 +132,7 @@ func (s *Subnet) PopulateStatus() {
 	} else {
 		s.Status.Type = CIPv6SubnetType
 	}
-	s.Status.Vacant = []CIDR{s.Spec.CIDR}
+	s.Status.Vacant = []CIDR{*s.Spec.CIDR}
 	capacityString := s.Spec.CIDR.AddressCapacity().String()
 	s.Status.Capacity = resource.MustParse(capacityString)
 	s.Status.CapacityLeft = s.Status.Capacity.DeepCopy()

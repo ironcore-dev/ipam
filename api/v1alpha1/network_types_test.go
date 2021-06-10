@@ -15,16 +15,25 @@ var _ = Describe("Network operations", func() {
 	}
 
 	networkFromCidrs := func(cidrStrings ...string) *Network {
-		cidrs := make([]CIDR, len(cidrStrings))
-		for i, cidrString := range cidrStrings {
-			cidrs[i] = *cidrMustParse(cidrString)
+		v4Cidrs := make([]CIDR, 0)
+		v6Cidrs := make([]CIDR, 0)
+		for _, cidrString := range cidrStrings {
+			cidr := *cidrMustParse(cidrString)
+			if cidr.IsIPv4() {
+				v4Cidrs = append(v4Cidrs, cidr)
+			} else {
+				v6Cidrs = append(v6Cidrs, cidr)
+			}
 		}
 
-		return &Network{
+		nw := &Network{
 			Status: NetworkStatus{
-				Ranges: cidrs,
+				IPv4Ranges: v4Cidrs,
+				IPv6Ranges: v6Cidrs,
 			},
 		}
+
+		return nw
 	}
 
 	Context("When Subnet is reserved on Network", func() {
@@ -76,7 +85,7 @@ var _ = Describe("Network operations", func() {
 				Expect(testCase.network.CanReserve(testCase.cidrToReserve)).To(BeTrue())
 				Expect(testCase.network.CanRelease(testCase.cidrToReserve)).To(BeFalse())
 				Expect(testCase.network.Reserve(testCase.cidrToReserve)).To(Succeed())
-				Expect(testCase.network.Status.Ranges).To(Equal(testCase.resultingCidrs))
+				Expect(testCase.network.getRangesForCidr(testCase.cidrToReserve)).To(Equal(testCase.resultingCidrs))
 			}
 		})
 	})
@@ -145,7 +154,7 @@ var _ = Describe("Network operations", func() {
 				Expect(testCase.network.CanRelease(testCase.cidrToRelease)).To(BeTrue())
 				Expect(testCase.network.CanReserve(testCase.cidrToRelease)).To(BeFalse())
 				Expect(testCase.network.Release(testCase.cidrToRelease)).To(Succeed())
-				Expect(testCase.network.Status.Ranges).To(Equal(testCase.resultingCidrs))
+				Expect(testCase.network.getRangesForCidr(testCase.cidrToRelease)).To(Equal(testCase.resultingCidrs))
 			}
 		})
 	})
