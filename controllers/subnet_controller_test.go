@@ -28,30 +28,42 @@ var _ = Describe("Subnet controller", func() {
 
 	AfterEach(func() {
 		ctx := context.Background()
-		Expect(k8sClient.DeleteAllOf(ctx, &v1alpha1.Subnet{}, client.InNamespace(SubnetNamespace))).To(Succeed())
-		Eventually(func() bool {
-			list := v1alpha1.SubnetList{}
-			err := k8sClient.List(ctx, &list)
-			if err != nil {
-				return false
-			}
-			if len(list.Items) > 0 {
-				return false
-			}
-			return true
-		}, timeout, interval).Should(BeTrue())
-		Expect(k8sClient.DeleteAllOf(ctx, &v1alpha1.Network{}, client.InNamespace(SubnetNamespace))).To(Succeed())
-		Eventually(func() bool {
-			list := v1alpha1.NetworkList{}
-			err := k8sClient.List(ctx, &list)
-			if err != nil {
-				return false
-			}
-			if len(list.Items) > 0 {
-				return false
-			}
-			return true
-		}, timeout, interval).Should(BeTrue())
+		resources := []struct {
+			res   client.Object
+			list  client.ObjectList
+			count func(client.ObjectList) int
+		}{
+			{
+				res:  &v1alpha1.Subnet{},
+				list: &v1alpha1.SubnetList{},
+				count: func(objList client.ObjectList) int {
+					list := objList.(*v1alpha1.SubnetList)
+					return len(list.Items)
+				},
+			},
+			{
+				res:  &v1alpha1.Network{},
+				list: &v1alpha1.NetworkList{},
+				count: func(objList client.ObjectList) int {
+					list := objList.(*v1alpha1.NetworkList)
+					return len(list.Items)
+				},
+			},
+		}
+
+		for _, r := range resources {
+			Expect(k8sClient.DeleteAllOf(ctx, r.res, client.InNamespace(SubnetNamespace))).To(Succeed())
+			Eventually(func() bool {
+				err := k8sClient.List(ctx, r.list)
+				if err != nil {
+					return false
+				}
+				if r.count(r.list) > 0 {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+		}
 	})
 
 	Context("When Subnet CR is created", func() {

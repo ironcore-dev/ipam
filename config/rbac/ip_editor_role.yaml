@@ -1,20 +1,24 @@
-# permissions for end users to view ipams.
+# permissions for end users to edit ips.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: ipam-viewer-role
+  name: ip-editor-role
 rules:
 - apiGroups:
   - ipam.onmetal.de
   resources:
-  - ipams
+  - ips
   verbs:
+  - create
+  - delete
   - get
   - list
+  - patch
+  - update
   - watch
 - apiGroups:
   - ipam.onmetal.de
   resources:
-  - ipams/status
+  - ips/status
   verbs:
   - get

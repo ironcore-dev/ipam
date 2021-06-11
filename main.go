@@ -94,8 +94,16 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Network")
 		os.Exit(1)
 	}
+	if err = (&controllers.IpReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("Ipam"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Ipam")
+		os.Exit(1)
+	}
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
-		if err = (&ipamv1alpha1.Ipam{}).SetupWebhookWithManager(mgr); err != nil {
+		if err = (&ipamv1alpha1.Ip{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Ipam")
 			os.Exit(1)
 		}
@@ -108,7 +116,10 @@ func main() {
 			os.Exit(1)
 		}
 	}
-
+	if err = (&ipamv1alpha1.Ip{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "Ip")
+		os.Exit(1)
+	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

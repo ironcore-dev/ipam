@@ -1,12 +1,12 @@
 # IPAM
-k8s operator for Ipam CRD
+k8s operator for Ipam
 
 ### CRD parameters
 
 | Parameter  | Description | Example | Validation rules |
 | ------------- | ------------- | ------------- | ------------- |
 | subnet | Subnet reference | subnet | Should exist |
-| crd | Some other CRD | groupVersion, kind and name for CRD too lookup | Should exist |
+| crd | Any other CRD to link IP request for | groupVersion, kind and name for CRD too lookup | Optional, should exist if specified |
 | ip | IP to request | 10.12.34.64 | Optional, if not specified it will be assigned automatically in the specified subnet if any IPs are available |
 
 ## Getting started
@@ -71,10 +71,10 @@ helm uninstall ipam -n ipam
 
 ```
 # Create subnets
-# Create IPAM
-kubectl apply -f config/samples/ipam_v1alpha1_ipam.yaml
+# Create IP
+kubectl apply -f config/samples/ipam_v1alpha1_ip.yaml
 # Check that IP was assigned -> should be 10.12.34.64
-kubectl describe ipams ipam1
+kubectl describe ips ip1
 ```
 
 ### Cleanup
