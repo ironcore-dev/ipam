@@ -105,7 +105,7 @@ func (r *IpReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 			log.Error(err, "unable to reserve IP", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
-		if err := r.Update(ctx, subnet); err != nil {
+		if err := r.Status().Update(ctx, subnet); err != nil {
 			log.Error(err, "unable to update subnet state", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
@@ -143,7 +143,7 @@ func (r *IpReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 			log.Error(err, "unable to reserve IP", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
-		if err := r.Update(ctx, subnet); err != nil {
+		if err := r.Status().Update(ctx, subnet); err != nil {
 			log.Error(err, "unable to update subnet state", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
@@ -170,7 +170,7 @@ func (r *IpReconciler) finalizeIp(ctx context.Context, ipam *v1alpha1.Ip) error 
 	if err != nil {
 		return fmt.Errorf("unable to release IP: %w", err)
 	}
-	if err := r.Update(ctx, subnet); err != nil {
+	if err := r.Status().Update(ctx, subnet); err != nil {
 		return fmt.Errorf("\"unable to update subnet state: %w", err)
 	}
 	return nil
