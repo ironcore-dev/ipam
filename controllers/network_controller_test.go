@@ -10,6 +10,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/onmetal/ipam/api/v1alpha1"
@@ -27,6 +28,38 @@ var _ = Describe("Network controller", func() {
 		timeout  = time.Second * 30
 		interval = time.Millisecond * 250
 	)
+
+	AfterEach(func() {
+		ctx := context.Background()
+		resources := []struct {
+			res   client.Object
+			list  client.ObjectList
+			count func(client.ObjectList) int
+		}{
+			{
+				res:  &v1alpha1.Network{},
+				list: &v1alpha1.NetworkList{},
+				count: func(objList client.ObjectList) int {
+					list := objList.(*v1alpha1.NetworkList)
+					return len(list.Items)
+				},
+			},
+		}
+
+		for _, r := range resources {
+			Expect(k8sClient.DeleteAllOf(ctx, r.res, client.InNamespace(NetworkNamespace))).To(Succeed())
+			Eventually(func() bool {
+				err := k8sClient.List(ctx, r.list)
+				if err != nil {
+					return false
+				}
+				if r.count(r.list) > 0 {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+		}
+	})
 
 	Context("When network CR is created", func() {
 		It("Should get ID assigned if ID is vacant", func() {
