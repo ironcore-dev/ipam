@@ -279,6 +279,7 @@ var _ = Describe("Subnet operations", func() {
 			}
 
 			localSubnet.PopulateStatus()
+			localSubnet.FillStatusFromCidr(localCidr)
 
 			Expect(localSubnet.Status.Capacity.Value()).To(Equal(localCidr.AddressCapacity().Int64()))
 			Expect(localSubnet.Status.CapacityLeft.Value()).To(Equal(localCidr.AddressCapacity().Int64()))
@@ -298,6 +299,7 @@ var _ = Describe("Subnet operations", func() {
 			}
 
 			regionalSubnet.PopulateStatus()
+			regionalSubnet.FillStatusFromCidr(regionalCidr)
 
 			Expect(regionalSubnet.Status.Capacity.Value()).To(Equal(regionalCidr.AddressCapacity().Int64()))
 			Expect(regionalSubnet.Status.CapacityLeft.Value()).To(Equal(regionalCidr.AddressCapacity().Int64()))
@@ -317,6 +319,7 @@ var _ = Describe("Subnet operations", func() {
 			}
 
 			multiregionalSubnet.PopulateStatus()
+			multiregionalSubnet.FillStatusFromCidr(multiregionalCidr)
 
 			Expect(multiregionalSubnet.Status.Capacity.Value()).To(Equal(multiregionalCidr.AddressCapacity().Int64()))
 			Expect(multiregionalSubnet.Status.CapacityLeft.Value()).To(Equal(multiregionalCidr.AddressCapacity().Int64()))

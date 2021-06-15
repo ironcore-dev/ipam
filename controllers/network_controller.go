@@ -118,7 +118,7 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	if network.Spec.Type == "" {
-		log.Error(err, "network does not specify type, nothing to do for now", "name", req.NamespacedName)
+		log.Info("network does not specify type, nothing to do for now", "name", req.NamespacedName)
 		network.Status.State = machinev1alpha1.CFinishedRequestState
 		if err := r.Status().Update(ctx, network); err != nil {
 			log.Error(err, "unable to update network status", "name", req.NamespacedName)

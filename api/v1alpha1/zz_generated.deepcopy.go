@@ -576,6 +576,10 @@ func (in *SubnetStatus) DeepCopyInto(out *SubnetStatus) {
 	*out = *in
 	out.Capacity = in.Capacity.DeepCopy()
 	out.CapacityLeft = in.CapacityLeft.DeepCopy()
+	if in.Reserved != nil {
+		in, out := &in.Reserved, &out.Reserved
+		*out = (*in).DeepCopy()
+	}
 	if in.Vacant != nil {
 		in, out := &in.Vacant, &out.Vacant
 		*out = make([]CIDR, len(*in))

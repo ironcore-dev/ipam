@@ -17,6 +17,9 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"math/big"
+	"net"
+
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -83,6 +86,8 @@ type SubnetStatus struct {
 	Capacity resource.Quantity `json:"capacity,omitempty"`
 	// CapacityLeft shows remaining capacity (excluding capacity of child subnets)
 	CapacityLeft resource.Quantity `json:"capacityLeft,omitempty"`
+	// Reserved is a CIDR that was reserved
+	Reserved *CIDR `json:"reserved,omitempty"`
 	// Vacant shows CIDR ranges available for booking
 	Vacant []CIDR `json:"vacant,omitempty"`
 	// State represents the cunnet processing state
@@ -93,9 +98,9 @@ type SubnetStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="CIDR",type=string,JSONPath=`.spec.cidr`,description="CIDR"
 // +kubebuilder:printcolumn:name="Parent Subnet",type=string,JSONPath=`.spec.parentSubnetName`,description="Parent Subnet"
 // +kubebuilder:printcolumn:name="Parent Network",type=string,JSONPath=`.spec.networkName`,description="Parent Network"
+// +kubebuilder:printcolumn:name="Reserved",type=string,JSONPath=`.status.reserved`,description="Reserved CIDR"
 // +kubebuilder:printcolumn:name="Address Type",type=string,JSONPath=`.status.type`,description="Address Type"
 // +kubebuilder:printcolumn:name="Locality",type=string,JSONPath=`.status.locality`,description="Locality"
 // +kubebuilder:printcolumn:name="Capacity",type=string,JSONPath=`.status.capacity`,description="Capacity"
@@ -127,15 +132,6 @@ func init() {
 // PopulateStatus fills status subresource with default values
 func (s *Subnet) PopulateStatus() {
 	s.Status.State = CProcessingSubnetState
-	if s.Spec.CIDR.IsIPv4() {
-		s.Status.Type = CIPv4SubnetType
-	} else {
-		s.Status.Type = CIPv6SubnetType
-	}
-	s.Status.Vacant = []CIDR{*s.Spec.CIDR}
-	capacityString := s.Spec.CIDR.AddressCapacity().String()
-	s.Status.Capacity = resource.MustParse(capacityString)
-	s.Status.CapacityLeft = s.Status.Capacity.DeepCopy()
 
 	azCount := len(s.Spec.AvailabilityZones)
 	regionCount := len(s.Spec.Regions)
@@ -146,6 +142,67 @@ func (s *Subnet) PopulateStatus() {
 	} else {
 		s.Status.Locality = CMultiregionalSubnetLocalityType
 	}
+}
+
+func (s *Subnet) FillStatusFromCidr(cidr *CIDR) {
+	if cidr.IsIPv4() {
+		s.Status.Type = CIPv4SubnetType
+	} else {
+		s.Status.Type = CIPv6SubnetType
+	}
+
+	s.Status.Reserved = cidr.DeepCopy()
+	s.Status.Vacant = []CIDR{*cidr.DeepCopy()}
+	capacityString := cidr.AddressCapacity().String()
+	s.Status.Capacity = resource.MustParse(capacityString)
+	s.Status.CapacityLeft = s.Status.Capacity.DeepCopy()
+	s.Status.State = CFinishedSubnetState
+}
+
+func (s *Subnet) ProposeForCapacity(capacity *resource.Quantity) (*CIDR, error) {
+	bigCap := capacity.AsDec().UnscaledBig()
+	count := big.NewInt(1)
+
+	bitLen := bigCap.BitLen()
+	count.Lsh(count, uint(bitLen))
+
+	// Check if the value set to capacity is equal to power of 2
+	// otherwise take the next power of 2
+	if bigCap.Cmp(count) < 0 {
+		bitLen += 1
+	}
+
+	return s.ProposeForBits(byte(bitLen))
+}
+
+func (s *Subnet) ProposeForBits(bits byte) (*CIDR, error) {
+	cidrBits := bits
+	var candidateCidr *CIDR
+	for _, cidr := range s.Status.Vacant {
+		_, currentBits := cidr.MaskOnesAndZeroes()
+
+		if currentBits > cidrBits && currentBits <= bits {
+			cidrBits = currentBits
+			candidateCidr = &cidr
+			if currentBits == bits {
+				break
+			}
+		}
+	}
+
+	if candidateCidr == nil {
+		return nil, errors.Errorf("unable to find cidr that will fit /%d network", bits)
+	}
+
+	firstIP, _ := candidateCidr.ToAddressRange()
+	cidrOnes, _ := candidateCidr.MaskOnesAndZeroes()
+
+	ipNet := &net.IPNet{
+		IP:   firstIP,
+		Mask: net.CIDRMask(int(cidrOnes), int(cidrBits)),
+	}
+
+	return CIDRFromNet(ipNet), nil
 }
 
 // Reserve books CIDR from the range of vacant CIDRs, if possible

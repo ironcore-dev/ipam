@@ -149,7 +149,7 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			return ctrl.Result{}, err
 		}
 
-		subnet.Status.State = v1alpha1.CFinishedSubnetState
+		subnet.FillStatusFromCidr(subnet.Spec.CIDR)
 		if err := r.Status().Update(ctx, subnet); err != nil {
 			log.Error(err, "unable to update subnet status", "name", req.NamespacedName)
 			return ctrl.Result{}, err
@@ -172,9 +172,29 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, err
 	}
 
+	var cidrToReserve *v1alpha1.CIDR
+	if subnet.Spec.CIDR != nil {
+		cidrToReserve = subnet.Spec.CIDR
+	} else if subnet.Spec.HostIdentifierBits != nil {
+		cidrToReserve, err = parentSubnet.ProposeForBits(*subnet.Spec.HostIdentifierBits)
+	} else {
+		cidrToReserve, err = parentSubnet.ProposeForCapacity(subnet.Spec.Capacity)
+	}
+
+	if err != nil {
+		log.Error(err, "unable to find cidr that will fit in parent subnet", "name", req.NamespacedName, "parent name", parentSubnetNamespacedName)
+		subnet.Status.State = v1alpha1.CFailedSubnetState
+		subnet.Status.Message = err.Error()
+		if err := r.Status().Update(ctx, subnet); err != nil {
+			log.Error(err, "unable to update subnet status", "name", req.NamespacedName)
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, err
+	}
+
 	// If it is not possible to reserve subnet's CIDR in parent subnet,
 	// then CIDR (or its part) is already reserved, and CIDR allocation has failed.
-	if err := parentSubnet.Reserve(subnet.Spec.CIDR); err != nil {
+	if err := parentSubnet.Reserve(cidrToReserve); err != nil {
 		log.Error(err, "unable to reserve cidr in parent subnet", "name", req.NamespacedName, "parent name", parentSubnetNamespacedName)
 		subnet.Status.State = v1alpha1.CFailedSubnetState
 		subnet.Status.Message = err.Error()
@@ -190,7 +210,7 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, err
 	}
 
-	subnet.Status.State = v1alpha1.CFinishedSubnetState
+	subnet.FillStatusFromCidr(subnet.Spec.CIDR)
 	if err := r.Status().Update(ctx, subnet); err != nil {
 		log.Error(err, "unable to update parent subnet status after cidr reservation", "name", req.NamespacedName, "parent name", parentSubnetNamespacedName)
 		return ctrl.Result{}, err

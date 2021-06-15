@@ -15,10 +15,6 @@ spec:
   scope: Namespaced
   versions:
     - additionalPrinterColumns:
-        - description: CIDR
-          jsonPath: .spec.cidr
-          name: CIDR
-          type: string
         - description: Parent Subnet
           jsonPath: .spec.parentSubnetName
           name: Parent Subnet
@@ -26,6 +22,10 @@ spec:
         - description: Parent Network
           jsonPath: .spec.networkName
           name: Parent Network
+          type: string
+        - description: Reserved CIDR
+          jsonPath: .status.reserved
+          name: Reserved
           type: string
         - description: Address Type
           jsonPath: .status.type
@@ -135,6 +135,9 @@ spec:
                   type: string
                 message:
                   description: Message contains an error string for the failed State
+                  type: string
+                reserved:
+                  description: Reserved is a CIDR that was reserved
                   type: string
                 state:
                   description: State represents the cunnet processing state
