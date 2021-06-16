@@ -103,6 +103,17 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
+	if network.Status.State == machinev1alpha1.CFinishedRequestState &&
+		network.Status.Reserved == nil &&
+		network.Spec.Type != "" {
+		network.Status.State = machinev1alpha1.CProcessingRequestState
+		if err := r.Status().Update(ctx, network); err != nil {
+			log.Error(err, "unable to update network resource status", "name", req.NamespacedName, "currentStatus", network.Status.State, "targetStatus", machinev1alpha1.CProcessingRequestState)
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
 	if network.Status.State == machinev1alpha1.CFinishedRequestState ||
 		network.Status.State == machinev1alpha1.CFailedRequestState {
 		return ctrl.Result{}, nil
@@ -152,6 +163,7 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
+	var networkIdToReserve *machinev1alpha1.NetworkID
 	if network.Spec.ID == nil {
 		networkId, err := counter.Spec.Propose()
 		if err != nil {
@@ -164,10 +176,10 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			log.Error(err, "unable to get network id", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
-		network.Spec.ID = networkId
+		networkIdToReserve = networkId
 	}
 
-	if err := counter.Spec.Reserve(network.Spec.ID); err != nil {
+	if err := counter.Spec.Reserve(networkIdToReserve); err != nil {
 		network.Status.State = machinev1alpha1.CFailedRequestState
 		network.Status.Message = err.Error()
 		if err := r.Status().Update(ctx, network); err != nil {
@@ -183,12 +195,8 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
-	if err := r.Update(ctx, network); err != nil {
-		log.Error(err, "unable to update network", "name", req.NamespacedName)
-		return ctrl.Result{}, err
-	}
-
 	network.Status.State = machinev1alpha1.CFinishedRequestState
+	network.Status.Reserved = networkIdToReserve
 	if err := r.Status().Update(ctx, network); err != nil {
 		log.Error(err, "unable to update network status", "name", req.NamespacedName)
 		return ctrl.Result{}, err
@@ -223,13 +231,18 @@ func (r *NetworkReconciler) finalizeNetwork(ctx context.Context, log logr.Logger
 		return err
 	}
 
+	if network.Status.Reserved == nil {
+		log.Info("id has not been booked, nothing to do")
+		return nil
+	}
+
 	// For the cases of failure or external release
-	if counter.Spec.CanReserve(network.Spec.ID) {
+	if counter.Spec.CanReserve(network.Status.Reserved) {
 		log.Info("id already released, will let to remove finalizer and remove resource", "counter name", counterNamespacedName)
 		return nil
 	}
 
-	if err := counter.Spec.Release(network.Spec.ID); err != nil {
+	if err := counter.Spec.Release(network.Status.Reserved); err != nil {
 		log.Error(err, "unexpected error while releasing ID", "counter name", counterNamespacedName)
 		return err
 	}

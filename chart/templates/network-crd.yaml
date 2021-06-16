@@ -19,9 +19,9 @@ spec:
           jsonPath: .spec.type
           name: Type
           type: string
-        - description: Network ID
-          jsonPath: .spec.id
-          name: ID
+        - description: Reserved Network ID
+          jsonPath: .status.reserved
+          name: Reserved
           type: string
         - description: Total address capacity in all ranges
           jsonPath: .status.capacity
@@ -88,9 +88,7 @@ spec:
                   pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                   x-kubernetes-int-or-string: true
                 ipv4Ranges:
-                  description: Ranges is a list of ranges booked by child subnets Ranges
-                    []CIDR `json:"ranges,omitempty"` IPv4Ranges is a list of IPv4 ranges
-                    booked by child subnets
+                  description: IPv4Ranges is a list of IPv4 ranges booked by child subnets
                   items:
                     type: string
                   type: array
@@ -101,6 +99,9 @@ spec:
                   type: array
                 message:
                   description: Message contains error details if the one has occurred
+                  type: string
+                reserved:
+                  description: Reserved is a reserved network ID
                   type: string
                 state:
                   description: State is a network creation request processing state

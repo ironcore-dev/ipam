@@ -30,7 +30,7 @@ type NetworkSpec struct {
 	// Represented with number encoded to string.
 	// +kubebuilder:validation:Optional
 	ID *NetworkID `json:"id,omitempty"`
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Type=string
 	// +kubebuilder:validation:Enum=VXLAN;MPLS
 	Type NetworkType `json:"type,omitempty"`
@@ -49,12 +49,12 @@ type RequestState string
 
 // NetworkStatus defines the observed state of Network
 type NetworkStatus struct {
-	// Ranges is a list of ranges booked by child subnets
-	// Ranges []CIDR `json:"ranges,omitempty"`
 	// IPv4Ranges is a list of IPv4 ranges booked by child subnets
 	IPv4Ranges []CIDR `json:"ipv4Ranges,omitempty"`
 	// IPv6Ranges is a list of IPv6 ranges booked by child subnets
 	IPv6Ranges []CIDR `json:"ipv6Ranges,omitempty"`
+	// Reserved is a reserved network ID
+	Reserved *NetworkID `json:"reserved,omitempty"`
 	// Capacity is a total address capacity of all CIDRs in Ranges
 	Capacity resource.Quantity `json:"capacity,omitempty"`
 	// State is a network creation request processing state
@@ -67,7 +67,7 @@ type NetworkStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.spec.type`,description="Network Type"
-// +kubebuilder:printcolumn:name="ID",type=string,JSONPath=`.spec.id`,description="Network ID"
+// +kubebuilder:printcolumn:name="Reserved",type=string,JSONPath=`.status.reserved`,description="Reserved Network ID"
 // +kubebuilder:printcolumn:name="Capacity",type=string,JSONPath=`.status.capacity`,description="Total address capacity in all ranges"
 // +kubebuilder:printcolumn:name="Description",type=string,JSONPath=`.spec.description`,description="Description"
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`,description="Request state"

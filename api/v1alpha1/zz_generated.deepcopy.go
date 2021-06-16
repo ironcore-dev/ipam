@@ -460,6 +460,10 @@ func (in *NetworkStatus) DeepCopyInto(out *NetworkStatus) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Reserved != nil {
+		in, out := &in.Reserved, &out.Reserved
+		*out = (*in).DeepCopy()
+	}
 	out.Capacity = in.Capacity.DeepCopy()
 }
 

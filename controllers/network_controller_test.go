@@ -119,7 +119,7 @@ var _ = Describe("Network controller", func() {
 					if testNetwork.Status.State != v1alpha1.CFinishedRequestState {
 						return false
 					}
-					if testNetwork.Spec.ID == nil {
+					if testNetwork.Status.Reserved == nil {
 						return false
 					}
 					return true
@@ -141,8 +141,8 @@ var _ = Describe("Network controller", func() {
 				}, timeout, interval).Should(BeTrue())
 
 				By(fmt.Sprintf("%s network ID reserved in counter", testNetworkCase.network.Spec.Type))
-				Expect(v1alpha1.NewNetworkCounterSpec(testNetwork.Spec.Type).CanReserve(testNetwork.Spec.ID)).Should(BeTrue())
-				Expect(counter.Spec.CanReserve(testNetwork.Spec.ID)).Should(BeFalse())
+				Expect(v1alpha1.NewNetworkCounterSpec(testNetwork.Spec.Type).CanReserve(testNetwork.Status.Reserved)).Should(BeTrue())
+				Expect(counter.Spec.CanReserve(testNetwork.Status.Reserved)).Should(BeFalse())
 
 				By(fmt.Sprintf("%s network ID with the same ID is created", testNetworkCase.network.Spec.Type))
 				testNetworkCopy := v1alpha1.Network{
@@ -152,6 +152,7 @@ var _ = Describe("Network controller", func() {
 					},
 					Spec: *testNetwork.Spec.DeepCopy(),
 				}
+				testNetworkCopy.Spec.ID = testNetwork.Status.Reserved
 				Expect(k8sClient.Create(ctx, &testNetworkCopy)).Should(Succeed())
 
 				By(fmt.Sprintf("%s network ID with the same ID fails on ID reservation", testNetworkCase.network.Spec.Type))
@@ -171,7 +172,7 @@ var _ = Describe("Network controller", func() {
 				}, timeout, interval).Should(BeTrue())
 
 				By(fmt.Sprintf("%s network ID CR deleted", testNetworkCase.network.Spec.Type))
-				oldNetworkID := testNetwork.Spec.ID.DeepCopy()
+				oldNetworkID := testNetwork.Status.Reserved.DeepCopy()
 				Expect(k8sClient.Delete(ctx, testNetwork)).Should(Succeed())
 				Eventually(func() bool {
 					err := k8sClient.Get(ctx, networkNamespacedName, testNetwork)

@@ -20,10 +20,12 @@ var _ = Describe("Network webhook", func() {
 			crs := []Network{
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
-						Name:      "wrong-type",
+						Name:      "empty-type",
 						Namespace: NetworkNamespace,
 					},
-					Spec: NetworkSpec{},
+					Spec: NetworkSpec{
+						ID: NetworkIDFromInt64(1000),
+					},
 				},
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
@@ -89,6 +91,13 @@ var _ = Describe("Network webhook", func() {
 	Context("When Network is not created", func() {
 		It("Should check that valid CR will be accepted", func() {
 			crs := []Network{
+				{
+					ObjectMeta: controllerruntime.ObjectMeta{
+						Name:      "empty-type-and-id",
+						Namespace: NetworkNamespace,
+					},
+					Spec: NetworkSpec{},
+				},
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
 						Name:      "vxlan-no-id",
@@ -168,11 +177,11 @@ var _ = Describe("Network webhook", func() {
 		})
 	})
 
-	Context("When Network is created", func() {
+	Context("When Network is created with ID and Type", func() {
 		It("Should not allow to update CR", func() {
 			cr := Network{
 				ObjectMeta: controllerruntime.ObjectMeta{
-					Name:      "network-to-update",
+					Name:      "network-with-id-and-type-failed-to-update",
 					Namespace: NetworkNamespace,
 				},
 				Spec: NetworkSpec{
@@ -198,6 +207,85 @@ var _ = Describe("Network webhook", func() {
 			By(fmt.Sprintf("Try to update network CR"))
 			cr.Spec.ID = NetworkIDFromInt64(10)
 			Expect(k8sClient.Update(ctx, &cr)).ShouldNot(Succeed())
+		})
+	})
+
+	Context("When Network is created with Type", func() {
+		It("Should not allow to update CR", func() {
+			cr := Network{
+				ObjectMeta: controllerruntime.ObjectMeta{
+					Name:      "network-with-type-failed-to-update",
+					Namespace: NetworkNamespace,
+				},
+				Spec: NetworkSpec{
+					Type: CMPLSNetworkType,
+				},
+			}
+
+			By(fmt.Sprintf("Create network CR"))
+			Expect(k8sClient.Create(ctx, &cr)).Should(Succeed())
+			Eventually(func() bool {
+				namespacedName := types.NamespacedName{
+					Namespace: cr.Namespace,
+					Name:      cr.Name,
+				}
+				err := k8sClient.Get(ctx, namespacedName, &cr)
+				if err != nil {
+					return false
+				}
+				return true
+			}).Should(BeTrue())
+
+			By(fmt.Sprintf("Try to update network CR"))
+			cr.Spec.ID = NetworkIDFromInt64(10)
+			Expect(k8sClient.Update(ctx, &cr)).ShouldNot(Succeed())
+		})
+	})
+
+	Context("When Network is created without ID and Type", func() {
+		It("Should allow to update CR with ID and Type", func() {
+			By(fmt.Sprintf("Create network CR"))
+			cr := Network{
+				ObjectMeta: controllerruntime.ObjectMeta{
+					Name:      "network-without-id-and-type-succeed-to-update",
+					Namespace: NetworkNamespace,
+				},
+				Spec: NetworkSpec{},
+			}
+
+			Expect(k8sClient.Create(ctx, &cr)).Should(Succeed())
+			Eventually(func() bool {
+				namespacedName := types.NamespacedName{
+					Namespace: cr.Namespace,
+					Name:      cr.Name,
+				}
+				err := k8sClient.Get(ctx, namespacedName, &cr)
+				if err != nil {
+					return false
+				}
+				return true
+			}).Should(BeTrue())
+
+			By(fmt.Sprintf("Update empty network CR ID and Type with values"))
+			cr.Spec.ID = NetworkIDFromBytes([]byte{1, 11, 12, 13, 14, 15, 16})
+			cr.Spec.Type = CMPLSNetworkType
+
+			Expect(k8sClient.Update(ctx, &cr)).Should(Succeed())
+			Eventually(func() bool {
+				namespacedName := types.NamespacedName{
+					Namespace: cr.Namespace,
+					Name:      cr.Name,
+				}
+				err := k8sClient.Get(ctx, namespacedName, &cr)
+				if err != nil {
+					return false
+				}
+				return true
+			}).Should(BeTrue())
+
+			By(fmt.Sprintf("Update network CR description"))
+			cr.Spec.Description = "sample description"
+			Expect(k8sClient.Update(ctx, &cr)).Should(Succeed())
 		})
 	})
 })

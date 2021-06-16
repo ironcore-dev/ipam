@@ -188,4 +188,32 @@ var _ = Describe("Network operations", func() {
 			}
 		})
 	})
+
+	Context("When IPv4 and IPv6 subnets are booked in the same network", func() {
+		It("Should reserve both IPv4 and IPv6 subnets", func() {
+			network := networkFromCidrs()
+			v4Cidr := cidrMustParse("192.168.0.0/24")
+			v6Cidr := cidrMustParse("2002::1234:abcd:ffff:c0a8:101/64")
+
+			By("Reserve CIDRs in network")
+			Expect(network.CanReserve(v4Cidr)).To(BeTrue())
+			Expect(network.Reserve(v4Cidr)).To(Succeed())
+			Expect(network.CanReserve(v6Cidr)).To(BeTrue())
+			Expect(network.Reserve(v6Cidr)).To(Succeed())
+
+			Expect(network.Status.IPv4Ranges).To(HaveLen(1))
+			Expect(network.Status.IPv4Ranges[0].Equal(v4Cidr)).To(BeTrue())
+			Expect(network.Status.IPv6Ranges).To(HaveLen(1))
+			Expect(network.Status.IPv6Ranges[0].Equal(v6Cidr)).To(BeTrue())
+
+			By("Release CIDRs from network")
+			Expect(network.CanRelease(v4Cidr)).To(BeTrue())
+			Expect(network.Release(v4Cidr)).To(Succeed())
+			Expect(network.CanRelease(v6Cidr)).To(BeTrue())
+			Expect(network.Release(v6Cidr)).To(Succeed())
+
+			Expect(network.Status.IPv4Ranges).To(HaveLen(0))
+			Expect(network.Status.IPv6Ranges).To(HaveLen(0))
+		})
+	})
 })
