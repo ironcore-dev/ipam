@@ -92,8 +92,8 @@ spec:
                 description: CIDR represents the IP Address Range
                 type: string
               hostIdentifierBits:
-                description: HostIdentifierBits is an amount of trailing zero bits
-                  in netmask
+                description: PrefixBits is an amount of ones zero bits at the beginning
+                  of the netmask
                 maximum: 128
                 minimum: 0
                 type: integer
@@ -110,9 +110,6 @@ spec:
                   type: string
                 minItems: 1
                 type: array
-            required:
-            - availabilityZones
-            - regions
             type: object
           status:
             description: SubnetStatus defines the observed state of Subnet

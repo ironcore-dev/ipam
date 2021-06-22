@@ -543,8 +543,8 @@ func (in *SubnetSpec) DeepCopyInto(out *SubnetSpec) {
 		in, out := &in.CIDR, &out.CIDR
 		*out = (*in).DeepCopy()
 	}
-	if in.HostIdentifierBits != nil {
-		in, out := &in.HostIdentifierBits, &out.HostIdentifierBits
+	if in.PrefixBits != nil {
+		in, out := &in.PrefixBits, &out.PrefixBits
 		*out = new(byte)
 		**out = **in
 	}

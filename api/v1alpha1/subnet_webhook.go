@@ -75,6 +75,14 @@ func (r *Subnet) ValidateCreate() error {
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.capacity"), r.Spec.CIDR, "if set, capacity value should be between 1 and 2^128"))
 	}
 
+	if !r.uniqueAZSet() {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.availabilityZones"), r.Spec.AvailabilityZones, "availability zone values should be unique"))
+	}
+
+	if !r.uniqueRegionSet() {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.regions"), r.Spec.Regions, "region values should be unique"))
+	}
+
 	if len(allErrs) > 0 {
 		gvk := r.GroupVersionKind()
 		gk := schema.GroupKind{
@@ -102,8 +110,8 @@ func (r *Subnet) ValidateUpdate(old runtime.Object) error {
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.cidr"), r.Spec.CIDR, "CIDR change is disallowed"))
 	}
 
-	if oldSubnet.Spec.HostIdentifierBits != r.Spec.HostIdentifierBits {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.hostIdentifierBits"), r.Spec.HostIdentifierBits, "Host identifier bits change is disallowed"))
+	if oldSubnet.Spec.PrefixBits != r.Spec.PrefixBits {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.hostIdentifierBits"), r.Spec.PrefixBits, "Host identifier bits change is disallowed"))
 	}
 
 	if oldSubnet.Spec.Capacity != r.Spec.Capacity {
@@ -151,9 +159,29 @@ func (r *Subnet) countCIDRReservationRules() int {
 	if r.Spec.Capacity != nil {
 		count += 1
 	}
-	if r.Spec.HostIdentifierBits != nil {
+	if r.Spec.PrefixBits != nil {
 		count += 1
 	}
 
 	return count
+}
+
+func (r *Subnet) uniqueRegionSet() bool {
+	return uniqueSet(r.Spec.Regions)
+}
+
+func (r *Subnet) uniqueAZSet() bool {
+	return uniqueSet(r.Spec.AvailabilityZones)
+}
+
+func uniqueSet(set []string) bool {
+	setmap := make(map[string]struct{})
+	for _, item := range set {
+		_, ok := setmap[item]
+		if ok {
+			return false
+		}
+		setmap[item] = struct{}{}
+	}
+	return true
 }

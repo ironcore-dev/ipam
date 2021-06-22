@@ -50,10 +50,22 @@ func (n *CIDR) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (n *CIDR) MaskOnesAndZeroes() (byte, byte) {
+func (n *CIDR) MaskBits() byte {
+	_, bits := n.Net.Mask.Size()
+
+	return byte(bits)
+}
+
+func (n *CIDR) MaskOnes() byte {
+	ones, _ := n.Net.Mask.Size()
+
+	return byte(ones)
+}
+
+func (n *CIDR) MaskZeroes() byte {
 	ones, bits := n.Net.Mask.Size()
 
-	return byte(ones), byte(bits)
+	return byte(bits - ones)
 }
 
 func (n *CIDR) AddressCapacity() *big.Int {

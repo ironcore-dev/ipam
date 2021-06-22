@@ -30,11 +30,11 @@ type SubnetSpec struct {
 	// CIDR represents the IP Address Range
 	// +kubebuilder:validation:Optional
 	CIDR *CIDR `json:"cidr,omitempty"`
-	// HostIdentifierBits is an amount of trailing zero bits in netmask
+	// PrefixBits is an amount of ones zero bits at the beginning of the netmask
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=128
-	HostIdentifierBits *byte `json:"hostIdentifierBits,omitempty"`
+	PrefixBits *byte `json:"hostIdentifierBits,omitempty"`
 	// Capacity is a desired amount of addresses; will be ceiled to the closest power of 2.
 	// +kubebuilder:validation:Optional
 	Capacity *resource.Quantity `json:"capacity,omitempty"`
@@ -47,11 +47,11 @@ type SubnetSpec struct {
 	// Regions represents the network service location
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
-	Regions []string `json:"regions"`
+	Regions []string `json:"regions,omitempty"`
 	// AvailabilityZones represents the locality of the network segment
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
-	AvailabilityZones []string `json:"availabilityZones"`
+	AvailabilityZones []string `json:"availabilityZones,omitempty"`
 }
 
 const (
@@ -163,43 +163,64 @@ func (s *Subnet) ProposeForCapacity(capacity *resource.Quantity) (*CIDR, error) 
 	bigCap := capacity.AsDec().UnscaledBig()
 	count := big.NewInt(1)
 
+	if bigCap.Cmp(count) < 0 {
+		return nil, errors.New("requested capacity is smaller than 1")
+	}
+
+	bigCap.Sub(bigCap, count)
+
 	bitLen := bigCap.BitLen()
 	count.Lsh(count, uint(bitLen))
 
-	// Check if the value set to capacity is equal to power of 2
+	// Check if the value set to capacity is smaller than power of 2
 	// otherwise take the next power of 2
-	if bigCap.Cmp(count) < 0 {
+	if bigCap.Cmp(count) > 0 {
 		bitLen += 1
 	}
 
-	return s.ProposeForBits(byte(bitLen))
+	if s.Status.Reserved == nil {
+		return nil, errors.New("cidr is not set, can't compute the network prefix")
+	}
+
+	maskBits := s.Status.Reserved.MaskBits()
+
+	return s.ProposeForBits(maskBits - byte(bitLen))
 }
 
-func (s *Subnet) ProposeForBits(bits byte) (*CIDR, error) {
-	cidrBits := bits
+func (s *Subnet) ProposeForBits(prefixBits byte) (*CIDR, error) {
+	if prefixBits > s.Status.Reserved.MaskBits() {
+		return nil, errors.New("prefix bit count is bigger than bit coint in IP")
+	}
+
+	var candidateOnes byte
 	var candidateCidr *CIDR
 	for _, cidr := range s.Status.Vacant {
-		_, currentBits := cidr.MaskOnesAndZeroes()
+		currentOnes := cidr.MaskOnes()
 
-		if currentBits > cidrBits && currentBits <= bits {
-			cidrBits = currentBits
-			candidateCidr = &cidr
-			if currentBits == bits {
-				break
+		if currentOnes <= prefixBits {
+			if candidateCidr == nil {
+				candidateOnes = currentOnes
+				candidateCidr = &cidr
+			} else if currentOnes > candidateOnes {
+				candidateOnes = currentOnes
+				candidateCidr = &cidr
+				if currentOnes == prefixBits {
+					break
+				}
 			}
 		}
 	}
 
 	if candidateCidr == nil {
-		return nil, errors.Errorf("unable to find cidr that will fit /%d network", bits)
+		return nil, errors.Errorf("unable to find cidr that will fit /%d network", prefixBits)
 	}
 
 	firstIP, _ := candidateCidr.ToAddressRange()
-	cidrOnes, _ := candidateCidr.MaskOnesAndZeroes()
+	cidrBits := candidateCidr.MaskBits()
 
 	ipNet := &net.IPNet{
 		IP:   firstIP,
-		Mask: net.CIDRMask(int(cidrOnes), int(cidrBits)),
+		Mask: net.CIDRMask(int(prefixBits), int(cidrBits)),
 	}
 
 	return CIDRFromNet(ipNet), nil

@@ -5,6 +5,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 var _ = Describe("Subnet operations", func() {
@@ -328,6 +329,162 @@ var _ = Describe("Subnet operations", func() {
 			Expect(multiregionalSubnet.Status.Vacant[0].Equal(multiregionalCidr)).To(BeTrue())
 			Expect(multiregionalSubnet.Status.Type).To(Equal(CIPv6SubnetType))
 			Expect(multiregionalSubnet.Status.Message).To(BeZero())
+		})
+	})
+
+	Context("When Subnet is asked to propose CIDR for the capacity", func() {
+		It("Should should return CIDR based on first smallest vacant CIDR", func() {
+			testCases := []struct {
+				subnet       *Subnet
+				capacity     *resource.Quantity
+				bits         byte
+				expectedCidr *CIDR
+			}{
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("10.0.0.0/8")},
+							Reserved: cidrMustParse("10.0.0.0/8"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(256, 0),
+					bits:         24,
+					expectedCidr: cidrMustParse("10.0.0.0/24"),
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("10.0.0.0/24")},
+							Reserved: cidrMustParse("10.0.0.0/24"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(1, 0),
+					bits:         32,
+					expectedCidr: cidrMustParse("10.0.0.0/32"),
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("0.0.0.0/0")},
+							Reserved: cidrMustParse("0.0.0.0/0"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(4294967296, 0),
+					bits:         0,
+					expectedCidr: cidrMustParse("0.0.0.0/0"),
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("0.0.0.0/0")},
+							Reserved: cidrMustParse("0.0.0.0/0"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(2, 0),
+					bits:         31,
+					expectedCidr: cidrMustParse("0.0.0.0/31"),
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("0.0.0.0/0")},
+							Reserved: cidrMustParse("0.0.0.0/0"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(5, 0),
+					bits:         29,
+					expectedCidr: cidrMustParse("0.0.0.0/29"),
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("0.0.0.0/0")},
+							Reserved: cidrMustParse("0.0.0.0/0"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(7, 0),
+					bits:         29,
+					expectedCidr: cidrMustParse("0.0.0.0/29"),
+				},
+			}
+
+			for idx, testCase := range testCases {
+				By(fmt.Sprintf("Checking for capacity %d", idx))
+				proposedForCapacity, err := testCase.subnet.ProposeForCapacity(testCase.capacity)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(proposedForCapacity.Equal(testCase.expectedCidr)).To(BeTrue())
+				Expect(testCase.subnet.CanReserve(proposedForCapacity))
+
+				proposedForBits, err := testCase.subnet.ProposeForBits(testCase.bits)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(proposedForBits.Equal(testCase.expectedCidr)).To(BeTrue())
+				Expect(testCase.subnet.CanReserve(proposedForBits))
+			}
+		})
+	})
+
+	Context("When Subnet is asked to propose CIDR for the wrong capacity", func() {
+		It("Should should an error", func() {
+			testCases := []struct {
+				subnet   *Subnet
+				capacity *resource.Quantity
+				bits     int16
+			}{
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("10.0.0.0/24")},
+							Reserved: cidrMustParse("10.0.0.0/24"),
+						},
+					},
+					capacity: resource.NewScaledQuantity(512, 0),
+					bits:     23,
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("10.0.0.0/24")},
+							Reserved: cidrMustParse("10.0.0.0/24"),
+						},
+					},
+					bits: 128,
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("0.0.0.0/0")},
+							Reserved: cidrMustParse("0.0.0.0/0"),
+						},
+					},
+					capacity: resource.NewScaledQuantity(4294967297, 0),
+					bits:     -1,
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("0.0.0.0/0")},
+							Reserved: cidrMustParse("0.0.0.0/0"),
+						},
+					},
+					capacity: resource.NewScaledQuantity(0, 0),
+					bits:     -1,
+				},
+			}
+
+			for idx, testCase := range testCases {
+				By(fmt.Sprintf("Checking for capacity %d", idx))
+				if testCase.capacity != nil {
+					proposedForCapacity, err := testCase.subnet.ProposeForCapacity(testCase.capacity)
+					Expect(err).To(HaveOccurred())
+					Expect(proposedForCapacity).To(BeNil())
+				}
+
+				if testCase.bits != -1 {
+					proposedForBits, err := testCase.subnet.ProposeForBits(byte(testCase.bits))
+					Expect(err).To(HaveOccurred())
+					Expect(proposedForBits).To(BeNil())
+				}
+			}
 		})
 	})
 })
