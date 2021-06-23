@@ -164,8 +164,8 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
-	var networkIdToReserve *machinev1alpha1.NetworkID
-	if network.Spec.ID == nil {
+	networkIdToReserve := network.Spec.ID
+	if networkIdToReserve == nil {
 		networkId, err := counter.Spec.Propose()
 		if err != nil {
 			network.Status.State = machinev1alpha1.CFailedRequestState

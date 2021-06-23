@@ -68,10 +68,8 @@ func (n *Network) ValidateUpdate(old runtime.Object) error {
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.type"), n.Spec.Type, "network type change is disallowed; resource should be released (deleted) first"))
 	}
 
-	if (oldNetwork.Spec.ID != nil &&
-		oldNetwork.Spec.ID.Cmp(&n.Spec.ID.Int) != 0) ||
-		(oldNetwork.Spec.ID == nil &&
-			oldNetwork.Spec.Type != "") {
+	if (oldNetwork.Spec.ID != nil && oldNetwork.Spec.ID.Cmp(&n.Spec.ID.Int) != 0) ||
+		(oldNetwork.Spec.ID == nil && oldNetwork.Spec.Type != "" && n.Spec.ID != nil) {
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.id"), n.Spec.ID, "network ID change after assignment is disallowed; resource should be released (deleted) first"))
 	}
 
