@@ -8,6 +8,7 @@ require (
 	github.com/onsi/gomega v1.11.0
 	github.com/pkg/errors v0.9.1
 	golang.org/x/mod v0.3.0
+	gopkg.in/inf.v0 v0.9.1
 	k8s.io/api v0.20.2
 	k8s.io/apimachinery v0.20.2
 	k8s.io/client-go v0.20.2

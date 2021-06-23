@@ -18,8 +18,9 @@ import (
 
 var _ = Describe("Network controller", func() {
 	const (
-		VXLANNetworkName = "test-vxlan-network"
-		MPLSNetworkName  = "test-mpls-network"
+		VXLANNetworkName  = "test-vxlan-network"
+		GENEVENetworkName = "test-geneve-network"
+		MPLSNetworkName   = "test-mpls-network"
 
 		CopyPostfix = "-copy"
 
@@ -78,6 +79,19 @@ var _ = Describe("Network controller", func() {
 						},
 						Spec: v1alpha1.NetworkSpec{
 							Type: v1alpha1.CVXLANNetworkType,
+						},
+					},
+				},
+				{
+					counterName: CGENEVECounterName,
+					firstId:     v1alpha1.CGENEVEFirstAvaliableID,
+					network: &v1alpha1.Network{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      GENEVENetworkName,
+							Namespace: NetworkNamespace,
+						},
+						Spec: v1alpha1.NetworkSpec{
+							Type: v1alpha1.CGENEVENetworkType,
 						},
 					},
 				},

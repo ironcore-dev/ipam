@@ -106,16 +106,25 @@ func (r *Subnet) ValidateUpdate(old runtime.Object) error {
 
 	var allErrs field.ErrorList
 
-	if !oldSubnet.Spec.CIDR.Equal(r.Spec.CIDR) {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.cidr"), r.Spec.CIDR, "CIDR change is disallowed"))
+	if !(oldSubnet.Spec.CIDR == nil && r.Spec.CIDR == nil) {
+		if oldSubnet.Spec.CIDR == nil || r.Spec.CIDR == nil ||
+			!oldSubnet.Spec.CIDR.Equal(r.Spec.CIDR) {
+			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.cidr"), r.Spec.CIDR, "CIDR change is disallowed"))
+		}
 	}
 
-	if oldSubnet.Spec.PrefixBits != r.Spec.PrefixBits {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.hostIdentifierBits"), r.Spec.PrefixBits, "Host identifier bits change is disallowed"))
+	if !(oldSubnet.Spec.PrefixBits == nil && r.Spec.PrefixBits == nil) {
+		if oldSubnet.Spec.PrefixBits == nil || r.Spec.PrefixBits == nil ||
+			*oldSubnet.Spec.PrefixBits != *r.Spec.PrefixBits {
+			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.hostIdentifierBits"), r.Spec.PrefixBits, "Host identifier bits change is disallowed"))
+		}
 	}
 
-	if oldSubnet.Spec.Capacity != r.Spec.Capacity {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.capacity"), r.Spec.Capacity, "Capacity change is disallowed"))
+	if !(oldSubnet.Spec.Capacity == nil && r.Spec.Capacity == nil) {
+		if oldSubnet.Spec.Capacity == nil || r.Spec.Capacity == nil ||
+			!oldSubnet.Spec.Capacity.Equal(*r.Spec.Capacity) {
+			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.capacity"), r.Spec.Capacity, "Capacity change is disallowed"))
+		}
 	}
 
 	if oldSubnet.Spec.ParentSubnetName != r.Spec.ParentSubnetName {

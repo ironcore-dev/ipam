@@ -65,7 +65,7 @@ func (n *Network) ValidateUpdate(old runtime.Object) error {
 
 	if oldNetwork.Spec.Type != "" &&
 		oldNetwork.Spec.Type != n.Spec.Type {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.type"), n.Spec.ID, "network type change is disallowed; resource should be released (deleted) first"))
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.type"), n.Spec.Type, "network type change is disallowed; resource should be released (deleted) first"))
 	}
 
 	if (oldNetwork.Spec.ID != nil &&
@@ -108,9 +108,14 @@ func (n *Network) validateID() *field.Error {
 			n.Spec.ID.Cmp(&CVXLANMaxID.Int) > 0 {
 			return field.Invalid(field.NewPath("spec.id"), n.Spec.ID, fmt.Sprintf("value for the ID for network type %s should be in interval [%s; %s]", n.Spec.Type, CVXLANFirstAvaliableID, CVXLANMaxID))
 		}
+	case CGENEVENetworkType:
+		if n.Spec.ID.Cmp(&CGENEVEFirstAvaliableID.Int) < 0 ||
+			n.Spec.ID.Cmp(&CGENEVEMaxID.Int) > 0 {
+			return field.Invalid(field.NewPath("spec.id"), n.Spec.ID, fmt.Sprintf("value for the ID for network type %s should be in interval [%s; %s]", n.Spec.Type, CGENEVEFirstAvaliableID, CGENEVEMaxID))
+		}
 	case CMPLSNetworkType:
 		if n.Spec.ID.Cmp(&CMPLSFirstAvailableID.Int) < 0 {
-			return field.Invalid(field.NewPath("spec.id"), n.Spec.ID, fmt.Sprintf("value for the ID for network type %s should be in interval [%s; %f]", n.Spec.Type, CVXLANFirstAvaliableID, math.Inf(1)))
+			return field.Invalid(field.NewPath("spec.id"), n.Spec.ID, fmt.Sprintf("value for the ID for network type %s should be in interval [%s; %f]", n.Spec.Type, CMPLSFirstAvailableID, math.Inf(1)))
 		}
 	default:
 		return field.Invalid(field.NewPath("spec.type"), n.Spec.Type, "unknown network type")

@@ -5,6 +5,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"gopkg.in/inf.v0"
 )
 
 var _ = Describe("Network operations", func() {
@@ -201,8 +202,10 @@ var _ = Describe("Network operations", func() {
 			Expect(network.CanReserve(v6Cidr)).To(BeTrue())
 			Expect(network.Reserve(v6Cidr)).To(Succeed())
 
+			Expect(network.Status.IPv4Capacity.AsDec().Cmp(inf.NewDecBig(v4Cidr.AddressCapacity(), 0))).To(Equal(0))
 			Expect(network.Status.IPv4Ranges).To(HaveLen(1))
 			Expect(network.Status.IPv4Ranges[0].Equal(v4Cidr)).To(BeTrue())
+			Expect(network.Status.IPv6Capacity.AsDec().Cmp(inf.NewDecBig(v6Cidr.AddressCapacity(), 0))).To(Equal(0))
 			Expect(network.Status.IPv6Ranges).To(HaveLen(1))
 			Expect(network.Status.IPv6Ranges[0].Equal(v6Cidr)).To(BeTrue())
 
@@ -213,7 +216,9 @@ var _ = Describe("Network operations", func() {
 			Expect(network.Release(v6Cidr)).To(Succeed())
 
 			Expect(network.Status.IPv4Ranges).To(HaveLen(0))
+			Expect(network.Status.IPv4Capacity.IsZero()).To(BeTrue())
 			Expect(network.Status.IPv6Ranges).To(HaveLen(0))
+			Expect(network.Status.IPv6Capacity.IsZero()).To(BeTrue())
 		})
 	})
 })

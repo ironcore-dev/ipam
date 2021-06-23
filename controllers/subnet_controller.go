@@ -131,7 +131,7 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			return ctrl.Result{}, err
 		}
 
-		// If it is not possible to reserve subnet's CIDR in  network,
+		// If it is not possible to reserve subnet's CIDR in network,
 		// then CIDR (or its part) is already reserved,
 		// and CIDR allocation has failed.
 		if err := network.Reserve(subnet.Spec.CIDR); err != nil {

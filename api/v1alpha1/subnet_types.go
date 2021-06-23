@@ -34,7 +34,7 @@ type SubnetSpec struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=128
-	PrefixBits *byte `json:"hostIdentifierBits,omitempty"`
+	PrefixBits *byte `json:"prefixBits,omitempty"`
 	// Capacity is a desired amount of addresses; will be ceiled to the closest power of 2.
 	// +kubebuilder:validation:Optional
 	Capacity *resource.Quantity `json:"capacity,omitempty"`

@@ -1,11 +1,11 @@
 apiVersion: ipam.onmetal.de/v1alpha1
 kind: Subnet
 metadata:
-  name: subnet-sample
+  name: parent-cidr-subnet-sample
 spec:
   cidr: "10.0.0.0/8"
   parentSubnetName: ""
-  networkGlobalName: networkglobal-sample
+  networkName: network-sample
   regions:
     - euw
   availabilityZones:

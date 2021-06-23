@@ -14,17 +14,17 @@ webhooks:
       service:
         name: {{ include "chart.fullname" . }}-webhook-service
         namespace: {{ .Release.Namespace }}
-        path: /mutate-{{ .Values.crd.ipam.group | replace "." "-" }}-v1alpha1-{{ .Values.crd.ipam.singular }}
+        path: /mutate-{{ .Values.crd.ip.group | replace "." "-" }}-v1alpha1-{{ .Values.crd.ip.singular }}
     failurePolicy: Fail
-    name: v{{ .Values.crd.ipam.singular }}.kb.io
+    name: v{{ .Values.crd.ip.singular }}.kb.io
     rules:
       - apiGroups:
-          - {{ .Values.crd.ipam.group }}
+          - {{ .Values.crd.ip.group }}
         apiVersions:
           - v1alpha1
         operations:
           - CREATE
           - UPDATE
         resources:
-          - {{ .Values.crd.ipam.plural }}
+          - {{ .Values.crd.ip.plural }}
     sideEffects: None

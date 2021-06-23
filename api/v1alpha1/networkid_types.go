@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	CVXLANNetworkType NetworkType = "VXLAN"
-	CMPLSNetworkType  NetworkType = "MPLS"
+	CGENEVENetworkType NetworkType = "GENEVE"
+	CVXLANNetworkType  NetworkType = "VXLAN"
+	CMPLSNetworkType   NetworkType = "MPLS"
 )
 
 // NetworkType is a type of network id is assigned to.

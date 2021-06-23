@@ -14,145 +14,145 @@ spec:
     singular: {{ .Values.crd.subnet.singular }}
   scope: Namespaced
   versions:
-    - additionalPrinterColumns:
-        - description: Parent Subnet
-          jsonPath: .spec.parentSubnetName
-          name: Parent Subnet
-          type: string
-        - description: Parent Network
-          jsonPath: .spec.networkName
-          name: Parent Network
-          type: string
-        - description: Reserved CIDR
-          jsonPath: .status.reserved
-          name: Reserved
-          type: string
-        - description: Address Type
-          jsonPath: .status.type
-          name: Address Type
-          type: string
-        - description: Locality
-          jsonPath: .status.locality
-          name: Locality
-          type: string
-        - description: Capacity
-          jsonPath: .status.capacity
-          name: Capacity
-          type: string
-        - description: Capacity Left
-          jsonPath: .status.capacityLeft
-          name: Capacity Left
-          type: string
-        - description: State
-          jsonPath: .status.state
-          name: State
-          type: string
-        - description: Message
-          jsonPath: .status.message
-          name: Message
-          type: string
-      name: v1alpha1
-      schema:
-        openAPIV3Schema:
-          description: Subnet is the Schema for the subnets API
-          properties:
-            apiVersion:
-              description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-              type: string
-            kind:
-              description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-              type: string
-            metadata:
-              type: object
-            spec:
-              description: SubnetSpec defines the desired state of Subnet
-              properties:
-                availabilityZones:
-                  description: AvailabilityZones represents the locality of the network
-                    segment
-                  items:
-                    type: string
-                  minItems: 1
-                  type: array
-                capacity:
-                  anyOf:
-                    - type: integer
-                    - type: string
-                  description: Capacity is a desired amount of addresses; will be ceiled
-                    to the closest power of 2.
-                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                  x-kubernetes-int-or-string: true
-                cidr:
-                  description: CIDR represents the IP Address Range
+  - additionalPrinterColumns:
+      - description: Parent Subnet
+        jsonPath: .spec.parentSubnetName
+        name: Parent Subnet
+        type: string
+      - description: Parent Network
+        jsonPath: .spec.networkName
+        name: Parent Network
+        type: string
+      - description: Reserved CIDR
+        jsonPath: .status.reserved
+        name: Reserved
+        type: string
+      - description: Address Type
+        jsonPath: .status.type
+        name: Address Type
+        type: string
+      - description: Locality
+        jsonPath: .status.locality
+        name: Locality
+        type: string
+      - description: Capacity
+        jsonPath: .status.capacity
+        name: Capacity
+        type: string
+      - description: Capacity Left
+        jsonPath: .status.capacityLeft
+        name: Capacity Left
+        type: string
+      - description: State
+        jsonPath: .status.state
+        name: State
+        type: string
+      - description: Message
+        jsonPath: .status.message
+        name: Message
+        type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Subnet is the Schema for the subnets API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: SubnetSpec defines the desired state of Subnet
+            properties:
+              availabilityZones:
+                description: AvailabilityZones represents the locality of the network
+                  segment
+                items:
                   type: string
-                hostIdentifierBits:
-                  description: PrefixBits is an amount of ones zero bits at the beginning
-                    of the netmask
-                  maximum: 128
-                  minimum: 0
-                  type: integer
-                networkName:
-                  description: NetworkName contains a reference (name) to the network
+                minItems: 1
+                type: array
+              capacity:
+                anyOf:
+                  - type: integer
+                  - type: string
+                description: Capacity is a desired amount of addresses; will be ceiled
+                  to the closest power of 2.
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
+              cidr:
+                description: CIDR represents the IP Address Range
+                type: string
+              networkName:
+                description: NetworkName contains a reference (name) to the network
+                type: string
+              parentSubnetName:
+                description: ParentSubnetName contains a reference (name) to the parent
+                  subent
+                type: string
+              prefixBits:
+                description: PrefixBits is an amount of ones zero bits at the beginning
+                  of the netmask
+                maximum: 128
+                minimum: 0
+                type: integer
+              regions:
+                description: Regions represents the network service location
+                items:
                   type: string
-                parentSubnetName:
-                  description: ParentSubnetName contains a reference (name) to the parent
-                    subent
+                minItems: 1
+                type: array
+            type: object
+          status:
+            description: SubnetStatus defines the observed state of Subnet
+            properties:
+              capacity:
+                anyOf:
+                  - type: integer
+                  - type: string
+                description: Capacity shows total capacity of CIDR
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
+              capacityLeft:
+                anyOf:
+                  - type: integer
+                  - type: string
+                description: CapacityLeft shows remaining capacity (excluding capacity
+                  of child subnets)
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
+              locality:
+                description: Locality represents subnet regional coverated
+                type: string
+              message:
+                description: Message contains an error string for the failed State
+                type: string
+              reserved:
+                description: Reserved is a CIDR that was reserved
+                type: string
+              state:
+                description: State represents the cunnet processing state
+                type: string
+              type:
+                description: Type represents whether CIDR is an IPv4 or IPv6
+                type: string
+              vacant:
+                description: Vacant shows CIDR ranges available for booking
+                items:
                   type: string
-                regions:
-                  description: Regions represents the network service location
-                  items:
-                    type: string
-                  minItems: 1
-                  type: array
-              type: object
-            status:
-              description: SubnetStatus defines the observed state of Subnet
-              properties:
-                capacity:
-                  anyOf:
-                    - type: integer
-                    - type: string
-                  description: Capacity shows total capacity of CIDR
-                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                  x-kubernetes-int-or-string: true
-                capacityLeft:
-                  anyOf:
-                    - type: integer
-                    - type: string
-                  description: CapacityLeft shows remaining capacity (excluding capacity
-                    of child subnets)
-                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                  x-kubernetes-int-or-string: true
-                locality:
-                  description: Locality represents subnet regional coverated
-                  type: string
-                message:
-                  description: Message contains an error string for the failed State
-                  type: string
-                reserved:
-                  description: Reserved is a CIDR that was reserved
-                  type: string
-                state:
-                  description: State represents the cunnet processing state
-                  type: string
-                type:
-                  description: Type represents whether CIDR is an IPv4 or IPv6
-                  type: string
-                vacant:
-                  description: Vacant shows CIDR ranges available for booking
-                  items:
-                    type: string
-                  type: array
-              type: object
-          type: object
-      served: true
-      storage: true
-      subresources:
-        status: {}
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
 status:
   acceptedNames:
     kind: ""

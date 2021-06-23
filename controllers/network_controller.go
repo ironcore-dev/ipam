@@ -34,8 +34,9 @@ import (
 const (
 	CNetworkFinalizer = "network.ipam.onmetal.de/finalizer"
 
-	CVXLANCounterName = "k8s-vxlan-network-counter"
-	CMPLSCounterName  = "k8s-mpls-network-counter"
+	CVXLANCounterName  = "k8s-vxlan-network-counter"
+	CGENEVECounterName = "k8s-geneve-network-counter"
+	CMPLSCounterName   = "k8s-mpls-network-counter"
 )
 
 // NetworkReconciler reconciles a Network object
@@ -260,6 +261,8 @@ func (r *NetworkReconciler) typeToCounterName(networkType machinev1alpha1.Networ
 	switch networkType {
 	case machinev1alpha1.CVXLANNetworkType:
 		counterName = CVXLANCounterName
+	case machinev1alpha1.CGENEVENetworkType:
+		counterName = CGENEVECounterName
 	case machinev1alpha1.CMPLSNetworkType:
 		counterName = CMPLSCounterName
 	default:

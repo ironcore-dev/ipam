@@ -50,7 +50,7 @@ Replace with your registry if you're using quay or anything else.
 ```
 # ! Be sure to install CRDs first
 # Build and push Docker image
-make docker-build docker-push IMG="localhost:5000/onmetal/ipam:latest" GIT_USER=yourusername GIT_PASSWORD=youraccesstoken
+make docker-build docker-push IMG="localhost:5000/onmetal/ipam:latest"
 
 # Deploy
 make deploy IMG="localhost:5000/onmetal/ipam:latest"

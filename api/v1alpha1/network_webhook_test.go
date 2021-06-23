@@ -59,6 +59,36 @@ var _ = Describe("Network webhook", func() {
 				},
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
+						Name:      "out-of-range-geneve-1",
+						Namespace: NetworkNamespace,
+					},
+					Spec: NetworkSpec{
+						ID:   NetworkIDFromBytes([]byte{0}),
+						Type: CGENEVENetworkType,
+					},
+				},
+				{
+					ObjectMeta: controllerruntime.ObjectMeta{
+						Name:      "out-of-range-geneve-2",
+						Namespace: NetworkNamespace,
+					},
+					Spec: NetworkSpec{
+						ID:   NetworkIDFromBytes([]byte{99}),
+						Type: CGENEVENetworkType,
+					},
+				},
+				{
+					ObjectMeta: controllerruntime.ObjectMeta{
+						Name:      "out-of-range-geneve-3",
+						Namespace: NetworkNamespace,
+					},
+					Spec: NetworkSpec{
+						ID:   NetworkIDFromBytes([]byte{0, 0, 0, 1}),
+						Type: CGENEVENetworkType,
+					},
+				},
+				{
+					ObjectMeta: controllerruntime.ObjectMeta{
 						Name:      "out-of-range-mpls-1",
 						Namespace: NetworkNamespace,
 					},
@@ -134,6 +164,45 @@ var _ = Describe("Network webhook", func() {
 					},
 					Spec: NetworkSpec{
 						Type: CVXLANNetworkType,
+						ID:   NetworkIDFromBytes([]byte{255, 16}),
+					},
+				},
+				{
+					ObjectMeta: controllerruntime.ObjectMeta{
+						Name:      "geneve-no-id",
+						Namespace: NetworkNamespace,
+					},
+					Spec: NetworkSpec{
+						Type: CGENEVENetworkType,
+					},
+				},
+				{
+					ObjectMeta: controllerruntime.ObjectMeta{
+						Name:      "geneve-border-bottom",
+						Namespace: NetworkNamespace,
+					},
+					Spec: NetworkSpec{
+						Type: CGENEVENetworkType,
+						ID:   NetworkIDFromBytes([]byte{100}),
+					},
+				},
+				{
+					ObjectMeta: controllerruntime.ObjectMeta{
+						Name:      "geneve-border-top",
+						Namespace: NetworkNamespace,
+					},
+					Spec: NetworkSpec{
+						Type: CGENEVENetworkType,
+						ID:   NetworkIDFromBytes([]byte{255, 255, 255}),
+					},
+				},
+				{
+					ObjectMeta: controllerruntime.ObjectMeta{
+						Name:      "geneve-middle-val",
+						Namespace: NetworkNamespace,
+					},
+					Spec: NetworkSpec{
+						Type: CGENEVENetworkType,
 						ID:   NetworkIDFromBytes([]byte{255, 16}),
 					},
 				},

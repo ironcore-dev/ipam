@@ -26,13 +26,14 @@ import (
 type NetworkSpec struct {
 	// ID is a unique network identifier.
 	// For VXLAN it is a single 24 bit value. First 100 values are reserved.
+	// For GENEVE it is a single 24 bit value. First 100 values are reserved.
 	// For MLPS it is a set of 20 bit values. First 16 values are reserved.
 	// Represented with number encoded to string.
 	// +kubebuilder:validation:Optional
 	ID *NetworkID `json:"id,omitempty"`
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Type=string
-	// +kubebuilder:validation:Enum=VXLAN;MPLS
+	// +kubebuilder:validation:Enum=VXLAN;GENEVE;MPLS
 	Type NetworkType `json:"type,omitempty"`
 	// Description contains a human readable description of network
 	// +kubebuilder:validation:Optional
@@ -55,8 +56,10 @@ type NetworkStatus struct {
 	IPv6Ranges []CIDR `json:"ipv6Ranges,omitempty"`
 	// Reserved is a reserved network ID
 	Reserved *NetworkID `json:"reserved,omitempty"`
-	// Capacity is a total address capacity of all CIDRs in Ranges
-	Capacity resource.Quantity `json:"capacity,omitempty"`
+	// IPv4Capacity is a total address capacity of all IPv4 CIDRs in Ranges
+	IPv4Capacity resource.Quantity `json:"ipv4Capacity,omitempty"`
+	// IPv6Capacity is a total address capacity of all IPv4 CIDRs in Ranges
+	IPv6Capacity resource.Quantity `json:"ipv6Capacity,omitempty"`
 	// State is a network creation request processing state
 	State RequestState `json:"state,omitempty"`
 	// Message contains error details if the one has occurred
@@ -68,7 +71,8 @@ type NetworkStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.spec.type`,description="Network Type"
 // +kubebuilder:printcolumn:name="Reserved",type=string,JSONPath=`.status.reserved`,description="Reserved Network ID"
-// +kubebuilder:printcolumn:name="Capacity",type=string,JSONPath=`.status.capacity`,description="Total address capacity in all ranges"
+// +kubebuilder:printcolumn:name="IPv4 Capacity",type=string,JSONPath=`.status.ipv4Capacity`,description="Total IPv4 address capacity in all ranges"
+// +kubebuilder:printcolumn:name="IPv6 Capacity",type=string,JSONPath=`.status.ipv6Capacity`,description="Total IPv4 address capacity in all ranges"
 // +kubebuilder:printcolumn:name="Description",type=string,JSONPath=`.spec.description`,description="Description"
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`,description="Request state"
 // +kubebuilder:printcolumn:name="Message",type=string,JSONPath=`.status.message`,description="Message about request processing resutls"
@@ -107,8 +111,9 @@ func (s *Network) Release(cidr *CIDR) error {
 	}
 
 	ranges = append(ranges[:reservationIdx], ranges[reservationIdx+1:]...)
+	sub := resource.MustParse(cidr.AddressCapacity().String())
+	s.subCapacityForCidr(cidr, &sub)
 	s.setRangesForCidr(cidr, ranges)
-	s.Status.Capacity.Sub(resource.MustParse(cidr.AddressCapacity().String()))
 
 	return nil
 }
@@ -129,7 +134,11 @@ func (s *Network) Reserve(cidr *CIDR) error {
 	vacantLen := len(ranges)
 	if vacantLen == 0 {
 		ranges = []CIDR{*cidr}
+
+		add := resource.MustParse(cidr.AddressCapacity().String())
+		s.addCapacityForCidr(cidr, &add)
 		s.setRangesForCidr(cidr, ranges)
+
 		return nil
 	}
 
@@ -163,12 +172,8 @@ func (s *Network) Reserve(cidr *CIDR) error {
 		return errors.New("unable to find place to insert cidr")
 	}
 
-	if s.Status.Capacity.IsZero() {
-		s.Status.Capacity = resource.MustParse(cidr.AddressCapacity().String())
-	} else {
-		s.Status.Capacity.Add(resource.MustParse(cidr.AddressCapacity().String()))
-	}
-
+	add := resource.MustParse(cidr.AddressCapacity().String())
+	s.addCapacityForCidr(cidr, &add)
 	s.setRangesForCidr(cidr, ranges)
 
 	return nil
@@ -211,5 +216,21 @@ func (s *Network) setRangesForCidr(cidr *CIDR, ranges []CIDR) {
 		s.Status.IPv4Ranges = ranges
 	} else {
 		s.Status.IPv6Ranges = ranges
+	}
+}
+
+func (s *Network) addCapacityForCidr(cidr *CIDR, add *resource.Quantity) {
+	if cidr.IsIPv4() {
+		s.Status.IPv4Capacity.Add(*add)
+	} else {
+		s.Status.IPv6Capacity.Add(*add)
+	}
+}
+
+func (s *Network) subCapacityForCidr(cidr *CIDR, sub *resource.Quantity) {
+	if cidr.IsIPv4() {
+		s.Status.IPv4Capacity.Sub(*sub)
+	} else {
+		s.Status.IPv6Capacity.Sub(*sub)
 	}
 }

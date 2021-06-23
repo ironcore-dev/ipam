@@ -91,12 +91,6 @@ spec:
               cidr:
                 description: CIDR represents the IP Address Range
                 type: string
-              hostIdentifierBits:
-                description: PrefixBits is an amount of ones zero bits at the beginning
-                  of the netmask
-                maximum: 128
-                minimum: 0
-                type: integer
               networkName:
                 description: NetworkName contains a reference (name) to the network
                 type: string
@@ -104,6 +98,12 @@ spec:
                 description: ParentSubnetName contains a reference (name) to the parent
                   subent
                 type: string
+              prefixBits:
+                description: PrefixBits is an amount of ones zero bits at the beginning
+                  of the netmask
+                maximum: 128
+                minimum: 0
+                type: integer
               regions:
                 description: Regions represents the network service location
                 items:

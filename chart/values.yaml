@@ -46,12 +46,12 @@ cluster:
   domain: cluster.local
 
 crd:
-  ipam:
+  ip:
     group: ipam.onmetal.de
-    plural: ipams
-    singular: ipam
-    kind: Ipam
-    listKind: IpamList
+    plural: ip
+    singular: ip
+    kind: Ip
+    listKind: IpList
     scope: Namespaced
   subnet:
     group: ipam.onmetal.de

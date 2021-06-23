@@ -1,11 +1,11 @@
 apiVersion: ipam.onmetal.de/v1alpha1
-kind: Ipam
+kind: Ip
 metadata:
-  name: ipam1
+  name: ip1
 spec:
-  subnet: subnet1
+  subnet: child-bits-subnet-sample
   crd:
     groupVersion: ipam.onmetal.de/v1alpha1
     kind: Example
     name: example1
-  ip: 10.0.0.1
+  ip: 10.192.0.1

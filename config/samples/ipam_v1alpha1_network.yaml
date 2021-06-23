@@ -1,6 +1,6 @@
 apiVersion: ipam.onmetal.de/v1alpha1
-kind: NetworkGlobal
+kind: Network
 metadata:
-  name: networkglobal-sample
+  name: network-sample
 spec:
   description: sample
