@@ -406,6 +406,59 @@ var _ = Describe("Subnet operations", func() {
 					bits:         29,
 					expectedCidr: cidrMustParse("0.0.0.0/29"),
 				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant: []CIDR{*cidrMustParse("10.1.0.0/16"), *cidrMustParse("10.2.0.0/15"),
+								*cidrMustParse("10.4.0.0/14"), *cidrMustParse("10.8.0.0/13"),
+								*cidrMustParse("10.16.0.0/12"), *cidrMustParse("10.32.0.0/11"),
+								*cidrMustParse("10.64.0.0/10"), *cidrMustParse("10.128.0.0/9")},
+							Reserved: cidrMustParse("10.0.0.0/8"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(1048000, 0),
+					bits:         12,
+					expectedCidr: cidrMustParse("10.16.0.0/12"),
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant: []CIDR{*cidrMustParse("10.1.0.0/16"), *cidrMustParse("10.2.0.0/15"),
+								*cidrMustParse("10.4.0.0/14"), *cidrMustParse("10.8.0.0/13"),
+								*cidrMustParse("10.16.0.0/12"), *cidrMustParse("10.32.0.0/11"),
+								*cidrMustParse("10.64.0.0/10"), *cidrMustParse("10.128.0.0/9")},
+							Reserved: cidrMustParse("10.0.0.0/8"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(65536, 0),
+					bits:         16,
+					expectedCidr: cidrMustParse("10.1.0.0/16"),
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant: []CIDR{*cidrMustParse("10.1.0.0/16"), *cidrMustParse("10.2.0.0/15"),
+								*cidrMustParse("10.4.0.0/14"), *cidrMustParse("10.8.0.0/13"),
+								*cidrMustParse("10.16.0.0/12"), *cidrMustParse("10.32.0.0/11"),
+								*cidrMustParse("10.64.0.0/10"), *cidrMustParse("10.128.0.0/9")},
+							Reserved: cidrMustParse("10.0.0.0/8"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(4194305, 0),
+					bits:         9,
+					expectedCidr: cidrMustParse("10.128.0.0/9"),
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("10.1.0.0/16"), *cidrMustParse("10.2.0.0/16")},
+							Reserved: cidrMustParse("10.0.0.0/8"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(65535, 0),
+					bits:         16,
+					expectedCidr: cidrMustParse("10.1.0.0/16"),
+				},
 			}
 
 			for idx, testCase := range testCases {

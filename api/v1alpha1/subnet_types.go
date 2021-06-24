@@ -198,15 +198,13 @@ func (s *Subnet) ProposeForBits(prefixBits byte) (*CIDR, error) {
 		currentOnes := cidr.MaskOnes()
 
 		if currentOnes <= prefixBits {
-			if candidateCidr == nil {
+			if candidateCidr == nil ||
+				currentOnes > candidateOnes {
 				candidateOnes = currentOnes
-				candidateCidr = &cidr
-			} else if currentOnes > candidateOnes {
-				candidateOnes = currentOnes
-				candidateCidr = &cidr
-				if currentOnes == prefixBits {
-					break
-				}
+				candidateCidr = cidr.DeepCopy()
+			}
+			if currentOnes == prefixBits {
+				break
 			}
 		}
 	}
