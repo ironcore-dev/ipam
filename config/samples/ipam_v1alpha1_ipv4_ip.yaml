@@ -1,0 +1,6 @@
+apiVersion: ipam.onmetal.de/v1alpha1
+kind: Ip
+metadata:
+  name: ipv4-ip-sample
+spec:
+  subnet: ipv4-child-cidr-subnet-sample

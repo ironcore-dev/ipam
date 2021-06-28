@@ -48,7 +48,7 @@ cluster:
 crd:
   ip:
     group: ipam.onmetal.de
-    plural: ip
+    plural: ips
     singular: ip
     kind: Ip
     listKind: IpList

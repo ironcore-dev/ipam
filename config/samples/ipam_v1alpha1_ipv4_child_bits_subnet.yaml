@@ -1,10 +1,10 @@
 apiVersion: ipam.onmetal.de/v1alpha1
 kind: Subnet
 metadata:
-  name: child-capacity-subnet-sample
+  name: ipv4-child-bits-subnet-sample
 spec:
-  capacity: "100"
-  parentSubnetName: "parent-cidr-subnet-sample"
+  prefixBits: 16
+  parentSubnetName: "ipv4-parent-cidr-subnet-sample"
   networkName: network-sample
   regions:
     - euw

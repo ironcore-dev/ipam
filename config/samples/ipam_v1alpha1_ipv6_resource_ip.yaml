@@ -1,0 +1,11 @@
+apiVersion: ipam.onmetal.de/v1alpha1
+kind: Ip
+metadata:
+  name: ipv6-resource-ip-sample
+spec:
+  subnet: ipv6-child-cidr-subnet-sample
+  crd:
+    groupVersion: ipam.onmetal.de/v1alpha1
+    kind: Example
+    name: example-sample
+  ip: fd34:5d8f:e75e:f3a2::0003

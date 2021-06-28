@@ -82,6 +82,8 @@ type SubnetStatus struct {
 	Type SubnetAddressType `json:"type,omitempty"`
 	// Locality represents subnet regional coverated
 	Locality SubnetLocalityType `json:"locality,omitempty"`
+	// PrefixBits is an amount of ones zero bits at the beginning of the netmask
+	PrefixBits byte `json:"prefixBits,omitempty"`
 	// Capacity shows total capacity of CIDR
 	Capacity resource.Quantity `json:"capacity,omitempty"`
 	// CapacityLeft shows remaining capacity (excluding capacity of child subnets)
@@ -103,6 +105,7 @@ type SubnetStatus struct {
 // +kubebuilder:printcolumn:name="Reserved",type=string,JSONPath=`.status.reserved`,description="Reserved CIDR"
 // +kubebuilder:printcolumn:name="Address Type",type=string,JSONPath=`.status.type`,description="Address Type"
 // +kubebuilder:printcolumn:name="Locality",type=string,JSONPath=`.status.locality`,description="Locality"
+// +kubebuilder:printcolumn:name="Prefix Bits",type=string,JSONPath=`.status.prefixBits`,description="Amount of ones in netmask"
 // +kubebuilder:printcolumn:name="Capacity",type=string,JSONPath=`.status.capacity`,description="Capacity"
 // +kubebuilder:printcolumn:name="Capacity Left",type=string,JSONPath=`.status.capacityLeft`,description="Capacity Left"
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`,description="State"
@@ -153,6 +156,7 @@ func (s *Subnet) FillStatusFromCidr(cidr *CIDR) {
 
 	s.Status.Reserved = cidr.DeepCopy()
 	s.Status.Vacant = []CIDR{*cidr.DeepCopy()}
+	s.Status.PrefixBits = cidr.MaskOnes()
 	capacityString := cidr.AddressCapacity().String()
 	s.Status.Capacity = resource.MustParse(capacityString)
 	s.Status.CapacityLeft = s.Status.Capacity.DeepCopy()

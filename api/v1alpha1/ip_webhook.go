@@ -18,9 +18,9 @@ package v1alpha1
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/onmetal/ipam/api/v1alpha1/cidr"
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -31,7 +31,7 @@ import (
 )
 
 // log is for logging in this package.
-var log = logf.Log.WithName("ip-resource")
+var iplog = logf.Log.WithName("ip-resource")
 var c client.Client
 
 func (r *Ip) SetupWebhookWithManager(mgr ctrl.Manager) error {
@@ -47,18 +47,18 @@ var _ webhook.Defaulter = &Ip{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *Ip) Default() {
-	log.Info("default", "name", r.Name)
+	iplog.Info("default", "name", r.Name)
 
 	if r.Spec.IP == "" {
 		ctx := context.Background()
 		var subnet Subnet
 		if err := c.Get(ctx, client.ObjectKey{Namespace: r.Namespace, Name: r.Spec.Subnet}, &subnet); err != nil {
-			log.Error(err, "unable to get gateway of Subnet")
+			iplog.Error(err, "unable to get gateway of Subnet")
 			return
 		}
 		ip, err := r.getFreeIP(context.Background(), subnet.Spec.CIDR.String(), r.Namespace, r.Spec.Subnet)
 		if err != nil {
-			log.Error(err, "unable to get free IP")
+			iplog.Error(err, "unable to get free IP")
 			return
 		}
 		r.Spec.IP = ip
@@ -71,28 +71,32 @@ var _ webhook.Validator = &Ip{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (r *Ip) ValidateCreate() error {
-	log.Info("validate create", "name", r.Name)
+	iplog.Info("validate create", "name", r.Name)
 	return r.validate()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *Ip) ValidateUpdate(old runtime.Object) error {
-	log.Info("validate update", "name", r.Name)
+	iplog.Info("validate update", "name", r.Name)
 	return r.validate()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
 func (r *Ip) ValidateDelete() error {
-	log.Info("validate delete", "name", r.Name)
+	iplog.Info("validate delete", "name", r.Name)
 	return nil
 }
 
 func (r *Ip) validate() error {
 	ctx := context.Background()
 	var subnet Subnet
-	if err := c.Get(ctx, client.ObjectKey{Namespace: r.Namespace, Name: r.Spec.Subnet}, &subnet); err != nil {
-		log.Error(err, "unable to get gateway of Subnet")
-		return errors.New("Subnet is not found: " + r.Spec.Subnet)
+	subnetKey := client.ObjectKey{
+		Namespace: r.Namespace,
+		Name:      r.Spec.Subnet,
+	}
+	if err := c.Get(ctx, subnetKey, &subnet); err != nil {
+		iplog.Error(err, "unable to find subnet", "name", r.Name, "subnet", subnetKey)
+		return errors.Wrapf(err, "Subnet is not found: "+r.Spec.Subnet)
 	}
 	// Only check for CRD if it is specified
 	if r.Spec.CRD != nil {
@@ -100,23 +104,25 @@ func (r *Ip) validate() error {
 		u := &unstructured.Unstructured{}
 		gv, err := schema.ParseGroupVersion(r.Spec.CRD.GroupVersion)
 		if err != nil {
-			return errors.New("unable to parse CRD GroupVersion")
+			iplog.Error(err, "unable to parse CRD GroupVersion", "name", r.Name, "crd", r.Spec.CRD)
+			return errors.Wrapf(err, "unable to parse CRD GroupVersion")
 		}
 		gvk := gv.WithKind(r.Spec.CRD.Kind)
 		u.SetGroupVersionKind(gvk)
-		err = c.Get(context.Background(), client.ObjectKey{
+		key := client.ObjectKey{
 			Namespace: r.Namespace,
 			Name:      r.Spec.CRD.Name,
-		}, u)
-		if err != nil {
-			return errors.New("unable to find CRD")
+		}
+		if err = c.Get(context.Background(), key, u); err != nil {
+			iplog.Error(err, "unable to find CRD", "name", r.Name, "crd", r.Spec.CRD)
+			return errors.Wrapf(err, "unable to find CRD")
 		}
 	}
 	if r.Spec.IP != "" {
 		free, err := r.isIPFree(ctx, r.Spec.IP, r.Namespace, r.Spec.Subnet)
 		if err != nil {
-			log.Error(err, "unable to check if IP is free")
-			return err
+			iplog.Error(err, "unable to check if IP is free")
+			return errors.Wrapf(err, "unable to check if IP is free")
 		}
 		if !free {
 			return errors.New("IP is already allocated")

@@ -37,6 +37,10 @@ spec:
       jsonPath: .status.locality
       name: Locality
       type: string
+    - description: Amount of ones in netmask
+      jsonPath: .status.prefixBits
+      name: Prefix Bits
+      type: string
     - description: Capacity
       jsonPath: .status.capacity
       name: Capacity
@@ -135,6 +139,10 @@ spec:
               message:
                 description: Message contains an error string for the failed State
                 type: string
+              prefixBits:
+                description: PrefixBits is an amount of ones zero bits at the beginning
+                  of the netmask
+                type: integer
               reserved:
                 description: Reserved is a CIDR that was reserved
                 type: string

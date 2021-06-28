@@ -14,7 +14,28 @@ spec:
     singular: {{ .Values.crd.ip.singular }}
   scope: Namespaced
   versions:
-    - name: v1alpha1
+    - additionalPrinterColumns:
+        - description: IP Address
+          jsonPath: .spec.ip
+          name: IP
+          type: string
+        - description: Subnet
+          jsonPath: .spec.subnet
+          name: Subnet
+          type: string
+        - description: Resource Group
+          jsonPath: .spec.crd.groupVersion
+          name: Resource Group
+          type: string
+        - description: Resource Kind
+          jsonPath: .spec.crd.kind
+          name: Resource Kind
+          type: string
+        - description: Resource Name
+          jsonPath: .spec.crd.name
+          name: Resource Name
+          type: string
+      name: v1alpha1
       schema:
         openAPIV3Schema:
           description: Ip is the Schema for the ips API

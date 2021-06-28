@@ -1,0 +1,13 @@
+apiVersion: ipam.onmetal.de/v1alpha1
+kind: Subnet
+metadata:
+  name: ipv6-child-bits-subnet-sample
+spec:
+  prefixBits: 88
+  parentSubnetName: "ipv6-parent-cidr-subnet-sample"
+  networkName: network-sample
+  regions:
+    - euw
+  availabilityZones:
+    - a
+    - b
