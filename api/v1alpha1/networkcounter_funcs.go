@@ -9,6 +9,9 @@ import (
 var CVXLANFirstAvaliableID = NetworkIDFromBytes([]byte{99 + 1})
 var CVXLANMaxID = NetworkIDFromBytes([]byte{255, 255, 255})
 
+var CGENEVEFirstAvaliableID = CVXLANFirstAvaliableID
+var CGENEVEMaxID = CVXLANMaxID
+
 // First 16 addresses (0-15) are reserved
 var CMPLSFirstAvailableID = NetworkIDFromBytes([]byte{15 + 1})
 var CIncrement = big.NewInt(1)
@@ -201,6 +204,16 @@ func NewNetworkCounterSpec(typ NetworkType) *NetworkCounterSpec {
 					Begin: CVXLANFirstAvaliableID,
 					// VXLAN ID consists of 24 bits
 					End: CVXLANMaxID,
+				},
+			},
+		}
+	case CGENEVENetworkType:
+		return &NetworkCounterSpec{
+			Vacant: []NetworkIDInterval{
+				{
+					Begin: CGENEVEFirstAvaliableID,
+					// GENEVE ID consists of 24 bits
+					End: CGENEVEMaxID,
 				},
 			},
 		}

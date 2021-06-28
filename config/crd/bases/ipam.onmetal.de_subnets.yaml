@@ -17,10 +17,6 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: CIDR
-      jsonPath: .spec.cidr
-      name: CIDR
-      type: string
     - description: Parent Subnet
       jsonPath: .spec.parentSubnetName
       name: Parent Subnet
@@ -29,6 +25,10 @@ spec:
       jsonPath: .spec.networkName
       name: Parent Network
       type: string
+    - description: Reserved CIDR
+      jsonPath: .status.reserved
+      name: Reserved
+      type: string
     - description: Address Type
       jsonPath: .status.type
       name: Address Type
@@ -36,6 +36,10 @@ spec:
     - description: Locality
       jsonPath: .status.locality
       name: Locality
+      type: string
+    - description: Amount of ones in netmask
+      jsonPath: .status.prefixBits
+      name: Prefix Bits
       type: string
     - description: Capacity
       jsonPath: .status.capacity
@@ -80,6 +84,14 @@ spec:
                   type: string
                 minItems: 1
                 type: array
+              capacity:
+                anyOf:
+                - type: integer
+                - type: string
+                description: Capacity is a desired amount of addresses; will be ceiled
+                  to the closest power of 2.
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
               cidr:
                 description: CIDR represents the IP Address Range
                 type: string
@@ -90,15 +102,18 @@ spec:
                 description: ParentSubnetName contains a reference (name) to the parent
                   subent
                 type: string
+              prefixBits:
+                description: PrefixBits is an amount of ones zero bits at the beginning
+                  of the netmask
+                maximum: 128
+                minimum: 0
+                type: integer
               regions:
                 description: Regions represents the network service location
                 items:
                   type: string
                 minItems: 1
                 type: array
-            required:
-            - availabilityZones
-            - regions
             type: object
           status:
             description: SubnetStatus defines the observed state of Subnet
@@ -123,6 +138,13 @@ spec:
                 type: string
               message:
                 description: Message contains an error string for the failed State
+                type: string
+              prefixBits:
+                description: PrefixBits is an amount of ones zero bits at the beginning
+                  of the netmask
+                type: integer
+              reserved:
+                description: Reserved is a CIDR that was reserved
                 type: string
               state:
                 description: State represents the cunnet processing state

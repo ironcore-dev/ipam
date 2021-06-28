@@ -1,0 +1,7 @@
+apiVersion: ipam.onmetal.de/v1alpha1
+kind: Network
+metadata:
+  name: geneve-network-sample
+spec:
+  type: GENEVE
+  id: "101"

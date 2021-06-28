@@ -1,0 +1,94 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: {{ .Values.crd.ip.plural }}.{{ .Values.crd.ip.group }}
+spec:
+  group: {{ .Values.crd.ip.group }}
+  names:
+    kind: {{ .Values.crd.ip.kind }}
+    listKind: {{ .Values.crd.ip.listKind }}
+    plural: {{ .Values.crd.ip.plural }}
+    singular: {{ .Values.crd.ip.singular }}
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: IP Address
+          jsonPath: .spec.ip
+          name: IP
+          type: string
+        - description: Subnet
+          jsonPath: .spec.subnet
+          name: Subnet
+          type: string
+        - description: Resource Group
+          jsonPath: .spec.crd.groupVersion
+          name: Resource Group
+          type: string
+        - description: Resource Kind
+          jsonPath: .spec.crd.kind
+          name: Resource Kind
+          type: string
+        - description: Resource Name
+          jsonPath: .spec.crd.name
+          name: Resource Name
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: Ip is the Schema for the ips API
+          properties:
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: IpSpec defines the desired state of Ip
+              properties:
+                crd:
+                  description: CRD find IP for
+                  properties:
+                    groupVersion:
+                      description: Kind is CRD Kind for lookup
+                      type: string
+                    kind:
+                      description: Kind is CRD Kind for lookup
+                      type: string
+                    name:
+                      description: Name is CRD Name for lookup
+                      type: string
+                  type: object
+                ip:
+                  description: IP to request, if not specified - will be added automatically
+                  type: string
+                subnet:
+                  description: Subnet to get IP from
+                  type: string
+              type: object
+            status:
+              description: IpStatus defines the observed state of Ip
+              properties:
+                lastUsedIp:
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

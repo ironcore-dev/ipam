@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
+	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -130,10 +131,10 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			return ctrl.Result{}, err
 		}
 
-		// If it is not possible to reserve subnet's CIDR in  network,
+		// If it is not possible to reserve subnet's CIDR in network,
 		// then CIDR (or its part) is already reserved,
 		// and CIDR allocation has failed.
-		if err := network.Reserve(&subnet.Spec.CIDR); err != nil {
+		if err := network.Reserve(subnet.Spec.CIDR); err != nil {
 			log.Error(err, "unable to reserve subnet in network", "name", req.NamespacedName, "network name", networkNamespacedName)
 			subnet.Status.State = v1alpha1.CFailedSubnetState
 			subnet.Status.Message = err.Error()
@@ -149,7 +150,7 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			return ctrl.Result{}, err
 		}
 
-		subnet.Status.State = v1alpha1.CFinishedSubnetState
+		subnet.FillStatusFromCidr(subnet.Spec.CIDR)
 		if err := r.Status().Update(ctx, subnet); err != nil {
 			log.Error(err, "unable to update subnet status", "name", req.NamespacedName)
 			return ctrl.Result{}, err
@@ -172,9 +173,52 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, err
 	}
 
+	if err := subset(parentSubnet.Spec.Regions, subnet.Spec.Regions); err != nil {
+		err := errors.Wrap(err, "subnet's region set is not a part of parent region set")
+		log.Error(err, "unable to use provided region set", "name", req.NamespacedName, "parent name", parentSubnetNamespacedName)
+		subnet.Status.State = v1alpha1.CFailedSubnetState
+		subnet.Status.Message = err.Error()
+		if err := r.Status().Update(ctx, subnet); err != nil {
+			log.Error(err, "unable to update subnet status", "name", req.NamespacedName)
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, err
+	}
+	if err := subset(parentSubnet.Spec.AvailabilityZones, subnet.Spec.AvailabilityZones); err != nil {
+		err := errors.Wrap(err, "subnet's az set is not a part of parent az set")
+		log.Error(err, "unable to use provided az set", "name", req.NamespacedName, "parent name", parentSubnetNamespacedName)
+		subnet.Status.State = v1alpha1.CFailedSubnetState
+		subnet.Status.Message = err.Error()
+		if err := r.Status().Update(ctx, subnet); err != nil {
+			log.Error(err, "unable to update subnet status", "name", req.NamespacedName)
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, err
+	}
+
+	var cidrToReserve *v1alpha1.CIDR
+	if subnet.Spec.CIDR != nil {
+		cidrToReserve = subnet.Spec.CIDR
+	} else if subnet.Spec.PrefixBits != nil {
+		cidrToReserve, err = parentSubnet.ProposeForBits(*subnet.Spec.PrefixBits)
+	} else {
+		cidrToReserve, err = parentSubnet.ProposeForCapacity(subnet.Spec.Capacity)
+	}
+
+	if err != nil {
+		log.Error(err, "unable to find cidr that will fit in parent subnet", "name", req.NamespacedName, "parent name", parentSubnetNamespacedName)
+		subnet.Status.State = v1alpha1.CFailedSubnetState
+		subnet.Status.Message = err.Error()
+		if err := r.Status().Update(ctx, subnet); err != nil {
+			log.Error(err, "unable to update subnet status", "name", req.NamespacedName)
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, err
+	}
+
 	// If it is not possible to reserve subnet's CIDR in parent subnet,
 	// then CIDR (or its part) is already reserved, and CIDR allocation has failed.
-	if err := parentSubnet.Reserve(&subnet.Spec.CIDR); err != nil {
+	if err := parentSubnet.Reserve(cidrToReserve); err != nil {
 		log.Error(err, "unable to reserve cidr in parent subnet", "name", req.NamespacedName, "parent name", parentSubnetNamespacedName)
 		subnet.Status.State = v1alpha1.CFailedSubnetState
 		subnet.Status.Message = err.Error()
@@ -190,7 +234,7 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, err
 	}
 
-	subnet.Status.State = v1alpha1.CFinishedSubnetState
+	subnet.FillStatusFromCidr(cidrToReserve)
 	if err := r.Status().Update(ctx, subnet); err != nil {
 		log.Error(err, "unable to update parent subnet status after cidr reservation", "name", req.NamespacedName, "parent name", parentSubnetNamespacedName)
 		return ctrl.Result{}, err
@@ -208,6 +252,14 @@ func (r *SubnetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 // finalizeSubnet releases subnet CIDR from parent subnet of network.
 func (r *SubnetReconciler) finalizeSubnet(ctx context.Context, log logr.Logger, namespacedName types.NamespacedName, subnet *v1alpha1.Subnet) error {
+	// If subnet has failed to reserve the CIDR
+	// it may be released
+	if subnet.Status.Reserved == nil &&
+		subnet.Status.State == v1alpha1.CFailedSubnetState {
+		log.Info("releasing failed subnet", "name", namespacedName)
+		return nil
+	}
+
 	// If subnet has no parent subnet, then it should be released from network.
 	// Otherwise, release from parent subnet
 	if subnet.Spec.ParentSubnetName == "" {
@@ -230,9 +282,9 @@ func (r *SubnetReconciler) finalizeSubnet(ctx context.Context, log logr.Logger, 
 
 		// If release fails and it is possible to reserve the same CIDR,
 		// then it can be considered as already released by 3rd party.
-		if err := network.Release(&subnet.Spec.CIDR); err != nil {
+		if err := network.Release(subnet.Status.Reserved); err != nil {
 			log.Error(err, "unable to release subnet in network", "name", namespacedName, "network name", networkNamespacedName)
-			if network.CanReserve(&subnet.Spec.CIDR) {
+			if network.CanReserve(subnet.Status.Reserved) {
 				log.Error(err, "seems that CIDR was released beforehand", "name", namespacedName, "network name", networkNamespacedName)
 				return nil
 			}
@@ -260,9 +312,9 @@ func (r *SubnetReconciler) finalizeSubnet(ctx context.Context, log logr.Logger, 
 			return err
 		}
 
-		if err := parentSubnet.Release(&subnet.Spec.CIDR); err != nil {
+		if err := parentSubnet.Release(subnet.Status.Reserved); err != nil {
 			log.Error(err, "unable to release cidr in parent subnet", "name", namespacedName, "parent name", parentSubnetNamespacedName)
-			if parentSubnet.CanReserve(&subnet.Spec.CIDR) {
+			if parentSubnet.CanReserve(subnet.Status.Reserved) {
 				log.Error(err, "seems that CIDR was released beforehand", "name", namespacedName, "parent name", parentSubnetNamespacedName)
 				return nil
 			}
@@ -273,6 +325,31 @@ func (r *SubnetReconciler) finalizeSubnet(ctx context.Context, log logr.Logger, 
 			log.Error(err, "unable to update parent subnet status after cidr reservation", "name", namespacedName, "parent name", parentSubnetNamespacedName)
 			return err
 		}
+	}
+
+	return nil
+}
+
+// Returns error if b is not a subset of a
+func subset(set []string, subset []string) error {
+	setmap := make(map[string]bool)
+
+	for _, val := range set {
+		if _, ok := setmap[val]; ok {
+			return errors.Errorf("parent set contains duplicate value %s", val)
+		}
+		setmap[val] = false
+	}
+
+	for _, val := range subset {
+		checked, ok := setmap[val]
+		if !ok {
+			return errors.Errorf("parent set does not contain value %s", val)
+		}
+		if checked {
+			return errors.Errorf("child subset contains duplicate value %s", val)
+		}
+		setmap[val] = true
 	}
 
 	return nil

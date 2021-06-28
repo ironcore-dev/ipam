@@ -23,8 +23,10 @@ import (
 // IpSpec defines the desired state of Ip
 type IpSpec struct {
 	// Subnet to get IP from
+	// +kubebuilder:validation:Required
 	Subnet string `json:"subnet,omitempty"`
 	// CRD find IP for
+	// +kubebuilder:validation:Optional
 	CRD *CRD `json:"crd,omitempty"`
 	// IP to request, if not specified - will be added automatically
 	// +kubebuilder:validation:Optional
@@ -47,7 +49,11 @@ type IpStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-
+// +kubebuilder:printcolumn:name="IP",type=string,JSONPath=`.spec.ip`,description="IP Address"
+// +kubebuilder:printcolumn:name="Subnet",type=string,JSONPath=`.spec.subnet`,description="Subnet"
+// +kubebuilder:printcolumn:name="Resource Group",type=string,JSONPath=`.spec.crd.groupVersion`,description="Resource Group"
+// +kubebuilder:printcolumn:name="Resource Kind",type=string,JSONPath=`.spec.crd.kind`,description="Resource Kind"
+// +kubebuilder:printcolumn:name="Resource Name",type=string,JSONPath=`.spec.crd.name`,description="Resource Name"
 // Ip is the Schema for the ips API
 type Ip struct {
 	metav1.TypeMeta   `json:",inline"`

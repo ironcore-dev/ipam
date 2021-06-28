@@ -6,19 +6,6 @@ WORKDIR /workspace
 COPY go.mod go.mod
 COPY go.sum go.sum
 
-RUN go env -w GOPRIVATE='github.com/onmetal/*'
-ARG GIT_USER
-ARG GIT_PASSWORD
-RUN if [ ! -z "$GIT_USER" ] && [ ! -z "$GIT_PASSWORD" ]; then \
-        printf "machine github.com\n \
-            login ${GIT_USER}\n \
-            password ${GIT_PASSWORD}\n \
-            \nmachine api.github.com\n \
-            login ${GIT_USER}\n \
-            password ${GIT_PASSWORD}\n" \
-            >> ${HOME}/.netrc;\
-    fi
-
 # cache deps before building and copying source so that we don't need to re-download as much
 # and so that source changes don't invalidate our downloaded layer
 RUN go mod download

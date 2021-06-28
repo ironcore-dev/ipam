@@ -5,6 +5,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 var _ = Describe("Subnet operations", func() {
@@ -17,7 +18,7 @@ var _ = Describe("Subnet operations", func() {
 	emptySubnetFromCidr := func(mainCidr string) *Subnet {
 		return &Subnet{
 			Spec: SubnetSpec{
-				CIDR: *cidrMustParse(mainCidr),
+				CIDR: cidrMustParse(mainCidr),
 			},
 			Status: SubnetStatus{
 				Vacant: []CIDR{},
@@ -37,7 +38,7 @@ var _ = Describe("Subnet operations", func() {
 
 		return &Subnet{
 			Spec: SubnetSpec{
-				CIDR: *cidrMustParse(mainCidr),
+				CIDR: cidrMustParse(mainCidr),
 			},
 			Status: SubnetStatus{
 				Vacant: cidrs,
@@ -269,7 +270,7 @@ var _ = Describe("Subnet operations", func() {
 
 	Context("When Subnet spec is filled", func() {
 		It("Should correctly populate state", func() {
-			localCidr := *cidrMustParse("0.0.0.0/1")
+			localCidr := cidrMustParse("0.0.0.0/1")
 			localSubnet := Subnet{
 				Spec: SubnetSpec{
 					CIDR:              localCidr,
@@ -279,16 +280,17 @@ var _ = Describe("Subnet operations", func() {
 			}
 
 			localSubnet.PopulateStatus()
+			localSubnet.FillStatusFromCidr(localCidr)
 
 			Expect(localSubnet.Status.Capacity.Value()).To(Equal(localCidr.AddressCapacity().Int64()))
 			Expect(localSubnet.Status.CapacityLeft.Value()).To(Equal(localCidr.AddressCapacity().Int64()))
 			Expect(localSubnet.Status.Locality).To(Equal(CLocalSubnetLocalityType))
 			Expect(localSubnet.Status.Vacant).To(HaveLen(1))
-			Expect(localSubnet.Status.Vacant[0].Equal(&localCidr)).To(BeTrue())
+			Expect(localSubnet.Status.Vacant[0].Equal(localCidr)).To(BeTrue())
 			Expect(localSubnet.Status.Type).To(Equal(CIPv4SubnetType))
 			Expect(localSubnet.Status.Message).To(BeZero())
 
-			regionalCidr := *cidrMustParse("::/1")
+			regionalCidr := cidrMustParse("::/1")
 			regionalSubnet := Subnet{
 				Spec: SubnetSpec{
 					CIDR:              regionalCidr,
@@ -298,16 +300,17 @@ var _ = Describe("Subnet operations", func() {
 			}
 
 			regionalSubnet.PopulateStatus()
+			regionalSubnet.FillStatusFromCidr(regionalCidr)
 
 			Expect(regionalSubnet.Status.Capacity.Value()).To(Equal(regionalCidr.AddressCapacity().Int64()))
 			Expect(regionalSubnet.Status.CapacityLeft.Value()).To(Equal(regionalCidr.AddressCapacity().Int64()))
 			Expect(regionalSubnet.Status.Locality).To(Equal(CRegionalSubnetLocalityType))
 			Expect(regionalSubnet.Status.Vacant).To(HaveLen(1))
-			Expect(regionalSubnet.Status.Vacant[0].Equal(&regionalCidr)).To(BeTrue())
+			Expect(regionalSubnet.Status.Vacant[0].Equal(regionalCidr)).To(BeTrue())
 			Expect(regionalSubnet.Status.Type).To(Equal(CIPv6SubnetType))
 			Expect(regionalSubnet.Status.Message).To(BeZero())
 
-			multiregionalCidr := *cidrMustParse("::/1")
+			multiregionalCidr := cidrMustParse("::/1")
 			multiregionalSubnet := Subnet{
 				Spec: SubnetSpec{
 					CIDR:              multiregionalCidr,
@@ -317,14 +320,224 @@ var _ = Describe("Subnet operations", func() {
 			}
 
 			multiregionalSubnet.PopulateStatus()
+			multiregionalSubnet.FillStatusFromCidr(multiregionalCidr)
 
 			Expect(multiregionalSubnet.Status.Capacity.Value()).To(Equal(multiregionalCidr.AddressCapacity().Int64()))
 			Expect(multiregionalSubnet.Status.CapacityLeft.Value()).To(Equal(multiregionalCidr.AddressCapacity().Int64()))
 			Expect(multiregionalSubnet.Status.Locality).To(Equal(CMultiregionalSubnetLocalityType))
 			Expect(multiregionalSubnet.Status.Vacant).To(HaveLen(1))
-			Expect(multiregionalSubnet.Status.Vacant[0].Equal(&multiregionalCidr)).To(BeTrue())
+			Expect(multiregionalSubnet.Status.Vacant[0].Equal(multiregionalCidr)).To(BeTrue())
 			Expect(multiregionalSubnet.Status.Type).To(Equal(CIPv6SubnetType))
 			Expect(multiregionalSubnet.Status.Message).To(BeZero())
+		})
+	})
+
+	Context("When Subnet is asked to propose CIDR for the capacity", func() {
+		It("Should should return CIDR based on first smallest vacant CIDR", func() {
+			testCases := []struct {
+				subnet       *Subnet
+				capacity     *resource.Quantity
+				bits         byte
+				expectedCidr *CIDR
+			}{
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("10.0.0.0/8")},
+							Reserved: cidrMustParse("10.0.0.0/8"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(256, 0),
+					bits:         24,
+					expectedCidr: cidrMustParse("10.0.0.0/24"),
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("10.0.0.0/24")},
+							Reserved: cidrMustParse("10.0.0.0/24"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(1, 0),
+					bits:         32,
+					expectedCidr: cidrMustParse("10.0.0.0/32"),
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("0.0.0.0/0")},
+							Reserved: cidrMustParse("0.0.0.0/0"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(4294967296, 0),
+					bits:         0,
+					expectedCidr: cidrMustParse("0.0.0.0/0"),
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("0.0.0.0/0")},
+							Reserved: cidrMustParse("0.0.0.0/0"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(2, 0),
+					bits:         31,
+					expectedCidr: cidrMustParse("0.0.0.0/31"),
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("0.0.0.0/0")},
+							Reserved: cidrMustParse("0.0.0.0/0"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(5, 0),
+					bits:         29,
+					expectedCidr: cidrMustParse("0.0.0.0/29"),
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("0.0.0.0/0")},
+							Reserved: cidrMustParse("0.0.0.0/0"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(7, 0),
+					bits:         29,
+					expectedCidr: cidrMustParse("0.0.0.0/29"),
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant: []CIDR{*cidrMustParse("10.1.0.0/16"), *cidrMustParse("10.2.0.0/15"),
+								*cidrMustParse("10.4.0.0/14"), *cidrMustParse("10.8.0.0/13"),
+								*cidrMustParse("10.16.0.0/12"), *cidrMustParse("10.32.0.0/11"),
+								*cidrMustParse("10.64.0.0/10"), *cidrMustParse("10.128.0.0/9")},
+							Reserved: cidrMustParse("10.0.0.0/8"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(1048000, 0),
+					bits:         12,
+					expectedCidr: cidrMustParse("10.16.0.0/12"),
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant: []CIDR{*cidrMustParse("10.1.0.0/16"), *cidrMustParse("10.2.0.0/15"),
+								*cidrMustParse("10.4.0.0/14"), *cidrMustParse("10.8.0.0/13"),
+								*cidrMustParse("10.16.0.0/12"), *cidrMustParse("10.32.0.0/11"),
+								*cidrMustParse("10.64.0.0/10"), *cidrMustParse("10.128.0.0/9")},
+							Reserved: cidrMustParse("10.0.0.0/8"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(65536, 0),
+					bits:         16,
+					expectedCidr: cidrMustParse("10.1.0.0/16"),
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant: []CIDR{*cidrMustParse("10.1.0.0/16"), *cidrMustParse("10.2.0.0/15"),
+								*cidrMustParse("10.4.0.0/14"), *cidrMustParse("10.8.0.0/13"),
+								*cidrMustParse("10.16.0.0/12"), *cidrMustParse("10.32.0.0/11"),
+								*cidrMustParse("10.64.0.0/10"), *cidrMustParse("10.128.0.0/9")},
+							Reserved: cidrMustParse("10.0.0.0/8"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(4194305, 0),
+					bits:         9,
+					expectedCidr: cidrMustParse("10.128.0.0/9"),
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("10.1.0.0/16"), *cidrMustParse("10.2.0.0/16")},
+							Reserved: cidrMustParse("10.0.0.0/8"),
+						},
+					},
+					capacity:     resource.NewScaledQuantity(65535, 0),
+					bits:         16,
+					expectedCidr: cidrMustParse("10.1.0.0/16"),
+				},
+			}
+
+			for idx, testCase := range testCases {
+				By(fmt.Sprintf("Checking for capacity %d", idx))
+				proposedForCapacity, err := testCase.subnet.ProposeForCapacity(testCase.capacity)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(proposedForCapacity.Equal(testCase.expectedCidr)).To(BeTrue())
+				Expect(testCase.subnet.CanReserve(proposedForCapacity))
+
+				proposedForBits, err := testCase.subnet.ProposeForBits(testCase.bits)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(proposedForBits.Equal(testCase.expectedCidr)).To(BeTrue())
+				Expect(testCase.subnet.CanReserve(proposedForBits))
+			}
+		})
+	})
+
+	Context("When Subnet is asked to propose CIDR for the wrong capacity", func() {
+		It("Should should an error", func() {
+			testCases := []struct {
+				subnet   *Subnet
+				capacity *resource.Quantity
+				bits     int16
+			}{
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("10.0.0.0/24")},
+							Reserved: cidrMustParse("10.0.0.0/24"),
+						},
+					},
+					capacity: resource.NewScaledQuantity(512, 0),
+					bits:     23,
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("10.0.0.0/24")},
+							Reserved: cidrMustParse("10.0.0.0/24"),
+						},
+					},
+					bits: 128,
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("0.0.0.0/0")},
+							Reserved: cidrMustParse("0.0.0.0/0"),
+						},
+					},
+					capacity: resource.NewScaledQuantity(4294967297, 0),
+					bits:     -1,
+				},
+				{
+					subnet: &Subnet{
+						Status: SubnetStatus{
+							Vacant:   []CIDR{*cidrMustParse("0.0.0.0/0")},
+							Reserved: cidrMustParse("0.0.0.0/0"),
+						},
+					},
+					capacity: resource.NewScaledQuantity(0, 0),
+					bits:     -1,
+				},
+			}
+
+			for idx, testCase := range testCases {
+				By(fmt.Sprintf("Checking for capacity %d", idx))
+				if testCase.capacity != nil {
+					proposedForCapacity, err := testCase.subnet.ProposeForCapacity(testCase.capacity)
+					Expect(err).To(HaveOccurred())
+					Expect(proposedForCapacity).To(BeNil())
+				}
+
+				if testCase.bits != -1 {
+					proposedForBits, err := testCase.subnet.ProposeForBits(byte(testCase.bits))
+					Expect(err).To(HaveOccurred())
+					Expect(proposedForBits).To(BeNil())
+				}
+			}
 		})
 	})
 })
