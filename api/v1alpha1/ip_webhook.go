@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+
 	"github.com/onmetal/ipam/api/v1alpha1/cidr"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -49,7 +50,7 @@ var _ webhook.Defaulter = &Ip{}
 func (r *Ip) Default() {
 	iplog.Info("default", "name", r.Name)
 
-	if r.Spec.IP == "" {
+	if r.Spec.IP.String() == "" {
 		ctx := context.Background()
 		var subnet Subnet
 		if err := c.Get(ctx, client.ObjectKey{Namespace: r.Namespace, Name: r.Spec.Subnet}, &subnet); err != nil {
@@ -61,7 +62,7 @@ func (r *Ip) Default() {
 			iplog.Error(err, "unable to get free IP")
 			return
 		}
-		r.Spec.IP = ip
+		r.Spec.IP, _ = IPFromString(ip)
 	}
 }
 
@@ -118,8 +119,8 @@ func (r *Ip) validate() error {
 			return errors.Wrapf(err, "unable to find CRD")
 		}
 	}
-	if r.Spec.IP != "" {
-		free, err := r.isIPFree(ctx, r.Spec.IP, r.Namespace, r.Spec.Subnet)
+	if r.Spec.IP.String() != "" {
+		free, err := r.isIPFree(ctx, r.Spec.IP.String(), r.Namespace, r.Spec.Subnet)
 		if err != nil {
 			iplog.Error(err, "unable to check if IP is free")
 			return errors.Wrapf(err, "unable to check if IP is free")
@@ -186,8 +187,8 @@ func (r *Ip) findReservedIPs(ctx context.Context, namespace string, subnetName s
 		return nil, err
 	}
 	for index, ip := range ipList.Items {
-		if ip.Spec.Subnet == subnetName && ip.Spec.IP != "" && ip.Name != r.Name {
-			reservedIPs = append(reservedIPs, ipList.Items[index].Spec.IP)
+		if ip.Spec.Subnet == subnetName && ip.Spec.IP.String() != "" && ip.Name != r.Name {
+			reservedIPs = append(reservedIPs, ipList.Items[index].Spec.IP.String())
 		}
 	}
 	return reservedIPs, nil

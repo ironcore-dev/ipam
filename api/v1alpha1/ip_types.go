@@ -17,6 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"net"
+
+	"k8s.io/apimachinery/pkg/util/json"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -30,7 +34,7 @@ type IpSpec struct {
 	CRD *CRD `json:"crd,omitempty"`
 	// IP to request, if not specified - will be added automatically
 	// +kubebuilder:validation:Optional
-	IP string `json:"ip,omitempty"`
+	IP *IP `json:"ip,omitempty"`
 }
 
 type CRD struct {
@@ -40,6 +44,11 @@ type CRD struct {
 	Kind string `json:"kind,omitempty"`
 	// Name is CRD Name for lookup
 	Name string `json:"name,omitempty"`
+}
+
+// +kubebuilder:validation:Type=string
+type IP struct {
+	Net *net.IP `json:"-"`
 }
 
 // IpStatus defines the observed state of Ip
@@ -74,4 +83,36 @@ type IpList struct {
 
 func init() {
 	SchemeBuilder.Register(&Ip{}, &IpList{})
+}
+
+func (n IP) MarshalJSON() ([]byte, error) {
+	ip := n.String()
+	return json.Marshal(ip)
+}
+
+func (n *IP) UnmarshalJSON(b []byte) error {
+	stringVal := string(b)
+	if stringVal == "null" {
+		return nil
+	}
+	if err := json.Unmarshal(b, &stringVal); err != nil {
+		return err
+	}
+	pIp := net.ParseIP(stringVal)
+
+	n.Net = &pIp
+
+	return nil
+}
+
+func (n *IP) String() string {
+	return n.Net.String()
+}
+
+func IPFromString(ipString string) (*IP, error) {
+	ip := net.ParseIP(ipString)
+
+	return &IP{
+		Net: &ip,
+	}, nil
 }
