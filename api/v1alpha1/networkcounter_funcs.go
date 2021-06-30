@@ -351,9 +351,20 @@ func (n *NetworkCounterSpec) Release(id *NetworkID) error {
 	canJoinAfter := n.Vacant[afterIdx].CanJoinLeft(id)
 
 	if canJoinBefore && canJoinAfter {
+		beginId := n.Vacant[beforeIdx].Begin
+		endId := n.Vacant[afterIdx].End
+
+		if beginId == nil && n.Vacant[beforeIdx].Exact != nil {
+			beginId = n.Vacant[beforeIdx].Exact
+		}
+
+		if endId == nil && n.Vacant[beforeIdx].Exact != nil {
+			endId = n.Vacant[afterIdx].Exact
+		}
+
 		interval := NetworkIDInterval{
-			Begin: n.Vacant[beforeIdx].Begin,
-			End:   n.Vacant[afterIdx].End,
+			Begin: beginId,
+			End:   endId,
 		}
 
 		n.Vacant = append(n.Vacant[:beforeIdx], n.Vacant[afterIdx:]...)
