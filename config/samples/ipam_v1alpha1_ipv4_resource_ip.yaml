@@ -8,4 +8,3 @@ spec:
     groupVersion: ipam.onmetal.de/v1alpha1
     kind: Example
     name: example-sample
-  ip: 10.0.0.3
