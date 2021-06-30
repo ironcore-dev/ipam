@@ -33,9 +33,9 @@ var _ = Describe("IP webhook", func() {
 				Spec: IpSpec{
 					Subnet: "subnet1",
 					CRD: &CRD{
-						GroupVersion: ApiVersion,
-						Kind:         "Example",
-						Name:         "example2",
+						GroupVersion: "v1",
+						Kind:         "ConfigMap",
+						Name:         "configmap-that-doesnt-exist",
 					},
 					IP: "1.12.12.123",
 				},
@@ -44,22 +44,15 @@ var _ = Describe("IP webhook", func() {
 		})
 
 		It("Should allocate free IP", func() {
-
-			example := &Example{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: ApiVersion,
-					Kind:       "Example",
-				},
+			referredResource := &NetworkCounter{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "example1",
+					Name:      "referred-networkcounter",
 					Namespace: Namespace,
 				},
-				Spec: ExampleSpec{
-					Foo: "bar",
-				},
+				Spec: NetworkCounterSpec{},
 			}
-			By("Expecting Example Create Successful")
-			Expect(k8sClient.Create(ctx, example)).Should(Succeed())
+			By("Expecting referred resource to be created successfully")
+			Expect(k8sClient.Create(ctx, referredResource)).Should(Succeed())
 
 			subnet := &Subnet{
 				TypeMeta: metav1.TypeMeta{
@@ -142,8 +135,8 @@ var _ = Describe("IP webhook", func() {
 					Subnet: "subnet1",
 					CRD: &CRD{
 						GroupVersion: ApiVersion,
-						Kind:         "Example",
-						Name:         "example1",
+						Kind:         "NetworkCounter",
+						Name:         "referred-networkcounter",
 					},
 				},
 			}
@@ -196,8 +189,8 @@ var _ = Describe("IP webhook", func() {
 					Subnet: "subnet1",
 					CRD: &CRD{
 						GroupVersion: ApiVersion,
-						Kind:         "Example",
-						Name:         "example1",
+						Kind:         "NetworkCounter",
+						Name:         "referred-networkcounter",
 					},
 					IP: "10.12.34.64",
 				},
@@ -221,8 +214,8 @@ var _ = Describe("IP webhook", func() {
 					Subnet: "subnet1",
 					CRD: &CRD{
 						GroupVersion: ApiVersion,
-						Kind:         "Example",
-						Name:         "example1",
+						Kind:         "NetworkCounter",
+						Name:         "referred-networkcounter",
 					},
 					IP: "10.12.34.255",
 				},

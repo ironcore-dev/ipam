@@ -1,5 +1,20 @@
 ## Append samples you want in your CSV to this file as resources ##
 resources:
-- ipam_v1alpha1_ip_with_resource_and_ipv4.yaml
-- ipam_v1alpha1_example.yaml
+  - ipam_v1alpha1_ipv4_parent_cidr_subnet.yaml
+  - ipam_v1alpha1_ipv4_child_cidr_subnet.yaml
+  - ipam_v1alpha1_ipv4_child_bits_subnet.yaml
+  - ipam_v1alpha1_ipv4_child_capacity_subnet.yaml
+  - ipam_v1alpha1_ipv6_parent_cidr_subnet.yaml
+  - ipam_v1alpha1_ipv6_child_cidr_subnet.yaml
+  - ipam_v1alpha1_ipv6_child_bits_subnet.yaml
+  - ipam_v1alpha1_ipv6_child_capacity_subnet.yaml
+  - ipam_v1alpha1_referred_networkcounter.yaml
+  - ipam_v1alpha1_ipv4_ip_ip.yaml
+  - ipam_v1alpha1_ipv4_resource_and_ip_ip.yaml
+  - ipam_v1alpha1_ipv4_resource_ip.yaml
+  - ipam_v1alpha1_ipv4_ip.yaml
+  - ipam_v1alpha1_ipv6_ip_ip.yaml
+  - ipam_v1alpha1_ipv6_resource_and_ip_ip.yaml
+  - ipam_v1alpha1_ipv6_resource_ip.yaml
+  - ipam_v1alpha1_ipv6_ip.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

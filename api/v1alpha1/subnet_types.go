@@ -241,7 +241,7 @@ func (s *Subnet) Reserve(cidr *CIDR) error {
 	}
 
 	if reservationIdx == -1 {
-		return errors.Errorf("unable to find CIRD that includes CIDR %s", cidr.String())
+		return errors.Errorf("unable to find CIDR that includes CIDR %s", cidr.String())
 	}
 
 	remainingCidrsCount := len(remainingCidrs)
