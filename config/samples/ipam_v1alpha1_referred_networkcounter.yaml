@@ -1,0 +1,5 @@
+apiVersion: ipam.onmetal.de/v1alpha1
+kind: NetworkCounter
+metadata:
+  name: referred-networkcounter-sample
+spec: {}

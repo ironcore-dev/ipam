@@ -1,6 +1,0 @@
-apiVersion: ipam.onmetal.de/v1alpha1
-kind: Example
-metadata:
-  name: example-sample
-spec:
-  foo: bar

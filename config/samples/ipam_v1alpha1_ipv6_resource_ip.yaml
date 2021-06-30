@@ -6,5 +6,5 @@ spec:
   subnet: ipv6-child-cidr-subnet-sample
   crd:
     groupVersion: ipam.onmetal.de/v1alpha1
-    kind: Example
-    name: example-sample
+    kind: NetworkCounter
+    name: referred-networkcounter-sample
