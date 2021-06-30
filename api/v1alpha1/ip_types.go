@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"errors"
 	"net"
 
 	"k8s.io/apimachinery/pkg/util/json"
@@ -111,6 +112,11 @@ func (n *IP) String() string {
 
 func IPFromString(ipString string) (*IP, error) {
 	ip := net.ParseIP(ipString)
+
+	if ip == nil {
+		err := errors.New("parse IP failed")
+		return nil, err
+	}
 
 	return &IP{
 		Net: &ip,
