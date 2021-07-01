@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"net"
 
 	"github.com/onmetal/ipam/api/v1alpha1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -90,13 +89,13 @@ func (r *IpReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 	}
 
 	// Resource created
-	if ip.Status.LastUsedIP == "" {
+	if ip.Status.LastUsedIP == nil {
 		subnet, err := r.findSubnet(ctx, ip)
 		if err != nil {
 			log.Error(err, "unable to find ip subnet", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
-		newCidr, err := r.getIpAsCidr(ip.Spec.IP.String())
+		newCidr, err := ip.Spec.IP.AsCidr()
 		if err != nil {
 			log.Error(err, "unable to get ip as cidr", "name", req.NamespacedName)
 			return ctrl.Result{}, err
@@ -111,20 +110,20 @@ func (r *IpReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 			log.Error(err, "unable to update subnet state", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
-		ip.Status.LastUsedIP = ip.Spec.IP.String()
+		ip.Status.LastUsedIP = ip.Spec.IP
 		if err := r.Update(ctx, ip); err != nil {
 			log.Error(err, "unable to update ip state", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
 		// Resource was updated - e.g. IP changed
-	} else if ip.Status.LastUsedIP != ip.Spec.IP.String() {
+	} else if !ip.Status.LastUsedIP.Net.Equal(ip.Spec.IP.Net) {
 		// Free old IP
 		subnet, err := r.findSubnet(ctx, ip)
 		if err != nil {
 			log.Error(err, "unable to find ip subnet", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
-		lastCidr, err := r.getIpAsCidr(ip.Status.LastUsedIP)
+		lastCidr, err := ip.Status.LastUsedIP.AsCidr()
 		if err != nil {
 			log.Error(err, "unable to get ip as cidr", "name", req.NamespacedName)
 			return ctrl.Result{}, err
@@ -135,7 +134,7 @@ func (r *IpReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 			return ctrl.Result{}, err
 		}
 		// Occupy new IP
-		newCidr, err := r.getIpAsCidr(ip.Spec.IP.String())
+		newCidr, err := ip.Spec.IP.AsCidr()
 		if err != nil {
 			log.Error(err, "unable to get ip as cidr", "name", req.NamespacedName)
 			return ctrl.Result{}, err
@@ -149,7 +148,7 @@ func (r *IpReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 			log.Error(err, "unable to update subnet state", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
-		ip.Status.LastUsedIP = ip.Spec.IP.String()
+		ip.Status.LastUsedIP = ip.Spec.IP
 		if err := r.Update(ctx, ip); err != nil {
 			log.Error(err, "unable to update ip state", "name", req.NamespacedName)
 			return ctrl.Result{}, err
@@ -164,7 +163,7 @@ func (r *IpReconciler) finalizeIp(ctx context.Context, ipam *v1alpha1.Ip) error 
 	if err != nil {
 		return fmt.Errorf("unable to find ipam subnet: %w", err)
 	}
-	ipCidr, err := r.getIpAsCidr(ipam.Spec.IP.String())
+	ipCidr, err := ipam.Spec.IP.AsCidr()
 	if err != nil {
 		return fmt.Errorf("unable to get ip as cidr: %w", err)
 	}
@@ -176,19 +175,6 @@ func (r *IpReconciler) finalizeIp(ctx context.Context, ipam *v1alpha1.Ip) error 
 		return fmt.Errorf("\"unable to update subnet state: %w", err)
 	}
 	return nil
-}
-
-func (r *IpReconciler) getIpAsCidr(ipStr string) (*v1alpha1.CIDR, error) {
-	ip := net.ParseIP(ipStr)
-	cidrRange := "/32"
-	if ip.To4() == nil {
-		cidrRange = "/128"
-	}
-	cidr, err := v1alpha1.CIDRFromString(ipStr + cidrRange)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get CIDR from string: %w", err)
-	}
-	return cidr, nil
 }
 
 func (r *IpReconciler) findSubnet(ctx context.Context, ipam *v1alpha1.Ip) (*v1alpha1.Subnet, error) {

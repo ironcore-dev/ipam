@@ -49,12 +49,12 @@ type CRD struct {
 
 // +kubebuilder:validation:Type=string
 type IP struct {
-	Net *net.IP `json:"-"`
+	Net net.IP `json:"-"`
 }
 
 // IpStatus defines the observed state of Ip
 type IpStatus struct {
-	LastUsedIP string `json:"lastUsedIp,omitempty"`
+	LastUsedIP *IP `json:"lastUsedIp,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -101,7 +101,12 @@ func (n *IP) UnmarshalJSON(b []byte) error {
 	}
 	pIp := net.ParseIP(stringVal)
 
-	n.Net = &pIp
+	if pIp == nil {
+		err := errors.New("parse IP failed")
+		return err
+	}
+
+	n.Net = pIp
 
 	return nil
 }
@@ -119,6 +124,20 @@ func IPFromString(ipString string) (*IP, error) {
 	}
 
 	return &IP{
-		Net: &ip,
+		Net: ip,
 	}, nil
+}
+
+func (ip *IP) AsCidr() (*CIDR, error) {
+
+	cidrRange := 32
+	if ip.Net.To4() == nil {
+		cidrRange = 128
+	}
+	ipNet := &net.IPNet{
+		IP:   ip.Net,
+		Mask: net.CIDRMask(int(cidrRange), int(cidrRange)),
+	}
+
+	return CIDRFromNet(ipNet), nil
 }
