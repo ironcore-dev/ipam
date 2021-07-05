@@ -7,7 +7,7 @@ resources:
 - bases/ipam.onmetal.de_subnets.yaml
 - bases/ipam.onmetal.de_networks.yaml
 - bases/ipam.onmetal.de_networkcounters.yaml
-- bases/ipam.onmetal.de_networkglobals.yaml
+#- bases/ipam.onmetal.de_networkglobals.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:

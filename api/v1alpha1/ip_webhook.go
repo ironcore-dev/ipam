@@ -50,7 +50,7 @@ var _ webhook.Defaulter = &Ip{}
 func (r *Ip) Default() {
 	iplog.Info("default", "name", r.Name)
 
-	if r.Spec.IP.String() == "" {
+	if r.Spec.IP == nil {
 		ctx := context.Background()
 		var subnet Subnet
 		if err := c.Get(ctx, client.ObjectKey{Namespace: r.Namespace, Name: r.Spec.Subnet}, &subnet); err != nil {
