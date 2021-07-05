@@ -1100,6 +1100,31 @@ func successfulReleaseCases() []testCase {
 				},
 			},
 		},
+		// initial [[100], [102; 1000]]
+		// release 101
+		// result [[100; 1000]]
+		{
+			initial: NetworkCounterSpec{
+				Vacant: []NetworkIDInterval{
+					{
+						Exact: NetworkIDFromInt64(100),
+					},
+					{
+						Begin: NetworkIDFromInt64(102),
+						End:   NetworkIDFromInt64(1000),
+					},
+				},
+			},
+			testID: NetworkIDFromInt64(101),
+			resulting: NetworkCounterSpec{
+				Vacant: []NetworkIDInterval{
+					{
+						Begin: NetworkIDFromInt64(100),
+						End:   NetworkIDFromInt64(1000),
+					},
+				},
+			},
+		},
 	}
 }
 
