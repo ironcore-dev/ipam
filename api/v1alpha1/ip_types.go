@@ -115,6 +115,10 @@ func (n *IP) String() string {
 	return n.Net.String()
 }
 
+func (ipA *IP) Equal(ipB *IP) bool {
+	return ipA.Net.Equal(ipB.Net)
+}
+
 func IPFromString(ipString string) (*IP, error) {
 	ip := net.ParseIP(ipString)
 
@@ -129,7 +133,6 @@ func IPFromString(ipString string) (*IP, error) {
 }
 
 func (ip *IP) AsCidr() (*CIDR, error) {
-
 	cidrRange := 32
 	if ip.Net.To4() == nil {
 		cidrRange = 128

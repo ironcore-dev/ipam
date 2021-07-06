@@ -157,7 +157,7 @@ var _ = Describe("IP webhook", func() {
 			Eventually(func() bool {
 				ip := &Ip{}
 				_ = k8sClient.Get(context.Background(), key, ip)
-				return ip.Spec.IP == ipMustParse("10.12.34.64")
+				return ip.Spec.IP.Equal(ipMustParse("10.12.34.64"))
 			}, timeout, interval).Should(BeTrue())
 		})
 
