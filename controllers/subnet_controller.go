@@ -21,9 +21,11 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -33,13 +35,27 @@ import (
 
 const (
 	CSubnetFinalizer = "subnet.ipam.onmetal.de/finalizer"
+
+	CSubnetFinalizationSuccessReason = "SubnetFinalizationSuccess"
+
+	CTopSubnetReservationFailureReason = "TopSubnetReservationFailure"
+	CTopSubnetReservationSuccessReason = "TopSubnetReservationSuccess"
+	CTopSubnetReleaseSuccessReason     = "TopSubnetReleaseSuccess"
+
+	CChildSubnetAZScopeFailureReason      = "ChildSubnetAZScopeFailure"
+	CChildSubnetRegionScopeFailureReason  = "ChildSubnetRegionScopeFailure"
+	CChildSubnetCIDRProposalFailureReason = "ChildSubnetCIDRProposalFailure"
+	CChildSubnetReservationFailureReason  = "ChildSubnetReservationFailure"
+	CChildSubnetReservationSuccessReason  = "ChildSubnetReservationSuccess"
+	CChildSubnetReleaseSuccessReason      = "ChildSubnetReleaseSuccess"
 )
 
 // SubnetReconciler reconciles a Subnet object
 type SubnetReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Log           logr.Logger
+	Scheme        *runtime.Scheme
+	EventRecorder record.EventRecorder
 }
 
 // +kubebuilder:rbac:groups=ipam.onmetal.de,resources=subnets,verbs=get;list;watch;create;update;patch;delete
@@ -83,6 +99,7 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 				log.Error(err, "unable to update subnet resource on finalizer removal", "name", req.NamespacedName)
 				return ctrl.Result{}, err
 			}
+			r.EventRecorder.Event(subnet, v1.EventTypeNormal, CSubnetFinalizationSuccessReason, "Subnet deleted")
 		}
 		return ctrl.Result{}, nil
 	}
@@ -142,6 +159,7 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 				log.Error(err, "unable to update subnet status", "name", req.NamespacedName)
 				return ctrl.Result{}, err
 			}
+			r.EventRecorder.Event(subnet, v1.EventTypeWarning, CTopSubnetReservationFailureReason, subnet.Status.Message)
 			return ctrl.Result{}, err
 		}
 
@@ -155,6 +173,7 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			log.Error(err, "unable to update subnet status", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
+		r.EventRecorder.Eventf(subnet, v1.EventTypeNormal, CTopSubnetReservationSuccessReason, "CIDR %s in network %s reserved successfully", subnet.Status.Reserved.String(), network.Name)
 
 		return ctrl.Result{}, nil
 	}
@@ -182,6 +201,7 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			log.Error(err, "unable to update subnet status", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
+		r.EventRecorder.Event(subnet, v1.EventTypeWarning, CChildSubnetRegionScopeFailureReason, subnet.Status.Message)
 		return ctrl.Result{}, err
 	}
 	if err := subset(parentSubnet.Spec.AvailabilityZones, subnet.Spec.AvailabilityZones); err != nil {
@@ -193,6 +213,7 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			log.Error(err, "unable to update subnet status", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
+		r.EventRecorder.Event(subnet, v1.EventTypeWarning, CChildSubnetAZScopeFailureReason, subnet.Status.Message)
 		return ctrl.Result{}, err
 	}
 
@@ -213,6 +234,7 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			log.Error(err, "unable to update subnet status", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
+		r.EventRecorder.Event(subnet, v1.EventTypeWarning, CChildSubnetCIDRProposalFailureReason, subnet.Status.Message)
 		return ctrl.Result{}, err
 	}
 
@@ -226,6 +248,7 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			log.Error(err, "unable to update subnet status", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
+		r.EventRecorder.Event(subnet, v1.EventTypeWarning, CChildSubnetReservationFailureReason, subnet.Status.Message)
 		return ctrl.Result{}, err
 	}
 
@@ -239,12 +262,14 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		log.Error(err, "unable to update parent subnet status after cidr reservation", "name", req.NamespacedName, "parent name", parentSubnetNamespacedName)
 		return ctrl.Result{}, err
 	}
+	r.EventRecorder.Eventf(subnet, v1.EventTypeNormal, CChildSubnetReservationSuccessReason, "CIDR %s in subnet %s reserved successfully", subnet.Status.Reserved.String(), parentSubnet.Name)
 
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *SubnetReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.EventRecorder = mgr.GetEventRecorderFor("subnet-controller")
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Subnet{}).
 		Complete(r)
@@ -295,6 +320,7 @@ func (r *SubnetReconciler) finalizeSubnet(ctx context.Context, log logr.Logger, 
 			log.Error(err, "unable to update network", "name", namespacedName, "network name", networkNamespacedName)
 			return err
 		}
+		r.EventRecorder.Eventf(subnet, v1.EventTypeNormal, CTopSubnetReleaseSuccessReason, "CIDR %s in network %s released successfully", subnet.Status.Reserved.String(), network.Name)
 	} else {
 		parentSubnetNamespacedName := types.NamespacedName{
 			Namespace: subnet.Namespace,
@@ -325,6 +351,7 @@ func (r *SubnetReconciler) finalizeSubnet(ctx context.Context, log logr.Logger, 
 			log.Error(err, "unable to update parent subnet status after cidr reservation", "name", namespacedName, "parent name", parentSubnetNamespacedName)
 			return err
 		}
+		r.EventRecorder.Eventf(subnet, v1.EventTypeNormal, CChildSubnetReleaseSuccessReason, "CIDR %s in subnet %s released successfully", subnet.Status.Reserved.String(), parentSubnet.Name)
 	}
 
 	return nil
