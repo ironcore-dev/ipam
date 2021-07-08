@@ -277,6 +277,20 @@ func (s *Subnet) CanReserve(cidr *CIDR) bool {
 // Release puts CIDR to vacant range if there are no intersections
 // and joins neighbour networks
 func (s *Subnet) Release(cidr *CIDR) error {
+	if len(s.Spec.CIDR.Net.IP) != len(cidr.Net.IP) {
+		if len(s.Spec.CIDR.Net.IP) == 4 {
+			cidr = &CIDR{&net.IPNet{
+				IP:   cidr.Net.IP.To4(),
+				Mask: cidr.Net.Mask,
+			}}
+		} else {
+			cidr = &CIDR{&net.IPNet{
+				IP:   cidr.Net.IP.To16(),
+				Mask: cidr.Net.Mask,
+			}}
+		}
+	}
+
 	if !s.Spec.CIDR.CanReserve(cidr) {
 		return errors.Errorf("cidr %s is not describing subent of %s", cidr.String(), s.Spec.CIDR.String())
 	}

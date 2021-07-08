@@ -283,7 +283,6 @@ func (n *CIDR) CanReserve(cidr *CIDR) bool {
 	}
 
 	cidrIP := cidr.Net.IP
-
 	if len(n.Net.IP) != len(cidr.Net.IP) {
 		if len(n.Net.IP) == 4 {
 			cidrIP = cidr.Net.IP.To4()
