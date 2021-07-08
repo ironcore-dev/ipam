@@ -282,8 +282,18 @@ func (n *CIDR) CanReserve(cidr *CIDR) bool {
 		return n.Net.IP.Equal(cidr.Net.IP)
 	}
 
+	cidrIP := cidr.Net.IP
+
+	if len(n.Net.IP) != len(cidr.Net.IP) {
+		if len(n.Net.IP) == 4 {
+			cidrIP = cidr.Net.IP.To4()
+		} else {
+			cidrIP = cidr.Net.IP.To16()
+		}
+	}
+
 	for i := range n.Net.IP {
-		if n.Net.IP[i]&n.Net.Mask[i] != cidr.Net.IP[i]&cidr.Net.Mask[i]&n.Net.Mask[i] {
+		if n.Net.IP[i]&n.Net.Mask[i] != cidrIP[i]&cidr.Net.Mask[i]&n.Net.Mask[i] {
 			return false
 		}
 	}
