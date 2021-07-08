@@ -85,32 +85,35 @@ func (n *CIDR) MaskCapacity() *big.Int {
 }
 
 func (n *CIDR) ToAddressRange() (net.IP, net.IP) {
+	firstIp := n.IPBytes()
+
 	first := big.Int{}
-	first.SetBytes(n.Net.IP)
+	first.SetBytes(firstIp)
 
 	last := big.Int{}
 	last.Add(&first, n.MaskCapacity())
-	lastIP := make(net.IP, len(n.Net.IP))
+	lastIP := make(net.IP, len(firstIp))
 	last.FillBytes(lastIP)
 
-	return n.Net.IP, lastIP
+	return firstIp, lastIP
 }
 
 func (n *CIDR) Equal(cidr *CIDR) bool {
 	ourOnes, ourBits := n.Net.Mask.Size()
 	theirOnes, theirBits := cidr.Net.Mask.Size()
 
-	return n.Net.IP.Equal(cidr.Net.IP) &&
+	return n.IPBytes().Equal(cidr.IPBytes()) &&
 		ourBits == theirBits &&
 		ourOnes == theirOnes
 }
 
 func (n *CIDR) isLeft(ones int, bits int) bool {
-	ipLen := len(n.Net.IP)
+	ipBytes := n.IPBytes()
+	ipLen := len(ipBytes)
 	bitsDiff := bits - ones
 	ipIdx := ipLen - bitsDiff/8 - 1
 	ipBit := bitsDiff % 8
-	return n.Net.IP[ipIdx]&(1<<ipBit) == 0
+	return ipBytes[ipIdx]&(1<<ipBit) == 0
 }
 
 func (n *CIDR) IsLeft() bool {
@@ -135,14 +138,14 @@ func (n *CIDR) Before(cidr *CIDR) bool {
 	ourLast.SetBytes(lastIP)
 
 	theirFirst := big.Int{}
-	theirFirst.SetBytes(cidr.Net.IP)
+	theirFirst.SetBytes(cidr.IPBytes())
 
 	return ourLast.Cmp(&theirFirst) < 0
 }
 
 func (n *CIDR) After(cidr *CIDR) bool {
 	ourFirst := big.Int{}
-	ourFirst.SetBytes(n.Net.IP)
+	ourFirst.SetBytes(n.IPBytes())
 
 	_, lastIP := cidr.ToAddressRange()
 	theirLast := big.Int{}
@@ -156,7 +159,8 @@ func (n *CIDR) Join(cidr *CIDR) {
 		return
 	}
 
-	ipLen := len(n.Net.IP)
+	ipBytes := n.IPBytes()
+	ipLen := len(ipBytes)
 	ourOnes, ourBits := n.Net.Mask.Size()
 	joinOnes := ourOnes - 1
 	joinBitsDiff := ourBits - joinOnes
@@ -166,7 +170,8 @@ func (n *CIDR) Join(cidr *CIDR) {
 		joinIPBitLocalIdx = 8
 	}
 	joinIPIdx := ipLen - joinIPBitGlobalIdx/8 - 1
-	n.Net.IP[joinIPIdx] = n.Net.IP[joinIPIdx] & (0xff << joinIPBitLocalIdx)
+	ipBytes[joinIPIdx] = ipBytes[joinIPIdx] & (0xff << joinIPBitLocalIdx)
+	n.Net.IP = ipBytes
 	n.Net.Mask = net.CIDRMask(joinOnes, ourBits)
 }
 
@@ -177,17 +182,19 @@ func (n *CIDR) CanJoin(cidr *CIDR) bool {
 		return false
 	}
 
-	ipLen := len(n.Net.IP)
-	otherIP := make(net.IP, len(n.Net.IP))
-	copy(otherIP, n.Net.IP)
+	ourIp := n.IPBytes()
+	ipLen := len(ourIp)
+	otherIP := make(net.IP, ipLen)
+	copy(otherIP, ourIp)
 
 	otherBitsDiff := ourBitsDiff
 	otherIPIdx := ipLen - otherBitsDiff/8 - 1
 	otherIPBit := otherBitsDiff % 8
 	otherIP[otherIPIdx] = otherIP[otherIPIdx] ^ (1 << otherIPBit)
 
+	theirIP := cidr.IPBytes()
 	theirOnes, theirBits := cidr.Net.Mask.Size()
-	if cidr.Net.IP.Equal(otherIP) &&
+	if theirIP.Equal(otherIP) &&
 		theirOnes == ourOnes &&
 		theirBits == ourBits {
 		return true
@@ -210,9 +217,11 @@ func (n *CIDR) Reserve(cidr *CIDR) []CIDR {
 		return []CIDR{*n}
 	}
 
+	ourIp := n.IPBytes()
+	theirIp := cidr.IPBytes()
 	// If capacities are equal, then net IPs should be also equal
 	// Otherwise networks are not the same
-	if ourOnes == theirOnes && n.Net.IP.Equal(n.Net.IP) {
+	if ourOnes == theirOnes && ourIp.Equal(theirIp) {
 		return []CIDR{}
 	}
 
@@ -221,13 +230,13 @@ func (n *CIDR) Reserve(cidr *CIDR) []CIDR {
 	leftInsertIdx := 0
 	rightInsertIdx := onesDiff - 1
 	splitOnes := ourOnes + 1
-	currentIP := n.Net.IP
+	currentIP := ourIp
 	ipLen := len(currentIP)
 	for leftInsertIdx <= rightInsertIdx {
-		leftIP := make(net.IP, len(currentIP))
+		leftIP := make(net.IP, ipLen)
 		copy(leftIP, currentIP)
 
-		rightIP := make(net.IP, len(currentIP))
+		rightIP := make(net.IP, ipLen)
 		copy(rightIP, currentIP)
 		prevBitsDiff := ourBits - splitOnes
 		rightIPIdx := ipLen - prevBitsDiff/8 - 1
@@ -246,7 +255,7 @@ func (n *CIDR) Reserve(cidr *CIDR) []CIDR {
 			Mask: mask,
 		}
 
-		if leftNet.Contains(cidr.Net.IP) {
+		if leftNet.Contains(theirIp) {
 			nets[rightInsertIdx] = *CIDRFromNet(rightNet)
 			rightInsertIdx = rightInsertIdx - 1
 			currentIP = leftIP
@@ -276,23 +285,16 @@ func (n *CIDR) CanReserve(cidr *CIDR) bool {
 		return false
 	}
 
+	ourIp := n.IPBytes()
+	theirIp := cidr.IPBytes()
 	// If capacities are equal, then net IPs should be also equal
 	// Otherwise networks are not the same
 	if ourOnes == theirOnes {
-		return n.Net.IP.Equal(cidr.Net.IP)
-	}
-
-	cidrIP := cidr.Net.IP
-	if len(n.Net.IP) != len(cidr.Net.IP) {
-		if len(n.Net.IP) == 4 {
-			cidrIP = cidr.Net.IP.To4()
-		} else {
-			cidrIP = cidr.Net.IP.To16()
-		}
+		return ourIp.Equal(theirIp)
 	}
 
 	for i := range n.Net.IP {
-		if n.Net.IP[i]&n.Net.Mask[i] != cidrIP[i]&cidr.Net.Mask[i]&n.Net.Mask[i] {
+		if ourIp[i]&n.Net.Mask[i] != theirIp[i]&cidr.Net.Mask[i]&n.Net.Mask[i] {
 			return false
 		}
 	}
@@ -310,6 +312,14 @@ func (n *CIDR) IsIPv6() bool {
 
 func (n *CIDR) String() string {
 	return n.Net.String()
+}
+
+func (n *CIDR) IPBytes() net.IP {
+	ip := n.Net.IP.To4()
+	if ip == nil {
+		ip = n.Net.IP.To16()
+	}
+	return ip
 }
 
 // DeepCopyInto is an deepcopy function, copying the receiver, writing into out. in must be non-nil.
