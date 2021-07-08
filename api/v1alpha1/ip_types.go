@@ -17,6 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"errors"
+	"net"
+
+	"k8s.io/apimachinery/pkg/util/json"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -30,7 +35,7 @@ type IpSpec struct {
 	CRD *CRD `json:"crd,omitempty"`
 	// IP to request, if not specified - will be added automatically
 	// +kubebuilder:validation:Optional
-	IP string `json:"ip,omitempty"`
+	IP *IP `json:"ip,omitempty"`
 }
 
 type CRD struct {
@@ -42,9 +47,14 @@ type CRD struct {
 	Name string `json:"name,omitempty"`
 }
 
+// +kubebuilder:validation:Type=string
+type IP struct {
+	Net net.IP `json:"-"`
+}
+
 // IpStatus defines the observed state of Ip
 type IpStatus struct {
-	LastUsedIP string `json:"lastUsedIp,omitempty"`
+	LastUsedIP *IP `json:"lastUsedIp,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -74,4 +84,63 @@ type IpList struct {
 
 func init() {
 	SchemeBuilder.Register(&Ip{}, &IpList{})
+}
+
+func (n IP) MarshalJSON() ([]byte, error) {
+	ip := n.String()
+	return json.Marshal(ip)
+}
+
+func (n *IP) UnmarshalJSON(b []byte) error {
+	stringVal := string(b)
+	if stringVal == "null" {
+		return nil
+	}
+	if err := json.Unmarshal(b, &stringVal); err != nil {
+		return err
+	}
+	pIp := net.ParseIP(stringVal)
+
+	if pIp == nil {
+		err := errors.New("parse IP failed")
+		return err
+	}
+
+	n.Net = pIp
+
+	return nil
+}
+
+func (n *IP) String() string {
+	return n.Net.String()
+}
+
+func (ipA *IP) Equal(ipB *IP) bool {
+	return ipA.Net.Equal(ipB.Net)
+}
+
+func IPFromString(ipString string) (*IP, error) {
+	ip := net.ParseIP(ipString)
+
+	if ip == nil {
+		err := errors.New("parse IP failed")
+		return nil, err
+	}
+
+	return &IP{
+		Net: ip,
+	}, nil
+}
+
+func (ip *IP) AsCidr() (*CIDR, error) {
+	cidrRange := 32
+	if ip.Net.To4() == nil {
+		cidrRange = 128
+	}
+	ipNet := &net.IPNet{
+		IP:   ip.Net,
+		Mask: net.CIDRMask(int(cidrRange), int(cidrRange)),
+	}
+
+	return CIDRFromNet(ipNet), nil
 }

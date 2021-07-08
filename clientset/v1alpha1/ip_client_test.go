@@ -24,6 +24,13 @@ var _ = Describe("Ip client", func() {
 		timeout  = time.Second * 10
 		interval = time.Millisecond * 250
 	)
+	ipMustParse := func(ipString string) *v1alpha1.IP {
+		ip, err := v1alpha1.IPFromString(ipString)
+		if err != nil {
+			panic(err)
+		}
+		return ip
+	}
 
 	Context("When Ip CR is installed", func() {
 		It("Should check that Ip CR is operational with client", func() {
@@ -43,7 +50,7 @@ var _ = Describe("Ip client", func() {
 				},
 				Spec: v1alpha1.IpSpec{
 					Subnet: "sn",
-					IP:     "192.168.1.1",
+					IP:     ipMustParse("192.168.1.1"),
 				},
 			}
 
@@ -72,7 +79,7 @@ var _ = Describe("Ip client", func() {
 			<-finished
 
 			By("Updating Ip")
-			createdIp.Spec.IP = "127.0.0.1"
+			createdIp.Spec.IP = ipMustParse("127.0.0.1")
 			updatedIp := &v1alpha1.Ip{}
 			go func() {
 				defer GinkgoRecover()
@@ -91,7 +98,7 @@ var _ = Describe("Ip client", func() {
 			<-finished
 
 			By("Updating Ip status")
-			updatedIp.Status.LastUsedIP = "127.0.0.1"
+			updatedIp.Status.LastUsedIP = ipMustParse("127.0.0.1")
 			go func() {
 				defer GinkgoRecover()
 				statusUpdatedIp, err := client.UpdateStatus(ctx, updatedIp, v1.UpdateOptions{})

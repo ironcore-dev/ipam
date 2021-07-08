@@ -17,6 +17,13 @@ var _ = Describe("IP webhook", func() {
 		}
 		return cidr
 	}
+	ipMustParse := func(ipString string) *IP {
+		ip, err := IPFromString(ipString)
+		if err != nil {
+			panic(err)
+		}
+		return ip
+	}
 
 	Context("IP webhook test", func() {
 		It("Should fail with nonexistent related CRD", func() {
@@ -37,7 +44,7 @@ var _ = Describe("IP webhook", func() {
 						Kind:         "ConfigMap",
 						Name:         "configmap-that-doesnt-exist",
 					},
-					IP: "1.12.12.123",
+					IP: ipMustParse("1.12.12.123"),
 				},
 			}
 			Expect(k8sClient.Create(ctx, ip)).ShouldNot(Succeed())
@@ -150,7 +157,7 @@ var _ = Describe("IP webhook", func() {
 			Eventually(func() bool {
 				ip := &Ip{}
 				_ = k8sClient.Get(context.Background(), key, ip)
-				return ip.Spec.IP == "10.12.34.64"
+				return ip.Spec.IP.Equal(ipMustParse("10.12.34.64"))
 			}, timeout, interval).Should(BeTrue())
 		})
 
@@ -167,7 +174,7 @@ var _ = Describe("IP webhook", func() {
 				},
 				Spec: IpSpec{
 					Subnet: "subnet1",
-					IP:     "0.0.0.1",
+					IP:     ipMustParse("0.0.0.1"),
 				},
 			}
 			By("Expecting Ip Create Successful")
@@ -192,7 +199,7 @@ var _ = Describe("IP webhook", func() {
 						Kind:         "NetworkCounter",
 						Name:         "referred-networkcounter",
 					},
-					IP: "10.12.34.64",
+					IP: ipMustParse("10.12.34.64"),
 				},
 			}
 			By("Expecting Ip Create Successful")
@@ -217,7 +224,7 @@ var _ = Describe("IP webhook", func() {
 						Kind:         "NetworkCounter",
 						Name:         "referred-networkcounter",
 					},
-					IP: "10.12.34.255",
+					IP: ipMustParse("10.12.34.255"),
 				},
 			}
 			By("Expecting Ip Create Successful")

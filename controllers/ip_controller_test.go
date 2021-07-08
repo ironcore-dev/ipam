@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+
 	"github.com/onmetal/ipam/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -146,6 +147,10 @@ var _ = Describe("IP controller", func() {
 			}, timeout, interval).Should(BeTrue())
 
 			By("IP created successfully")
+			testIp, err := v1alpha1.IPFromString("10.0.0.1")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(testIp).NotTo(BeNil())
+
 			ip := &v1alpha1.Ip{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      IPName,
@@ -153,7 +158,7 @@ var _ = Describe("IP controller", func() {
 				},
 				Spec: v1alpha1.IpSpec{
 					Subnet: SubnetName,
-					IP:     "10.0.0.1",
+					IP:     testIp,
 				},
 			}
 
