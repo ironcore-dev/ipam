@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/onmetal/ipam/api/v1alpha1"
+	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
@@ -32,13 +33,17 @@ import (
 
 const (
 	IpamFinalizer = "ipam.ipam.onmetal.de/finalizer"
+
+	CIPReservationSuccessReason = "IPReservationSuccess"
+	CIPReleaseSuccessReason     = "IPReleaseSuccess"
 )
 
 // IpReconciler reconciles a Ip object
 type IpReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Log           logr.Logger
+	Scheme        *runtime.Scheme
+	EventRecorder record.EventRecorder
 }
 
 // +kubebuilder:rbac:groups=*,resources=*,verbs=get;list;watch
@@ -110,6 +115,7 @@ func (r *IpReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 			log.Error(err, "unable to update subnet state", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
+		r.EventRecorder.Eventf(subnet, v1.EventTypeNormal, CIPReservationSuccessReason, "IP %s reserved", newCidr.String())
 		ip.Status.LastUsedIP = ip.Spec.IP
 		if err := r.Update(ctx, ip); err != nil {
 			log.Error(err, "unable to update ip state", "name", req.NamespacedName)
@@ -148,6 +154,8 @@ func (r *IpReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 			log.Error(err, "unable to update subnet state", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
+		r.EventRecorder.Eventf(subnet, v1.EventTypeNormal, CIPReleaseSuccessReason, "IP %s reserved", lastCidr.String())
+		r.EventRecorder.Eventf(subnet, v1.EventTypeNormal, CIPReservationSuccessReason, "IP %s reserved", newCidr.String())
 		ip.Status.LastUsedIP = ip.Spec.IP
 		if err := r.Update(ctx, ip); err != nil {
 			log.Error(err, "unable to update ip state", "name", req.NamespacedName)
@@ -174,6 +182,8 @@ func (r *IpReconciler) finalizeIp(ctx context.Context, ipam *v1alpha1.Ip) error 
 	if err := r.Status().Update(ctx, subnet); err != nil {
 		return fmt.Errorf("\"unable to update subnet state: %w", err)
 	}
+	r.EventRecorder.Eventf(subnet, v1.EventTypeNormal, CIPReleaseSuccessReason, "IP %s released", ipCidr.String())
+
 	return nil
 }
 
@@ -187,6 +197,7 @@ func (r *IpReconciler) findSubnet(ctx context.Context, ipam *v1alpha1.Ip) (*v1al
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *IpReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.EventRecorder = mgr.GetEventRecorderFor("ip-controller")
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Ip{}).
 		Complete(r)
