@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"context"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -10,6 +11,13 @@ import (
 )
 
 var _ = Describe("IP webhook", func() {
+	const (
+		IPNamespace  = "default"
+		IPApiVersion = "ipam.onmetal.de/v1alpha1"
+		timeout      = time.Second * 10
+		interval     = time.Millisecond * 100
+	)
+
 	cidrMustParse := func(cidrString string) *CIDR {
 		cidr, err := CIDRFromString(cidrString)
 		if err != nil {
@@ -17,8 +25,8 @@ var _ = Describe("IP webhook", func() {
 		}
 		return cidr
 	}
-	ipMustParse := func(ipString string) *IP {
-		ip, err := IPFromString(ipString)
+	ipMustParse := func(ipString string) *IPAddr {
+		ip, err := IPAddrFromString(ipString)
 		if err != nil {
 			panic(err)
 		}
@@ -28,21 +36,17 @@ var _ = Describe("IP webhook", func() {
 	Context("IP webhook test", func() {
 		It("Should fail with nonexistent related CRD", func() {
 			ctx := context.Background()
-			ip := &Ip{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: ApiVersion,
-					Kind:       "Ip",
-				},
+			ip := &IP{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "ip0",
-					Namespace: Namespace,
+					Namespace: IPNamespace,
 				},
-				Spec: IpSpec{
-					Subnet: "subnet1",
-					CRD: &CRD{
-						GroupVersion: "v1",
-						Kind:         "ConfigMap",
-						Name:         "configmap-that-doesnt-exist",
+				Spec: IPSpec{
+					SubnetName: "subnet1",
+					ResourceReference: &ResourceReference{
+						APIVersion: "v1",
+						Kind:       "ConfigMap",
+						Name:       "configmap-that-doesnt-exist",
 					},
 					IP: ipMustParse("1.12.12.123"),
 				},
@@ -54,7 +58,7 @@ var _ = Describe("IP webhook", func() {
 			referredResource := &NetworkCounter{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "referred-networkcounter",
-					Namespace: Namespace,
+					Namespace: IPNamespace,
 				},
 				Spec: NetworkCounterSpec{},
 			}
@@ -62,13 +66,9 @@ var _ = Describe("IP webhook", func() {
 			Expect(k8sClient.Create(ctx, referredResource)).Should(Succeed())
 
 			subnet := &Subnet{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: ApiVersion,
-					Kind:       "Subnet",
-				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "subnet1",
-					Namespace: Namespace,
+					Namespace: IPNamespace,
 				},
 				Spec: SubnetSpec{
 					CIDR:              cidrMustParse("10.12.34.0/24"),
@@ -84,13 +84,9 @@ var _ = Describe("IP webhook", func() {
 			Expect(k8sClient.Create(ctx, subnet)).Should(Succeed())
 
 			subnet2 := &Subnet{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: ApiVersion,
-					Kind:       "Subnet",
-				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "subnet2",
-					Namespace: Namespace,
+					Namespace: IPNamespace,
 				},
 				Spec: SubnetSpec{
 					CIDR:              cidrMustParse("10.12.34.0/26"),
@@ -107,13 +103,9 @@ var _ = Describe("IP webhook", func() {
 			Expect(k8sClient.Create(ctx, subnet2)).Should(Succeed())
 
 			subnet3 := &Subnet{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: ApiVersion,
-					Kind:       "Subnet",
-				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "subnet3",
-					Namespace: Namespace,
+					Namespace: IPNamespace,
 				},
 				Spec: SubnetSpec{
 					CIDR:              cidrMustParse("10.12.34.128/25"),
@@ -129,33 +121,29 @@ var _ = Describe("IP webhook", func() {
 			By("Expecting Subnet 3 Create Successful")
 			Expect(k8sClient.Create(ctx, subnet3)).Should(Succeed())
 
-			ip := &Ip{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: ApiVersion,
-					Kind:       "Ip",
-				},
+			ip := &IP{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "ip1",
-					Namespace: Namespace,
+					Namespace: IPNamespace,
 				},
-				Spec: IpSpec{
-					Subnet: "subnet1",
-					CRD: &CRD{
-						GroupVersion: ApiVersion,
-						Kind:         "NetworkCounter",
-						Name:         "referred-networkcounter",
+				Spec: IPSpec{
+					SubnetName: "subnet1",
+					ResourceReference: &ResourceReference{
+						APIVersion: IPApiVersion,
+						Kind:       "NetworkCounter",
+						Name:       "referred-networkcounter",
 					},
 				},
 			}
-			By("Expecting Ip Create Successful")
+			By("Expecting IP Create Successful")
 			Expect(k8sClient.Create(ctx, ip)).Should(Succeed())
 
 			key := types.NamespacedName{
 				Name:      "ip1",
-				Namespace: Namespace,
+				Namespace: IPNamespace,
 			}
 			Eventually(func() bool {
-				ip := &Ip{}
+				ip := &IP{}
 				_ = k8sClient.Get(context.Background(), key, ip)
 				return ip.Spec.IP.Equal(ipMustParse("10.12.34.64"))
 			}, timeout, interval).Should(BeTrue())
@@ -163,71 +151,59 @@ var _ = Describe("IP webhook", func() {
 
 		It("Should create without CRD specified", func() {
 			ctx := context.Background()
-			ip := &Ip{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: ApiVersion,
-					Kind:       "Ip",
-				},
+			ip := &IP{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "ip2",
-					Namespace: Namespace,
+					Namespace: IPNamespace,
 				},
-				Spec: IpSpec{
-					Subnet: "subnet1",
-					IP:     ipMustParse("0.0.0.1"),
+				Spec: IPSpec{
+					SubnetName: "subnet1",
+					IP:         ipMustParse("0.0.0.1"),
 				},
 			}
-			By("Expecting Ip Create Successful")
+			By("Expecting IP Create Successful")
 			Expect(k8sClient.Create(ctx, ip)).Should(Succeed())
 		})
 
 		It("Should not allow to use already allocated IP", func() {
 			ctx := context.Background()
-			ip := &Ip{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: ApiVersion,
-					Kind:       "Ip",
-				},
+			ip := &IP{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "ip2",
-					Namespace: Namespace,
+					Namespace: IPNamespace,
 				},
-				Spec: IpSpec{
-					Subnet: "subnet1",
-					CRD: &CRD{
-						GroupVersion: ApiVersion,
-						Kind:         "NetworkCounter",
-						Name:         "referred-networkcounter",
+				Spec: IPSpec{
+					SubnetName: "subnet1",
+					ResourceReference: &ResourceReference{
+						APIVersion: IPApiVersion,
+						Kind:       "NetworkCounter",
+						Name:       "referred-networkcounter",
 					},
 					IP: ipMustParse("10.12.34.64"),
 				},
 			}
-			By("Expecting Ip Create Successful")
+			By("Expecting IP Create Successful")
 			Expect(k8sClient.Create(ctx, ip)).ShouldNot(Succeed())
 		})
 
 		It("Should not allow to use IP from child subnet", func() {
 			ctx := context.Background()
-			ip := &Ip{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: ApiVersion,
-					Kind:       "Ip",
-				},
+			ip := &IP{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "ip3",
-					Namespace: Namespace,
+					Namespace: IPNamespace,
 				},
-				Spec: IpSpec{
-					Subnet: "subnet1",
-					CRD: &CRD{
-						GroupVersion: ApiVersion,
-						Kind:         "NetworkCounter",
-						Name:         "referred-networkcounter",
+				Spec: IPSpec{
+					SubnetName: "subnet1",
+					ResourceReference: &ResourceReference{
+						APIVersion: IPApiVersion,
+						Kind:       "NetworkCounter",
+						Name:       "referred-networkcounter",
 					},
 					IP: ipMustParse("10.12.34.255"),
 				},
 			}
-			By("Expecting Ip Create Successful")
+			By("Expecting IP Create Successful")
 			Expect(k8sClient.Create(ctx, ip)).ShouldNot(Succeed())
 		})
 	})

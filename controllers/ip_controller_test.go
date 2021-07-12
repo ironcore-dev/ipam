@@ -57,10 +57,10 @@ var _ = Describe("IP controller", func() {
 				},
 			},
 			{
-				res:  &v1alpha1.Ip{},
-				list: &v1alpha1.IpList{},
+				res:  &v1alpha1.IP{},
+				list: &v1alpha1.IPList{},
 				count: func(objList client.ObjectList) int {
-					list := objList.(*v1alpha1.IpList)
+					list := objList.(*v1alpha1.IPList)
 					return len(list.Items)
 				},
 			},
@@ -107,7 +107,7 @@ var _ = Describe("IP controller", func() {
 				if err != nil {
 					return false
 				}
-				if createdNetwork.Status.State != v1alpha1.CFinishedRequestState {
+				if createdNetwork.Status.State != v1alpha1.CFinishedNetworkState {
 					return false
 				}
 				return true
@@ -147,18 +147,18 @@ var _ = Describe("IP controller", func() {
 			}, timeout, interval).Should(BeTrue())
 
 			By("IP created successfully")
-			testIp, err := v1alpha1.IPFromString("10.0.0.1")
+			testIP, err := v1alpha1.IPAddrFromString("10.0.0.1")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(testIp).NotTo(BeNil())
+			Expect(testIP).NotTo(BeNil())
 
-			ip := &v1alpha1.Ip{
+			ip := &v1alpha1.IP{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      IPName,
 					Namespace: Namespace,
 				},
-				Spec: v1alpha1.IpSpec{
-					Subnet: SubnetName,
-					IP:     testIp,
+				Spec: v1alpha1.IPSpec{
+					SubnetName: SubnetName,
+					IP:         testIP,
 				},
 			}
 

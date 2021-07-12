@@ -41,12 +41,12 @@ type NetworkSpec struct {
 }
 
 const (
-	CFailedRequestState     RequestState = "Failed"
-	CProcessingRequestState RequestState = "Processing"
-	CFinishedRequestState   RequestState = "Finished"
+	CFailedNetworkState     NetworkState = "Failed"
+	CProcessingNetworkState NetworkState = "Processing"
+	CFinishedNetworkState   NetworkState = "Finished"
 )
 
-type RequestState string
+type NetworkState string
 
 // NetworkStatus defines the observed state of Network
 type NetworkStatus struct {
@@ -61,7 +61,7 @@ type NetworkStatus struct {
 	// IPv6Capacity is a total address capacity of all IPv4 CIDRs in Ranges
 	IPv6Capacity resource.Quantity `json:"ipv6Capacity,omitempty"`
 	// State is a network creation request processing state
-	State RequestState `json:"state,omitempty"`
+	State NetworkState `json:"state,omitempty"`
 	// Message contains error details if the one has occurred
 	Message string `json:"message,omitempty"`
 }
@@ -97,8 +97,8 @@ func init() {
 	SchemeBuilder.Register(&Network{}, &NetworkList{})
 }
 
-func (s *Network) Release(cidr *CIDR) error {
-	ranges := s.getRangesForCidr(cidr)
+func (in *Network) Release(cidr *CIDR) error {
+	ranges := in.getRangesForCidr(cidr)
 	reservationIdx := -1
 	for i, reservedCidrs := range ranges {
 		if reservedCidrs.Equal(cidr) {
@@ -112,14 +112,14 @@ func (s *Network) Release(cidr *CIDR) error {
 
 	ranges = append(ranges[:reservationIdx], ranges[reservationIdx+1:]...)
 	sub := resource.MustParse(cidr.AddressCapacity().String())
-	s.subCapacityForCidr(cidr, &sub)
-	s.setRangesForCidr(cidr, ranges)
+	in.subCapacityForCidr(cidr, &sub)
+	in.setRangesForCidr(cidr, ranges)
 
 	return nil
 }
 
-func (s *Network) CanRelease(cidr *CIDR) bool {
-	ranges := s.getRangesForCidr(cidr)
+func (in *Network) CanRelease(cidr *CIDR) bool {
+	ranges := in.getRangesForCidr(cidr)
 	for _, vacantCidr := range ranges {
 		if vacantCidr.Equal(cidr) {
 			return true
@@ -129,15 +129,15 @@ func (s *Network) CanRelease(cidr *CIDR) bool {
 	return false
 }
 
-func (s *Network) Reserve(cidr *CIDR) error {
-	ranges := s.getRangesForCidr(cidr)
+func (in *Network) Reserve(cidr *CIDR) error {
+	ranges := in.getRangesForCidr(cidr)
 	vacantLen := len(ranges)
 	if vacantLen == 0 {
 		ranges = []CIDR{*cidr}
 
 		add := resource.MustParse(cidr.AddressCapacity().String())
-		s.addCapacityForCidr(cidr, &add)
-		s.setRangesForCidr(cidr, ranges)
+		in.addCapacityForCidr(cidr, &add)
+		in.setRangesForCidr(cidr, ranges)
 
 		return nil
 	}
@@ -173,14 +173,14 @@ func (s *Network) Reserve(cidr *CIDR) error {
 	}
 
 	add := resource.MustParse(cidr.AddressCapacity().String())
-	s.addCapacityForCidr(cidr, &add)
-	s.setRangesForCidr(cidr, ranges)
+	in.addCapacityForCidr(cidr, &add)
+	in.setRangesForCidr(cidr, ranges)
 
 	return nil
 }
 
-func (s *Network) CanReserve(cidr *CIDR) bool {
-	ranges := s.getRangesForCidr(cidr)
+func (in *Network) CanReserve(cidr *CIDR) bool {
+	ranges := in.getRangesForCidr(cidr)
 	vacantLen := len(ranges)
 	if vacantLen == 0 {
 		return true
@@ -204,33 +204,33 @@ func (s *Network) CanReserve(cidr *CIDR) bool {
 	return false
 }
 
-func (s *Network) getRangesForCidr(cidr *CIDR) []CIDR {
+func (in *Network) getRangesForCidr(cidr *CIDR) []CIDR {
 	if cidr.IsIPv4() {
-		return s.Status.IPv4Ranges
+		return in.Status.IPv4Ranges
 	}
-	return s.Status.IPv6Ranges
+	return in.Status.IPv6Ranges
 }
 
-func (s *Network) setRangesForCidr(cidr *CIDR, ranges []CIDR) {
+func (in *Network) setRangesForCidr(cidr *CIDR, ranges []CIDR) {
 	if cidr.IsIPv4() {
-		s.Status.IPv4Ranges = ranges
+		in.Status.IPv4Ranges = ranges
 	} else {
-		s.Status.IPv6Ranges = ranges
-	}
-}
-
-func (s *Network) addCapacityForCidr(cidr *CIDR, add *resource.Quantity) {
-	if cidr.IsIPv4() {
-		s.Status.IPv4Capacity.Add(*add)
-	} else {
-		s.Status.IPv6Capacity.Add(*add)
+		in.Status.IPv6Ranges = ranges
 	}
 }
 
-func (s *Network) subCapacityForCidr(cidr *CIDR, sub *resource.Quantity) {
+func (in *Network) addCapacityForCidr(cidr *CIDR, add *resource.Quantity) {
 	if cidr.IsIPv4() {
-		s.Status.IPv4Capacity.Sub(*sub)
+		in.Status.IPv4Capacity.Add(*add)
 	} else {
-		s.Status.IPv6Capacity.Sub(*sub)
+		in.Status.IPv6Capacity.Add(*add)
+	}
+}
+
+func (in *Network) subCapacityForCidr(cidr *CIDR, sub *resource.Quantity) {
+	if cidr.IsIPv4() {
+		in.Status.IPv4Capacity.Sub(*sub)
+	} else {
+		in.Status.IPv6Capacity.Sub(*sub)
 	}
 }

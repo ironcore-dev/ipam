@@ -17,130 +17,78 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"errors"
-	"net"
-
-	"k8s.io/apimachinery/pkg/util/json"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// IpSpec defines the desired state of Ip
-type IpSpec struct {
-	// Subnet to get IP from
+const (
+	CFailedIPState     IPState = "Failed"
+	CProcessingIPState IPState = "Processing"
+	CFinishedIPState   IPState = "Finished"
+)
+
+// IPState is a processing state of IP resource
+type IPState string
+
+// IPSpec defines the desired state of IP
+type IPSpec struct {
+	// SubnetName is referring to parent subnet that holds requested IP
 	// +kubebuilder:validation:Required
-	Subnet string `json:"subnet,omitempty"`
-	// CRD find IP for
+	SubnetName string `json:"subnetName,omitempty"`
+	// ResourceReference refers to resource IP has been booked for
 	// +kubebuilder:validation:Optional
-	CRD *CRD `json:"crd,omitempty"`
-	// IP to request, if not specified - will be added automatically
+	ResourceReference *ResourceReference `json:"resourceReference,omitempty"`
+	// IP allows to set desired IP address explicitly
 	// +kubebuilder:validation:Optional
-	IP *IP `json:"ip,omitempty"`
+	IP *IPAddr `json:"ip,omitempty"`
 }
 
-type CRD struct {
-	// Kind is CRD Kind for lookup
-	GroupVersion string `json:"groupVersion,omitempty"`
-	// Kind is CRD Kind for lookup
-	Kind string `json:"kind,omitempty"`
-	// Name is CRD Name for lookup
-	Name string `json:"name,omitempty"`
+// IPStatus defines the observed state of IP
+type IPStatus struct {
+	// State is a network creation request processing state
+	State IPState `json:"state,omitempty"`
+	// Reserved is a reserved IP
+	Reserved *IPAddr `json:"reserved,omitempty"`
+	// Message contains error details if the one has occurred
+	Message string `json:"message,omitempty"`
 }
 
-// +kubebuilder:validation:Type=string
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="IP",type=string,JSONPath=`.status.reserved`,description="IP Address"
+// +kubebuilder:printcolumn:name="Subnet",type=string,JSONPath=`.spec.subnetName`,description="Subnet"
+// +kubebuilder:printcolumn:name="Resource Group",type=string,JSONPath=`.spec.resourceReference.apiVersion`,description="Resource Group"
+// +kubebuilder:printcolumn:name="Resource Kind",type=string,JSONPath=`.spec.resourceReference.kind`,description="Resource Kind"
+// +kubebuilder:printcolumn:name="Resource Name",type=string,JSONPath=`.spec.resourceReference.name`,description="Resource Name"
+// IP is the Schema for the ips API
 type IP struct {
-	Net net.IP `json:"-"`
-}
-
-// IpStatus defines the observed state of Ip
-type IpStatus struct {
-	LastUsedIP *IP `json:"lastUsedIp,omitempty"`
-}
-
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="IP",type=string,JSONPath=`.spec.ip`,description="IP Address"
-// +kubebuilder:printcolumn:name="Subnet",type=string,JSONPath=`.spec.subnet`,description="Subnet"
-// +kubebuilder:printcolumn:name="Resource Group",type=string,JSONPath=`.spec.crd.groupVersion`,description="Resource Group"
-// +kubebuilder:printcolumn:name="Resource Kind",type=string,JSONPath=`.spec.crd.kind`,description="Resource Kind"
-// +kubebuilder:printcolumn:name="Resource Name",type=string,JSONPath=`.spec.crd.name`,description="Resource Name"
-// Ip is the Schema for the ips API
-type Ip struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   IpSpec   `json:"spec,omitempty"`
-	Status IpStatus `json:"status,omitempty"`
+	Spec   IPSpec   `json:"spec,omitempty"`
+	Status IPStatus `json:"status,omitempty"`
 }
 
-//+kubebuilder:object:root=true
+// +kubebuilder:object:root=true
 
-// IpList contains a list of Ip
-type IpList struct {
+// IPList contains a list of IP
+type IPList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Ip `json:"items"`
+	Items           []IP `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Ip{}, &IpList{})
+	SchemeBuilder.Register(&IP{}, &IPList{})
 }
 
-func (n IP) MarshalJSON() ([]byte, error) {
-	ip := n.String()
-	return json.Marshal(ip)
-}
-
-func (n *IP) UnmarshalJSON(b []byte) error {
-	stringVal := string(b)
-	if stringVal == "null" {
-		return nil
-	}
-	if err := json.Unmarshal(b, &stringVal); err != nil {
-		return err
-	}
-	pIp := net.ParseIP(stringVal)
-
-	if pIp == nil {
-		err := errors.New("parse IP failed")
-		return err
-	}
-
-	n.Net = pIp
-
-	return nil
-}
-
-func (n *IP) String() string {
-	return n.Net.String()
-}
-
-func (ipA *IP) Equal(ipB *IP) bool {
-	return ipA.Net.Equal(ipB.Net)
-}
-
-func IPFromString(ipString string) (*IP, error) {
-	ip := net.ParseIP(ipString)
-
-	if ip == nil {
-		err := errors.New("parse IP failed")
-		return nil, err
-	}
-
-	return &IP{
-		Net: ip,
-	}, nil
-}
-
-func (ip *IP) AsCidr() (*CIDR, error) {
-	cidrRange := 32
-	if ip.Net.To4() == nil {
-		cidrRange = 128
-	}
-	ipNet := &net.IPNet{
-		IP:   ip.Net,
-		Mask: net.CIDRMask(int(cidrRange), int(cidrRange)),
-	}
-
-	return CIDRFromNet(ipNet), nil
+type ResourceReference struct {
+	// APIVersion is resource's API group
+	// +kubebuilder:validation:Optional
+	APIVersion string `json:"apiVersion,omitempty"`
+	// Kind is CRD Kind for lookup
+	// +kubebuilder:validation:Required
+	Kind string `json:"kind,omitempty"`
+	// Name is CRD Name for lookup
+	// +kubebuilder:validation:Required
+	Name string `json:"name,omitempty"`
 }

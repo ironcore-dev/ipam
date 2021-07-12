@@ -378,7 +378,7 @@ spec:
   # Resource is a reference to k8s resource IP would be bountd to
   # Optional
   # Object with string fields
-  resource:
+  resourceReference:
     apiVersion: ipam.onmetal.de/v1alpha1
     kind: SampleReource
     name: sample-resorce-name

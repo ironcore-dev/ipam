@@ -12,7 +12,7 @@ const (
 )
 
 type V1Alpha1Interface interface {
-	Ips(namespace string) IpInterface
+	IPs(namespace string) IPInterface
 	Networks(namespace string) NetworkInterface
 	NetworkCounters(namespace string) NetworkCounterInterface
 	Subnets(namespace string) SubnetInterface
@@ -37,7 +37,7 @@ func NewForConfig(c *rest.Config) (V1Alpha1Interface, error) {
 	return &v1Alpha1Client{restClient: client}, nil
 }
 
-func (c *v1Alpha1Client) Ips(namespace string) IpInterface {
+func (c *v1Alpha1Client) IPs(namespace string) IPInterface {
 	return &ipClient{
 		restClient: c.restClient,
 		ns:         namespace,

@@ -8,15 +8,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 )
 
-const (
-	CGENEVENetworkType NetworkType = "GENEVE"
-	CVXLANNetworkType  NetworkType = "VXLAN"
-	CMPLSNetworkType   NetworkType = "MPLS"
-)
-
-// NetworkType is a type of network id is assigned to.
-type NetworkType string
-
 // NetworkID represents an incremental ID for network type.
 // Effectively it is a wrapper around big.Int,
 // as its Bytes() method allows to get unsigned big endian
@@ -46,11 +37,11 @@ func NetworkIDFromBytes(b []byte) *NetworkID {
 	}
 }
 
-func (n NetworkID) MarshalJSON() ([]byte, error) {
-	return json.Marshal(n.String())
+func (in NetworkID) MarshalJSON() ([]byte, error) {
+	return json.Marshal(in.String())
 }
 
-func (n *NetworkID) UnmarshalJSON(b []byte) error {
+func (in *NetworkID) UnmarshalJSON(b []byte) error {
 	stringVal := string(b)
 	if stringVal == "null" {
 		return nil
@@ -69,14 +60,14 @@ func (n *NetworkID) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("unable to set string value to big int %s", b)
 	}
 
-	n.Int = bi
+	in.Int = bi
 
 	return nil
 }
 
-func (n *NetworkID) DeepCopyInto(out *NetworkID) {
-	*out = *n
-	bi := new(big.Int).Set(&n.Int)
+func (in *NetworkID) DeepCopyInto(out *NetworkID) {
+	*out = *in
+	bi := new(big.Int).Set(&in.Int)
 	out.Int = *bi
 	return
 }

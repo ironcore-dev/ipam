@@ -14,19 +14,19 @@ import (
 )
 
 const (
-	CIpsResourceType = "ips"
+	CIPsResourceType = "ips"
 )
 
-type IpInterface interface {
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1alpha1.Ip, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1alpha1.IpList, error)
+type IPInterface interface {
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1alpha1.IP, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*v1alpha1.IPList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Create(ctx context.Context, ip *v1alpha1.Ip, opts metav1.CreateOptions) (*v1alpha1.Ip, error)
-	Update(ctx context.Context, ip *v1alpha1.Ip, opts metav1.UpdateOptions) (*v1alpha1.Ip, error)
-	UpdateStatus(ctx context.Context, ip *v1alpha1.Ip, opts metav1.UpdateOptions) (*v1alpha1.Ip, error)
+	Create(ctx context.Context, ip *v1alpha1.IP, opts metav1.CreateOptions) (*v1alpha1.IP, error)
+	Update(ctx context.Context, ip *v1alpha1.IP, opts metav1.UpdateOptions) (*v1alpha1.IP, error)
+	UpdateStatus(ctx context.Context, ip *v1alpha1.IP, opts metav1.UpdateOptions) (*v1alpha1.IP, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*v1alpha1.Ip, error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*v1alpha1.IP, error)
 }
 
 type ipClient struct {
@@ -34,12 +34,12 @@ type ipClient struct {
 	ns         string
 }
 
-func (c *ipClient) Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1alpha1.Ip, error) {
-	result := &v1alpha1.Ip{}
+func (c *ipClient) Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1alpha1.IP, error) {
+	result := &v1alpha1.IP{}
 	err := c.restClient.
 		Get().
 		Namespace(c.ns).
-		Resource(CIpsResourceType).
+		Resource(CIPsResourceType).
 		Name(name).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Do(ctx).
@@ -48,16 +48,16 @@ func (c *ipClient) Get(ctx context.Context, name string, opts metav1.GetOptions)
 	return result, err
 }
 
-func (c *ipClient) List(ctx context.Context, opts metav1.ListOptions) (*v1alpha1.IpList, error) {
+func (c *ipClient) List(ctx context.Context, opts metav1.ListOptions) (*v1alpha1.IPList, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
 	}
-	result := &v1alpha1.IpList{}
+	result := &v1alpha1.IPList{}
 	err := c.restClient.
 		Get().
 		Namespace(c.ns).
-		Resource(CIpsResourceType).
+		Resource(CIPsResourceType).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Do(ctx).
@@ -75,7 +75,7 @@ func (c *ipClient) Watch(ctx context.Context, opts metav1.ListOptions) (watch.In
 	watcher, err := c.restClient.
 		Get().
 		Namespace(c.ns).
-		Resource(CIpsResourceType).
+		Resource(CIPsResourceType).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Watch(ctx)
@@ -83,12 +83,12 @@ func (c *ipClient) Watch(ctx context.Context, opts metav1.ListOptions) (watch.In
 	return watcher, err
 }
 
-func (c *ipClient) Create(ctx context.Context, ip *v1alpha1.Ip, opts metav1.CreateOptions) (*v1alpha1.Ip, error) {
-	result := &v1alpha1.Ip{}
+func (c *ipClient) Create(ctx context.Context, ip *v1alpha1.IP, opts metav1.CreateOptions) (*v1alpha1.IP, error) {
+	result := &v1alpha1.IP{}
 	err := c.restClient.
 		Post().
 		Namespace(c.ns).
-		Resource(CIpsResourceType).
+		Resource(CIPsResourceType).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(ip).
 		Do(ctx).
@@ -97,11 +97,11 @@ func (c *ipClient) Create(ctx context.Context, ip *v1alpha1.Ip, opts metav1.Crea
 	return result, err
 }
 
-func (c *ipClient) Update(ctx context.Context, ip *v1alpha1.Ip, opts metav1.UpdateOptions) (*v1alpha1.Ip, error) {
-	result := &v1alpha1.Ip{}
+func (c *ipClient) Update(ctx context.Context, ip *v1alpha1.IP, opts metav1.UpdateOptions) (*v1alpha1.IP, error) {
+	result := &v1alpha1.IP{}
 	err := c.restClient.Put().
 		Namespace(c.ns).
-		Resource(CIpsResourceType).
+		Resource(CIPsResourceType).
 		Name(ip.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(ip).
@@ -111,11 +111,11 @@ func (c *ipClient) Update(ctx context.Context, ip *v1alpha1.Ip, opts metav1.Upda
 	return result, err
 }
 
-func (c *ipClient) UpdateStatus(ctx context.Context, ip *v1alpha1.Ip, opts metav1.UpdateOptions) (*v1alpha1.Ip, error) {
-	result := &v1alpha1.Ip{}
+func (c *ipClient) UpdateStatus(ctx context.Context, ip *v1alpha1.IP, opts metav1.UpdateOptions) (*v1alpha1.IP, error) {
+	result := &v1alpha1.IP{}
 	err := c.restClient.Put().
 		Namespace(c.ns).
-		Resource(CIpsResourceType).
+		Resource(CIPsResourceType).
 		Name(ip.Name).
 		SubResource(CStatusSubresource).
 		VersionedParams(&opts, scheme.ParameterCodec).
@@ -129,7 +129,7 @@ func (c *ipClient) UpdateStatus(ctx context.Context, ip *v1alpha1.Ip, opts metav
 func (c *ipClient) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
 	return c.restClient.Delete().
 		Namespace(c.ns).
-		Resource(CIpsResourceType).
+		Resource(CIPsResourceType).
 		Name(name).
 		Body(&opts).
 		Do(ctx).
@@ -144,7 +144,7 @@ func (c *ipClient) DeleteCollection(ctx context.Context, opts metav1.DeleteOptio
 
 	return c.restClient.Delete().
 		Namespace(c.ns).
-		Resource(CIpsResourceType).
+		Resource(CIPsResourceType).
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(&opts).
@@ -152,11 +152,11 @@ func (c *ipClient) DeleteCollection(ctx context.Context, opts metav1.DeleteOptio
 		Error()
 }
 
-func (c *ipClient) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*v1alpha1.Ip, error) {
-	result := &v1alpha1.Ip{}
+func (c *ipClient) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*v1alpha1.IP, error) {
+	result := &v1alpha1.IP{}
 	err := c.restClient.Patch(pt).
 		Namespace(c.ns).
-		Resource(CIpsResourceType).
+		Resource(CIPsResourceType).
 		Name(name).
 		SubResource(subresources...).
 		VersionedParams(&opts, scheme.ParameterCodec).

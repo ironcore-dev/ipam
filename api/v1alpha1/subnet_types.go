@@ -133,37 +133,37 @@ func init() {
 }
 
 // PopulateStatus fills status subresource with default values
-func (s *Subnet) PopulateStatus() {
-	s.Status.State = CProcessingSubnetState
+func (in *Subnet) PopulateStatus() {
+	in.Status.State = CProcessingSubnetState
 
-	azCount := len(s.Spec.AvailabilityZones)
-	regionCount := len(s.Spec.Regions)
+	azCount := len(in.Spec.AvailabilityZones)
+	regionCount := len(in.Spec.Regions)
 	if azCount == 1 && regionCount == 1 {
-		s.Status.Locality = CLocalSubnetLocalityType
+		in.Status.Locality = CLocalSubnetLocalityType
 	} else if azCount > 1 && regionCount == 1 {
-		s.Status.Locality = CRegionalSubnetLocalityType
+		in.Status.Locality = CRegionalSubnetLocalityType
 	} else {
-		s.Status.Locality = CMultiregionalSubnetLocalityType
+		in.Status.Locality = CMultiregionalSubnetLocalityType
 	}
 }
 
-func (s *Subnet) FillStatusFromCidr(cidr *CIDR) {
+func (in *Subnet) FillStatusFromCidr(cidr *CIDR) {
 	if cidr.IsIPv4() {
-		s.Status.Type = CIPv4SubnetType
+		in.Status.Type = CIPv4SubnetType
 	} else {
-		s.Status.Type = CIPv6SubnetType
+		in.Status.Type = CIPv6SubnetType
 	}
 
-	s.Status.Reserved = cidr.DeepCopy()
-	s.Status.Vacant = []CIDR{*cidr.DeepCopy()}
-	s.Status.PrefixBits = cidr.MaskOnes()
+	in.Status.Reserved = cidr.DeepCopy()
+	in.Status.Vacant = []CIDR{*cidr.DeepCopy()}
+	in.Status.PrefixBits = cidr.MaskOnes()
 	capacityString := cidr.AddressCapacity().String()
-	s.Status.Capacity = resource.MustParse(capacityString)
-	s.Status.CapacityLeft = s.Status.Capacity.DeepCopy()
-	s.Status.State = CFinishedSubnetState
+	in.Status.Capacity = resource.MustParse(capacityString)
+	in.Status.CapacityLeft = in.Status.Capacity.DeepCopy()
+	in.Status.State = CFinishedSubnetState
 }
 
-func (s *Subnet) ProposeForCapacity(capacity *resource.Quantity) (*CIDR, error) {
+func (in *Subnet) ProposeForCapacity(capacity *resource.Quantity) (*CIDR, error) {
 	bigCap := capacity.AsDec().UnscaledBig()
 	count := big.NewInt(1)
 
@@ -182,23 +182,23 @@ func (s *Subnet) ProposeForCapacity(capacity *resource.Quantity) (*CIDR, error) 
 		bitLen += 1
 	}
 
-	if s.Status.Reserved == nil {
+	if in.Status.Reserved == nil {
 		return nil, errors.New("cidr is not set, can't compute the network prefix")
 	}
 
-	maskBits := s.Status.Reserved.MaskBits()
+	maskBits := in.Status.Reserved.MaskBits()
 
-	return s.ProposeForBits(maskBits - byte(bitLen))
+	return in.ProposeForBits(maskBits - byte(bitLen))
 }
 
-func (s *Subnet) ProposeForBits(prefixBits byte) (*CIDR, error) {
-	if prefixBits > s.Status.Reserved.MaskBits() {
+func (in *Subnet) ProposeForBits(prefixBits byte) (*CIDR, error) {
+	if prefixBits > in.Status.Reserved.MaskBits() {
 		return nil, errors.New("prefix bit count is bigger than bit coint in IP")
 	}
 
 	var candidateOnes byte
 	var candidateCidr *CIDR
-	for _, cidr := range s.Status.Vacant {
+	for _, cidr := range in.Status.Vacant {
 		currentOnes := cidr.MaskOnes()
 
 		if currentOnes <= prefixBits {
@@ -229,10 +229,10 @@ func (s *Subnet) ProposeForBits(prefixBits byte) (*CIDR, error) {
 }
 
 // Reserve books CIDR from the range of vacant CIDRs, if possible
-func (s *Subnet) Reserve(cidr *CIDR) error {
+func (in *Subnet) Reserve(cidr *CIDR) error {
 	var remainingCidrs []CIDR
 	reservationIdx := -1
-	for i, vacantCidr := range s.Status.Vacant {
+	for i, vacantCidr := range in.Status.Vacant {
 		if vacantCidr.CanReserve(cidr) {
 			remainingCidrs = vacantCidr.Reserve(cidr)
 			reservationIdx = i
@@ -247,25 +247,25 @@ func (s *Subnet) Reserve(cidr *CIDR) error {
 	remainingCidrsCount := len(remainingCidrs)
 	switch remainingCidrsCount {
 	case 0:
-		s.Status.Vacant = append(s.Status.Vacant[:reservationIdx], s.Status.Vacant[reservationIdx+1:]...)
+		in.Status.Vacant = append(in.Status.Vacant[:reservationIdx], in.Status.Vacant[reservationIdx+1:]...)
 	case 1:
-		s.Status.Vacant[reservationIdx] = remainingCidrs[0]
+		in.Status.Vacant[reservationIdx] = remainingCidrs[0] // nolint // Ignore linting warning as slice length is checked before (by) switch statement
 	default:
-		released := make([]CIDR, len(s.Status.Vacant)+remainingCidrsCount-1)
-		copy(released[:reservationIdx], s.Status.Vacant[:reservationIdx])
+		released := make([]CIDR, len(in.Status.Vacant)+remainingCidrsCount-1)
+		copy(released[:reservationIdx], in.Status.Vacant[:reservationIdx])
 		copy(released[reservationIdx:reservationIdx+remainingCidrsCount], remainingCidrs)
-		copy(released[reservationIdx+remainingCidrsCount:], s.Status.Vacant[reservationIdx+1:])
-		s.Status.Vacant = released
+		copy(released[reservationIdx+remainingCidrsCount:], in.Status.Vacant[reservationIdx+1:])
+		in.Status.Vacant = released
 	}
 
-	s.Status.CapacityLeft.Sub(resource.MustParse(cidr.AddressCapacity().String()))
+	in.Status.CapacityLeft.Sub(resource.MustParse(cidr.AddressCapacity().String()))
 
 	return nil
 }
 
 // CanReserve checks if it is possible to reserve CIDR
-func (s *Subnet) CanReserve(cidr *CIDR) bool {
-	for _, vacantCidr := range s.Status.Vacant {
+func (in *Subnet) CanReserve(cidr *CIDR) bool {
+	for _, vacantCidr := range in.Status.Vacant {
 		if vacantCidr.CanReserve(cidr) {
 			return true
 		}
@@ -276,37 +276,37 @@ func (s *Subnet) CanReserve(cidr *CIDR) bool {
 
 // Release puts CIDR to vacant range if there are no intersections
 // and joins neighbour networks
-func (s *Subnet) Release(cidr *CIDR) error {
-	if !s.Spec.CIDR.CanReserve(cidr) {
-		return errors.Errorf("cidr %s is not describing subent of %s", cidr.String(), s.Spec.CIDR.String())
+func (in *Subnet) Release(cidr *CIDR) error {
+	if !in.Spec.CIDR.CanReserve(cidr) {
+		return errors.Errorf("cidr %s is not describing subent of %s", cidr.String(), in.Spec.CIDR.String())
 	}
 
-	vacantLen := len(s.Status.Vacant)
+	vacantLen := len(in.Status.Vacant)
 	if vacantLen == 0 {
-		s.Status.Vacant = []CIDR{*cidr.DeepCopy()}
+		in.Status.Vacant = []CIDR{*cidr.DeepCopy()}
 		return nil
 	}
 
 	insertIdx := -1
-	if s.Status.Vacant[0].After(cidr) {
-		s.Status.Vacant = append(s.Status.Vacant, CIDR{})
-		copy(s.Status.Vacant[1:], s.Status.Vacant)
-		s.Status.Vacant[0] = *cidr.DeepCopy()
+	if in.Status.Vacant[0].After(cidr) {
+		in.Status.Vacant = append(in.Status.Vacant, CIDR{})
+		copy(in.Status.Vacant[1:], in.Status.Vacant)
+		in.Status.Vacant[0] = *cidr.DeepCopy()
 		insertIdx = 0
 	}
 
-	if s.Status.Vacant[vacantLen-1].Before(cidr) {
-		s.Status.Vacant = append(s.Status.Vacant, *cidr.DeepCopy())
+	if in.Status.Vacant[vacantLen-1].Before(cidr) {
+		in.Status.Vacant = append(in.Status.Vacant, *cidr.DeepCopy())
 		insertIdx = vacantLen
 	}
 
 	if insertIdx < 0 {
 		for idx := 1; idx < vacantLen; idx++ {
 			prevIdx := idx - 1
-			if s.Status.Vacant[prevIdx].Before(cidr) && s.Status.Vacant[idx].After(cidr) {
-				s.Status.Vacant = append(s.Status.Vacant, CIDR{})
-				copy(s.Status.Vacant[idx+1:], s.Status.Vacant[idx:])
-				s.Status.Vacant[idx] = *cidr.DeepCopy()
+			if in.Status.Vacant[prevIdx].Before(cidr) && in.Status.Vacant[idx].After(cidr) {
+				in.Status.Vacant = append(in.Status.Vacant, CIDR{})
+				copy(in.Status.Vacant[idx+1:], in.Status.Vacant[idx:])
+				in.Status.Vacant[idx] = *cidr.DeepCopy()
 				insertIdx = idx
 				break
 			}
@@ -320,20 +320,20 @@ func (s *Subnet) Release(cidr *CIDR) error {
 	hasMoreJoins := true
 	for hasMoreJoins {
 		potentialJoinIdx := -1
-		if s.Status.Vacant[insertIdx].IsLeft() &&
-			insertIdx != len(s.Status.Vacant)-1 {
+		if in.Status.Vacant[insertIdx].IsLeft() &&
+			insertIdx != len(in.Status.Vacant)-1 {
 			potentialJoinIdx = insertIdx + 1
 		}
 
-		if s.Status.Vacant[insertIdx].IsRight() &&
+		if in.Status.Vacant[insertIdx].IsRight() &&
 			insertIdx != 0 {
 			potentialJoinIdx = insertIdx - 1
 		}
 
 		if potentialJoinIdx >= 0 &&
-			s.Status.Vacant[insertIdx].CanJoin(&s.Status.Vacant[potentialJoinIdx]) {
-			s.Status.Vacant[insertIdx].Join(&s.Status.Vacant[potentialJoinIdx])
-			s.Status.Vacant = append(s.Status.Vacant[:potentialJoinIdx], s.Status.Vacant[potentialJoinIdx+1:]...)
+			in.Status.Vacant[insertIdx].CanJoin(&in.Status.Vacant[potentialJoinIdx]) {
+			in.Status.Vacant[insertIdx].Join(&in.Status.Vacant[potentialJoinIdx])
+			in.Status.Vacant = append(in.Status.Vacant[:potentialJoinIdx], in.Status.Vacant[potentialJoinIdx+1:]...)
 
 			if insertIdx > potentialJoinIdx {
 				insertIdx = insertIdx - 1
@@ -343,33 +343,33 @@ func (s *Subnet) Release(cidr *CIDR) error {
 		}
 	}
 
-	s.Status.CapacityLeft.Add(resource.MustParse(cidr.AddressCapacity().String()))
+	in.Status.CapacityLeft.Add(resource.MustParse(cidr.AddressCapacity().String()))
 
 	return nil
 }
 
 // CanRelease checks whether it is possible to release CIDR into current vacant range
-func (s *Subnet) CanRelease(cidr *CIDR) bool {
-	if !s.Spec.CIDR.CanReserve(cidr) {
+func (in *Subnet) CanRelease(cidr *CIDR) bool {
+	if !in.Spec.CIDR.CanReserve(cidr) {
 		return false
 	}
 
-	vacantLen := len(s.Status.Vacant)
+	vacantLen := len(in.Status.Vacant)
 	if vacantLen == 0 {
 		return true
 	}
 
-	if s.Status.Vacant[0].After(cidr) {
+	if in.Status.Vacant[0].After(cidr) {
 		return true
 	}
 
-	if s.Status.Vacant[vacantLen-1].Before(cidr) {
+	if in.Status.Vacant[vacantLen-1].Before(cidr) {
 		return true
 	}
 
 	for idx := 1; idx < vacantLen; idx++ {
 		prevIdx := idx - 1
-		if s.Status.Vacant[prevIdx].Before(cidr) && s.Status.Vacant[idx].After(cidr) {
+		if in.Status.Vacant[prevIdx].Before(cidr) && in.Status.Vacant[idx].After(cidr) {
 			return true
 		}
 	}

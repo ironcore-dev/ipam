@@ -18,12 +18,15 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/onmetal/ipam/api/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	"github.com/onmetal/ipam/api/v1alpha1"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -32,14 +35,16 @@ import (
 )
 
 const (
-	IpamFinalizer = "ipam.ipam.onmetal.de/finalizer"
+	CIPFinalizer = "ip.ipam.onmetal.de/finalizer"
 
+	CIPReservationFailureReason = "IPReservationFailure"
+	CIPProposalFailureReason    = "IPProposalFailure"
 	CIPReservationSuccessReason = "IPReservationSuccess"
 	CIPReleaseSuccessReason     = "IPReleaseSuccess"
 )
 
-// IpReconciler reconciles a Ip object
-type IpReconciler struct {
+// IPReconciler reconciles a Ip object
+type IPReconciler struct {
 	client.Client
 	Log           logr.Logger
 	Scheme        *runtime.Scheme
@@ -53,10 +58,10 @@ type IpReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-func (r *IpReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("ip", req.NamespacedName)
 
-	ip := &v1alpha1.Ip{}
+	ip := &v1alpha1.IP{}
 	err := r.Get(ctx, req.NamespacedName, ip)
 	if apierrors.IsNotFound(err) {
 		log.Error(err, "requested ip resource not found", "name", req.NamespacedName)
@@ -68,13 +73,14 @@ func (r *IpReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 	}
 
 	if ip.GetDeletionTimestamp() != nil {
-		if controllerutil.ContainsFinalizer(ip, IpamFinalizer) {
+		if controllerutil.ContainsFinalizer(ip, CIPFinalizer) {
 			// Free IP on resource deletion
-			if err := r.finalizeIp(ctx, ip); err != nil {
+			if err := r.finalizeIP(ctx, log, ip); err != nil {
 				log.Error(err, "unable to finalize ip resource", "name", req.NamespacedName)
 				return ctrl.Result{}, err
 			}
-			controllerutil.RemoveFinalizer(ip, IpamFinalizer)
+
+			controllerutil.RemoveFinalizer(ip, CIPFinalizer)
 			err := r.Update(ctx, ip)
 			if err != nil {
 				log.Error(err, "unable to update ip resource on finalizer removal", "name", req.NamespacedName)
@@ -83,8 +89,9 @@ func (r *IpReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 		}
 		return ctrl.Result{}, nil
 	}
-	if !controllerutil.ContainsFinalizer(ip, IpamFinalizer) {
-		controllerutil.AddFinalizer(ip, IpamFinalizer)
+
+	if !controllerutil.ContainsFinalizer(ip, CIPFinalizer) {
+		controllerutil.AddFinalizer(ip, CIPFinalizer)
 		err = r.Update(ctx, ip)
 		if err != nil {
 			log.Error(err, "unable to update ip resource with finalizer", "name", req.NamespacedName)
@@ -93,112 +100,118 @@ func (r *IpReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 		return ctrl.Result{}, nil
 	}
 
-	// Resource created
-	if ip.Status.LastUsedIP == nil {
-		subnet, err := r.findSubnet(ctx, ip)
-		if err != nil {
-			log.Error(err, "unable to find ip subnet", "name", req.NamespacedName)
-			return ctrl.Result{}, err
-		}
-		newCidr, err := ip.Spec.IP.AsCidr()
-		if err != nil {
-			log.Error(err, "unable to get ip as cidr", "name", req.NamespacedName)
-			return ctrl.Result{}, err
-		}
-		// Occupy new IP
-		err = subnet.Reserve(newCidr)
-		if err != nil {
-			log.Error(err, "unable to reserve IP", "name", req.NamespacedName)
-			return ctrl.Result{}, err
-		}
-		if err := r.Status().Update(ctx, subnet); err != nil {
-			log.Error(err, "unable to update subnet state", "name", req.NamespacedName)
-			return ctrl.Result{}, err
-		}
-		r.EventRecorder.Eventf(subnet, v1.EventTypeNormal, CIPReservationSuccessReason, "IP %s reserved", newCidr.String())
-		ip.Status.LastUsedIP = ip.Spec.IP
-		if err := r.Update(ctx, ip); err != nil {
-			log.Error(err, "unable to update ip state", "name", req.NamespacedName)
-			return ctrl.Result{}, err
-		}
-		// Resource was updated - e.g. IP changed
-	} else if !ip.Status.LastUsedIP.Net.Equal(ip.Spec.IP.Net) {
-		// Free old IP
-		subnet, err := r.findSubnet(ctx, ip)
-		if err != nil {
-			log.Error(err, "unable to find ip subnet", "name", req.NamespacedName)
-			return ctrl.Result{}, err
-		}
-		lastCidr, err := ip.Status.LastUsedIP.AsCidr()
-		if err != nil {
-			log.Error(err, "unable to get ip as cidr", "name", req.NamespacedName)
-			return ctrl.Result{}, err
-		}
-		err = subnet.Release(lastCidr)
-		if err != nil {
-			log.Error(err, "unable to release IP", "name", req.NamespacedName)
-			return ctrl.Result{}, err
-		}
-		// Occupy new IP
-		newCidr, err := ip.Spec.IP.AsCidr()
-		if err != nil {
-			log.Error(err, "unable to get ip as cidr", "name", req.NamespacedName)
-			return ctrl.Result{}, err
-		}
-		err = subnet.Reserve(newCidr)
-		if err != nil {
-			log.Error(err, "unable to reserve IP", "name", req.NamespacedName)
-			return ctrl.Result{}, err
-		}
-		if err := r.Status().Update(ctx, subnet); err != nil {
-			log.Error(err, "unable to update subnet state", "name", req.NamespacedName)
-			return ctrl.Result{}, err
-		}
-		r.EventRecorder.Eventf(subnet, v1.EventTypeNormal, CIPReleaseSuccessReason, "IP %s reserved", lastCidr.String())
-		r.EventRecorder.Eventf(subnet, v1.EventTypeNormal, CIPReservationSuccessReason, "IP %s reserved", newCidr.String())
-		ip.Status.LastUsedIP = ip.Spec.IP
-		if err := r.Update(ctx, ip); err != nil {
-			log.Error(err, "unable to update ip state", "name", req.NamespacedName)
-			return ctrl.Result{}, err
-		}
+	if ip.Status.State == v1alpha1.CFinishedIPState ||
+		ip.Status.State == v1alpha1.CFailedIPState {
+		return ctrl.Result{}, nil
 	}
+
+	if ip.Status.State == "" {
+		ip.Status.State = v1alpha1.CProcessingIPState
+		if err := r.Status().Update(ctx, ip); err != nil {
+			log.Error(err, "unable to update ip resource status", "name", req.NamespacedName, "currentStatus", ip.Status.State, "targetStatus", v1alpha1.CProcessingNetworkState)
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
+	subnetNamespacedName := types.NamespacedName{
+		Namespace: ip.Namespace,
+		Name:      ip.Spec.SubnetName,
+	}
+	subnet := v1alpha1.Subnet{}
+	if err = r.Get(ctx, subnetNamespacedName, &subnet); err != nil {
+		log.Error(err, "unable to get subnet resource", "name", req.NamespacedName, "subnet name", subnetNamespacedName)
+		return ctrl.Result{}, err
+	}
+
+	var ipCidrToReserve *v1alpha1.CIDR
+	if ip.Spec.IP != nil {
+		ipCidrToReserve = ip.Spec.IP.AsCidr()
+	} else {
+		cidr, err := subnet.ProposeForCapacity(resource.NewScaledQuantity(1, 0))
+		if err != nil {
+			ip.Status.State = v1alpha1.CFailedIPState
+			ip.Status.Message = err.Error()
+			if err := r.Status().Update(ctx, ip); err != nil {
+				log.Error(err, "unable to update ip status", "name", req.NamespacedName)
+				return ctrl.Result{}, err
+			}
+			r.EventRecorder.Eventf(ip, v1.EventTypeWarning, CIPProposalFailureReason, ip.Status.Message)
+		}
+		ipCidrToReserve = cidr
+	}
+
+	if err := subnet.Reserve(ipCidrToReserve); err != nil {
+		ip.Status.State = v1alpha1.CFailedIPState
+		ip.Status.Message = err.Error()
+		if err := r.Status().Update(ctx, ip); err != nil {
+			log.Error(err, "unable to update ip status", "name", req.NamespacedName)
+			return ctrl.Result{}, err
+		}
+		r.EventRecorder.Eventf(ip, v1.EventTypeWarning, CIPReservationFailureReason, ip.Status.Message)
+	}
+
+	if err := r.Status().Update(ctx, &subnet); err != nil {
+		log.Error(err, "unable to update subnet status after ip reservation", "name", req.NamespacedName, "subnet name", subnetNamespacedName)
+		return ctrl.Result{}, err
+	}
+
+	if err := r.Status().Update(ctx, ip); err != nil {
+		log.Error(err, "unable to update ip status after ip reservation", "name", req.NamespacedName, "subnet name", subnetNamespacedName)
+		return ctrl.Result{}, err
+	}
+	r.EventRecorder.Eventf(ip, v1.EventTypeNormal, CIPReservationSuccessReason, "IP %s reserved", ipCidrToReserve.String())
+
 	return ctrl.Result{}, nil
 }
 
-func (r *IpReconciler) finalizeIp(ctx context.Context, ipam *v1alpha1.Ip) error {
-	// Free subnet IP
-	subnet, err := r.findSubnet(ctx, ipam)
+func (r *IPReconciler) finalizeIP(ctx context.Context, log logr.Logger, ip *v1alpha1.IP) error {
+	if ip.Status.Reserved == nil {
+		log.Info("IP has not been reserved, will release")
+		return nil
+	}
+
+	subnetNamespacedName := types.NamespacedName{
+		Namespace: ip.Namespace,
+		Name:      ip.Spec.SubnetName,
+	}
+	subnet := v1alpha1.Subnet{}
+	err := r.Get(ctx, subnetNamespacedName, &subnet)
+	if apierrors.IsNotFound(err) {
+		log.Error(err, "unable to find subnet, will release the IP address", "subnet name", subnetNamespacedName)
+		return nil
+	}
 	if err != nil {
-		return fmt.Errorf("unable to find ipam subnet: %w", err)
+		log.Error(err, "unexpected error while retrieving subnet", "subnet name", subnetNamespacedName)
+		return err
 	}
-	ipCidr, err := ipam.Spec.IP.AsCidr()
-	if err != nil {
-		return fmt.Errorf("unable to get ip as cidr: %w", err)
+
+	ipCidr := ip.Status.Reserved.AsCidr()
+
+	if subnet.CanReserve(ipCidr) {
+		log.Info("IP already released, will let to remove finalizer and remove resource", "subnet name", subnetNamespacedName)
+		return nil
 	}
-	err = subnet.Release(ipCidr)
-	if err != nil {
-		return fmt.Errorf("unable to release IP: %w", err)
+
+	if err := subnet.Release(ipCidr); err != nil {
+		log.Error(err, "unexpected error while releasing IP", "subnet name", subnetNamespacedName)
+		return err
 	}
-	if err := r.Status().Update(ctx, subnet); err != nil {
-		return fmt.Errorf("\"unable to update subnet state: %w", err)
+
+	if err := r.Status().Update(ctx, &subnet); err != nil {
+		log.Error(err, "unexpected error while updating subnet", "subnet name", subnetNamespacedName)
+		return err
 	}
-	r.EventRecorder.Eventf(subnet, v1.EventTypeNormal, CIPReleaseSuccessReason, "IP %s released", ipCidr.String())
+
+	r.EventRecorder.Eventf(ip, v1.EventTypeNormal, CIPReleaseSuccessReason, "IP %s released", ipCidr.String())
 
 	return nil
 }
 
-func (r *IpReconciler) findSubnet(ctx context.Context, ipam *v1alpha1.Ip) (*v1alpha1.Subnet, error) {
-	subnet := &v1alpha1.Subnet{}
-	if err := r.Get(ctx, client.ObjectKey{Namespace: ipam.Namespace, Name: ipam.Spec.Subnet}, subnet); err != nil {
-		return nil, fmt.Errorf("unable to get gateway of Subnet: %w", err)
-	}
-	return subnet, nil
-}
-
 // SetupWithManager sets up the controller with the Manager.
-func (r *IpReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *IPReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.EventRecorder = mgr.GetEventRecorderFor("ip-controller")
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.Ip{}).
+		For(&v1alpha1.IP{}).
 		Complete(r)
 }

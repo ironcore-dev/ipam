@@ -130,7 +130,7 @@ var _ = Describe("Network controller", func() {
 					if !controllerutil.ContainsFinalizer(testNetwork, CNetworkFinalizer) {
 						return false
 					}
-					if testNetwork.Status.State != v1alpha1.CFinishedRequestState {
+					if testNetwork.Status.State != v1alpha1.CFinishedNetworkState {
 						return false
 					}
 					if testNetwork.Status.Reserved == nil {
@@ -179,7 +179,7 @@ var _ = Describe("Network controller", func() {
 					if err != nil {
 						return false
 					}
-					if testNetworkCopy.Status.State != v1alpha1.CFailedRequestState {
+					if testNetworkCopy.Status.State != v1alpha1.CFailedNetworkState {
 						return false
 					}
 					return true
