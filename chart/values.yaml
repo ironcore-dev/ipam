@@ -50,8 +50,8 @@ crd:
     group: ipam.onmetal.de
     plural: ips
     singular: ip
-    kind: Ip
-    listKind: IpList
+    kind: IP
+    listKind: IPList
     scope: Namespaced
   subnet:
     group: ipam.onmetal.de

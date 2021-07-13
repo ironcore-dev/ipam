@@ -378,7 +378,7 @@ spec:
   # Resource is a reference to k8s resource IP would be bountd to
   # Optional
   # Object with string fields
-  resource:
+  resourceReference:
     apiVersion: ipam.onmetal.de/v1alpha1
     kind: SampleReource
     name: sample-resorce-name
@@ -393,15 +393,15 @@ Sample output for the `kubectl`.
 
 ```shell
 [user@localhost ~]$ kubectl get ips
-NAME                             IP                          SUBNET                          RESOURCE GROUP             RESOURCE KIND    RESOURCE NAME
-ipv4-ip-ip-sample                10.0.0.1                    ipv4-child-cidr-subnet-sample                                               
-ipv4-ip-sample                   10.0.0.3                    ipv4-child-cidr-subnet-sample                                               
-ipv4-resource-and-ip-ip-sample   10.0.0.2                    ipv4-child-cidr-subnet-sample   ipam.onmetal.de/v1alpha1   NetworkCounter   referred-networkcounter-sample
-ipv4-resource-ip-sample          10.0.0.0                    ipv4-child-cidr-subnet-sample   ipam.onmetal.de/v1alpha1   NetworkCounter   referred-networkcounter-sample
-ipv6-ip-ip-sample                fd34:5d8f:e75e:f3a2::0001   ipv6-child-cidr-subnet-sample                                               
-ipv6-ip-sample                   fd34:5d8f:e75e:f3a2::1      ipv6-child-cidr-subnet-sample                                               
-ipv6-resource-and-ip-ip-sample   fd34:5d8f:e75e:f3a2::0002   ipv6-child-cidr-subnet-sample   ipam.onmetal.de/v1alpha1   NetworkCounter   referred-networkcounter-sample
-ipv6-resource-ip-sample          fd34:5d8f:e75e:f3a2::       ipv6-child-cidr-subnet-sample   ipam.onmetal.de/v1alpha1   NetworkCounter   referred-networkcounter-sample
+NAME                             IP                       SUBNET                          RESOURCE GROUP             RESOURCE KIND    RESOURCE NAME                    STATE      MESSAGE
+ipv4-ip-ip-sample                10.0.0.1                 ipv4-child-cidr-subnet-sample                                                                                Finished   
+ipv4-ip-sample                   10.0.0.3                 ipv4-child-cidr-subnet-sample                                                                                Finished   
+ipv4-resource-and-ip-ip-sample   10.0.0.2                 ipv4-child-cidr-subnet-sample   ipam.onmetal.de/v1alpha1   NetworkCounter   referred-networkcounter-sample   Finished   
+ipv4-resource-ip-sample          10.0.0.0                 ipv4-child-cidr-subnet-sample   ipam.onmetal.de/v1alpha1   NetworkCounter   referred-networkcounter-sample   Finished   
+ipv6-ip-ip-sample                fd34:5d8f:e75e:f3a2::1   ipv6-child-cidr-subnet-sample                                                                                Finished   
+ipv6-ip-sample                   fd34:5d8f:e75e:f3a2::3   ipv6-child-cidr-subnet-sample                                                                                Finished   
+ipv6-resource-and-ip-ip-sample   fd34:5d8f:e75e:f3a2::2   ipv6-child-cidr-subnet-sample   ipam.onmetal.de/v1alpha1   NetworkCounter   referred-networkcounter-sample   Finished   
+ipv6-resource-ip-sample          fd34:5d8f:e75e:f3a2::    ipv6-child-cidr-subnet-sample   ipam.onmetal.de/v1alpha1   NetworkCounter   referred-networkcounter-sample   Finished
 ```
 
 IPs status is pretty simple and does not provide any additional info. 

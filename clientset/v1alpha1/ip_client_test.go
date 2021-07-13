@@ -14,26 +14,26 @@ import (
 	"github.com/onmetal/ipam/api/v1alpha1"
 )
 
-var _ = Describe("Ip client", func() {
+var _ = Describe("IP client", func() {
 	const (
-		IpName         = "test-ip"
-		IpToDeleteName = "test-ip-to-delete"
+		IPName         = "test-ip"
+		IPToDeleteName = "test-ip-to-delete"
 		DeleteLabel    = "delete-label"
-		IpNamespace    = "default"
+		IPNamespace    = "default"
 
 		timeout  = time.Second * 10
 		interval = time.Millisecond * 250
 	)
-	ipMustParse := func(ipString string) *v1alpha1.IP {
-		ip, err := v1alpha1.IPFromString(ipString)
+	ipMustParse := func(ipString string) *v1alpha1.IPAddr {
+		ip, err := v1alpha1.IPAddrFromString(ipString)
 		if err != nil {
 			panic(err)
 		}
 		return ip
 	}
 
-	Context("When Ip CR is installed", func() {
-		It("Should check that Ip CR is operational with client", func() {
+	Context("When IP CR is installed", func() {
+		It("Should check that IP CR is operational with client", func() {
 			By("Creating client")
 			finished := make(chan bool)
 			ctx := context.Background()
@@ -41,16 +41,16 @@ var _ = Describe("Ip client", func() {
 			clientset, err := NewForConfig(cfg)
 			Expect(err).NotTo(HaveOccurred())
 
-			client := clientset.Ips(IpNamespace)
+			client := clientset.IPs(IPNamespace)
 
-			ip := &v1alpha1.Ip{
+			ip := &v1alpha1.IP{
 				ObjectMeta: v1.ObjectMeta{
-					Name:      IpName,
-					Namespace: IpNamespace,
+					Name:      IPName,
+					Namespace: IPNamespace,
 				},
-				Spec: v1alpha1.IpSpec{
-					Subnet: "sn",
-					IP:     ipMustParse("192.168.1.1"),
+				Spec: v1alpha1.IPSpec{
+					SubnetName: "sn",
+					IP:         ipMustParse("192.168.1.1"),
 				},
 			}
 
@@ -59,70 +59,70 @@ var _ = Describe("Ip client", func() {
 			Expect(err).NotTo(HaveOccurred())
 			events := watcher.ResultChan()
 
-			By("Creating Ip")
-			createdIp := &v1alpha1.Ip{}
+			By("Creating IP")
+			createdIP := &v1alpha1.IP{}
 			go func() {
 				defer GinkgoRecover()
-				createdIp, err = client.Create(ctx, ip, v1.CreateOptions{})
+				createdIP, err = client.Create(ctx, ip, v1.CreateOptions{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(createdIp.Spec).Should(Equal(ip.Spec))
+				Expect(createdIP.Spec).Should(Equal(ip.Spec))
 				finished <- true
 			}()
 
 			event := &watch.Event{}
 			Eventually(events).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Added))
-			eventIp := event.Object.(*v1alpha1.Ip)
-			Expect(eventIp).NotTo(BeNil())
-			Expect(eventIp.Spec).Should(Equal(ip.Spec))
+			eventIP := event.Object.(*v1alpha1.IP)
+			Expect(eventIP).NotTo(BeNil())
+			Expect(eventIP.Spec).Should(Equal(ip.Spec))
 
 			<-finished
 
-			By("Updating Ip")
-			createdIp.Spec.IP = ipMustParse("127.0.0.1")
-			updatedIp := &v1alpha1.Ip{}
+			By("Updating IP")
+			createdIP.Spec.IP = ipMustParse("127.0.0.1")
+			updatedIP := &v1alpha1.IP{}
 			go func() {
 				defer GinkgoRecover()
-				updatedIp, err = client.Update(ctx, createdIp, v1.UpdateOptions{})
+				updatedIP, err = client.Update(ctx, createdIP, v1.UpdateOptions{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(updatedIp.Spec).Should(Equal(createdIp.Spec))
+				Expect(updatedIP.Spec).Should(Equal(createdIP.Spec))
 				finished <- true
 			}()
 
 			Eventually(events).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Modified))
-			eventIp = event.Object.(*v1alpha1.Ip)
-			Expect(eventIp).NotTo(BeNil())
-			Expect(eventIp.Spec).Should(Equal(createdIp.Spec))
+			eventIP = event.Object.(*v1alpha1.IP)
+			Expect(eventIP).NotTo(BeNil())
+			Expect(eventIP.Spec).Should(Equal(createdIP.Spec))
 
 			<-finished
 
-			By("Updating Ip status")
-			updatedIp.Status.LastUsedIP = ipMustParse("127.0.0.1")
+			By("Updating IP status")
+			updatedIP.Status.Reserved = ipMustParse("127.0.0.1")
 			go func() {
 				defer GinkgoRecover()
-				statusUpdatedIp, err := client.UpdateStatus(ctx, updatedIp, v1.UpdateOptions{})
+				statusUpdatedIP, err := client.UpdateStatus(ctx, updatedIP, v1.UpdateOptions{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(statusUpdatedIp.Status).Should(Equal(updatedIp.Status))
+				Expect(statusUpdatedIP.Status).Should(Equal(updatedIP.Status))
 				finished <- true
 			}()
 
 			Eventually(events).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Modified))
-			eventIp = event.Object.(*v1alpha1.Ip)
-			Expect(eventIp).NotTo(BeNil())
-			Expect(eventIp.Status).Should(Equal(updatedIp.Status))
+			eventIP = event.Object.(*v1alpha1.IP)
+			Expect(eventIP).NotTo(BeNil())
+			Expect(eventIP.Status).Should(Equal(updatedIP.Status))
 
 			<-finished
 
-			By("Patching Ip")
+			By("Patching IP")
 			patch := []struct {
 				Op    string `json:"op"`
 				Path  string `json:"path"`
 				Value string `json:"value"`
 			}{{
 				Op:    "replace",
-				Path:  "/spec/subnet",
+				Path:  "/spec/subnetName",
 				Value: "test-subnet",
 			}}
 
@@ -131,56 +131,56 @@ var _ = Describe("Ip client", func() {
 
 			go func() {
 				defer GinkgoRecover()
-				patchedIp, err := client.Patch(ctx, IpName, types.JSONPatchType, patchData, v1.PatchOptions{})
+				patchedIP, err := client.Patch(ctx, IPName, types.JSONPatchType, patchData, v1.PatchOptions{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(patchedIp.Spec.Subnet).Should(Equal(patch[0].Value))
+				Expect(patchedIP.Spec.SubnetName).Should(Equal(patch[0].Value))
 				finished <- true
 			}()
 
 			Eventually(events).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Modified))
-			eventIp = event.Object.(*v1alpha1.Ip)
-			Expect(eventIp).NotTo(BeNil())
-			Expect(eventIp.Spec.Subnet).Should(Equal(patch[0].Value))
+			eventIP = event.Object.(*v1alpha1.IP)
+			Expect(eventIP).NotTo(BeNil())
+			Expect(eventIP.Spec.SubnetName).Should(Equal(patch[0].Value))
 
 			<-finished
 
-			ipToDelete := &v1alpha1.Ip{
+			ipToDelete := &v1alpha1.IP{
 				ObjectMeta: v1.ObjectMeta{
-					Name:      IpToDeleteName,
-					Namespace: IpNamespace,
+					Name:      IPToDeleteName,
+					Namespace: IPNamespace,
 					Labels: map[string]string{
 						DeleteLabel: "",
 					},
 				},
-				Spec: v1alpha1.IpSpec{
-					Subnet: "sn",
+				Spec: v1alpha1.IPSpec{
+					SubnetName: "sn",
 				},
 			}
 
-			By("Creating Ip collection")
+			By("Creating IP collection")
 			_, err = client.Create(ctx, ipToDelete, v1.CreateOptions{})
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(events).Should(Receive())
 
-			By("Listing Ips")
+			By("Listing IPs")
 			ipList, err := client.List(ctx, v1.ListOptions{})
 			Expect(ipList).NotTo(BeNil())
 			Expect(ipList.Items).To(HaveLen(2))
 
-			By("Bulk deleting Ip")
+			By("Bulk deleting IP")
 			Expect(client.DeleteCollection(ctx, v1.DeleteOptions{}, v1.ListOptions{LabelSelector: DeleteLabel})).To(Succeed())
 
-			By("Requesting created Ip")
+			By("Requesting created IP")
 			Eventually(func() bool {
-				_, err = client.Get(ctx, IpName, v1.GetOptions{})
+				_, err = client.Get(ctx, IPName, v1.GetOptions{})
 				if err != nil {
 					return false
 				}
 				return true
 			}, timeout, interval).Should(BeTrue())
 			Eventually(func() bool {
-				_, err = client.Get(ctx, IpToDeleteName, v1.GetOptions{})
+				_, err = client.Get(ctx, IPToDeleteName, v1.GetOptions{})
 				if err != nil {
 					return false
 				}
@@ -189,23 +189,23 @@ var _ = Describe("Ip client", func() {
 
 			Eventually(events).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Deleted))
-			eventIp = event.Object.(*v1alpha1.Ip)
-			Expect(eventIp).NotTo(BeNil())
-			Expect(eventIp.Name).To(Equal(IpToDeleteName))
+			eventIP = event.Object.(*v1alpha1.IP)
+			Expect(eventIP).NotTo(BeNil())
+			Expect(eventIP.Name).To(Equal(IPToDeleteName))
 
-			By("Deleting Ip")
+			By("Deleting IP")
 			go func() {
 				defer GinkgoRecover()
-				err := client.Delete(ctx, IpName, v1.DeleteOptions{})
+				err := client.Delete(ctx, IPName, v1.DeleteOptions{})
 				Expect(err).NotTo(HaveOccurred())
 				finished <- true
 			}()
 
 			Eventually(events).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Deleted))
-			eventIp = event.Object.(*v1alpha1.Ip)
-			Expect(eventIp).NotTo(BeNil())
-			Expect(eventIp.Name).To(Equal(IpName))
+			eventIP = event.Object.(*v1alpha1.IP)
+			Expect(eventIP).NotTo(BeNil())
+			Expect(eventIP.Name).To(Equal(IPName))
 
 			<-finished
 

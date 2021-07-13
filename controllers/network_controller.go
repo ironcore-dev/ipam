@@ -112,26 +112,26 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
-	if network.Status.State == machinev1alpha1.CFinishedRequestState &&
+	if network.Status.State == machinev1alpha1.CFinishedNetworkState &&
 		network.Status.Reserved == nil &&
 		network.Spec.Type != "" {
-		network.Status.State = machinev1alpha1.CProcessingRequestState
+		network.Status.State = machinev1alpha1.CProcessingNetworkState
 		if err := r.Status().Update(ctx, network); err != nil {
-			log.Error(err, "unable to update network resource status", "name", req.NamespacedName, "currentStatus", network.Status.State, "targetStatus", machinev1alpha1.CProcessingRequestState)
+			log.Error(err, "unable to update network resource status", "name", req.NamespacedName, "currentStatus", network.Status.State, "targetStatus", machinev1alpha1.CProcessingNetworkState)
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
 	}
 
-	if network.Status.State == machinev1alpha1.CFinishedRequestState ||
-		network.Status.State == machinev1alpha1.CFailedRequestState {
+	if network.Status.State == machinev1alpha1.CFinishedNetworkState ||
+		network.Status.State == machinev1alpha1.CFailedNetworkState {
 		return ctrl.Result{}, nil
 	}
 
 	if network.Status.State == "" {
-		network.Status.State = machinev1alpha1.CProcessingRequestState
+		network.Status.State = machinev1alpha1.CProcessingNetworkState
 		if err := r.Status().Update(ctx, network); err != nil {
-			log.Error(err, "unable to update network resource status", "name", req.NamespacedName, "currentStatus", network.Status.State, "targetStatus", machinev1alpha1.CProcessingRequestState)
+			log.Error(err, "unable to update network resource status", "name", req.NamespacedName, "currentStatus", network.Status.State, "targetStatus", machinev1alpha1.CProcessingNetworkState)
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
@@ -139,7 +139,7 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	if network.Spec.Type == "" {
 		log.Info("network does not specify type, nothing to do for now", "name", req.NamespacedName)
-		network.Status.State = machinev1alpha1.CFinishedRequestState
+		network.Status.State = machinev1alpha1.CFinishedNetworkState
 		if err := r.Status().Update(ctx, network); err != nil {
 			log.Error(err, "unable to update network status", "name", req.NamespacedName)
 			return ctrl.Result{}, err
@@ -176,7 +176,7 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if networkIdToReserve == nil {
 		networkId, err := counter.Spec.Propose()
 		if err != nil {
-			network.Status.State = machinev1alpha1.CFailedRequestState
+			network.Status.State = machinev1alpha1.CFailedNetworkState
 			network.Status.Message = err.Error()
 			if err := r.Status().Update(ctx, network); err != nil {
 				log.Error(err, "unable to update network status", "name", req.NamespacedName)
@@ -190,7 +190,7 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	if err := counter.Spec.Reserve(networkIdToReserve); err != nil {
-		network.Status.State = machinev1alpha1.CFailedRequestState
+		network.Status.State = machinev1alpha1.CFailedNetworkState
 		network.Status.Message = err.Error()
 		if err := r.Status().Update(ctx, network); err != nil {
 			log.Error(err, "unable to update network status", "name", req.NamespacedName)
@@ -207,7 +207,7 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 	r.EventRecorder.Eventf(network, v1.EventTypeNormal, CNetworkIDReservationSuccessReason, "ID %s for type %s reserved successfully", networkIdToReserve, network.Spec.Type)
 
-	network.Status.State = machinev1alpha1.CFinishedRequestState
+	network.Status.State = machinev1alpha1.CFinishedNetworkState
 	network.Status.Reserved = networkIdToReserve
 	if err := r.Status().Update(ctx, network); err != nil {
 		log.Error(err, "unable to update network status", "name", req.NamespacedName)

@@ -17,9 +17,9 @@ import (
 // log is for logging in this package.
 var networklog = logf.Log.WithName("network-resource")
 
-func (n *Network) SetupWebhookWithManager(mgr ctrl.Manager) error {
+func (in *Network) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
-		For(n).
+		For(in).
 		Complete()
 }
 
@@ -28,34 +28,34 @@ func (n *Network) SetupWebhookWithManager(mgr ctrl.Manager) error {
 var _ webhook.Validator = &Network{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (n *Network) ValidateCreate() error {
-	networklog.Info("validate create", "name", n.Name)
+func (in *Network) ValidateCreate() error {
+	networklog.Info("validate create", "name", in.Name)
 
 	var allErrs field.ErrorList
 
-	if n.Spec.Type == "" && n.Spec.ID != nil {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.id"), n.Spec.ID, "setting network ID without type is disallowed"))
+	if in.Spec.Type == "" && in.Spec.ID != nil {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.id"), in.Spec.ID, "setting network ID without type is disallowed"))
 	}
 
-	if err := n.validateID(); err != nil {
+	if err := in.validateID(); err != nil {
 		allErrs = append(allErrs, err)
 	}
 
 	if len(allErrs) > 0 {
-		gvk := n.GroupVersionKind()
+		gvk := in.GroupVersionKind()
 		gk := schema.GroupKind{
 			Group: gvk.Group,
 			Kind:  gvk.Kind,
 		}
-		return apierrors.NewInvalid(gk, n.Name, allErrs)
+		return apierrors.NewInvalid(gk, in.Name, allErrs)
 	}
 
 	return nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (n *Network) ValidateUpdate(old runtime.Object) error {
-	networklog.Info("validate update", "name", n.Name)
+func (in *Network) ValidateUpdate(old runtime.Object) error {
+	networklog.Info("validate update", "name", in.Name)
 	oldNetwork, ok := old.(*Network)
 	if !ok {
 		return apierrors.NewInternalError(errors.New("cannot cast previous object version to Network CR type"))
@@ -64,59 +64,59 @@ func (n *Network) ValidateUpdate(old runtime.Object) error {
 	var allErrs field.ErrorList
 
 	if oldNetwork.Spec.Type != "" &&
-		oldNetwork.Spec.Type != n.Spec.Type {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.type"), n.Spec.Type, "network type change is disallowed; resource should be released (deleted) first"))
+		oldNetwork.Spec.Type != in.Spec.Type {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.type"), in.Spec.Type, "network type change is disallowed; resource should be released (deleted) first"))
 	}
 
-	if (oldNetwork.Spec.ID != nil && oldNetwork.Spec.ID.Cmp(&n.Spec.ID.Int) != 0) ||
-		(oldNetwork.Spec.ID == nil && oldNetwork.Spec.Type != "" && n.Spec.ID != nil) {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.id"), n.Spec.ID, "network ID change after assignment is disallowed; resource should be released (deleted) first"))
+	if (oldNetwork.Spec.ID != nil && oldNetwork.Spec.ID.Cmp(&in.Spec.ID.Int) != 0) ||
+		(oldNetwork.Spec.ID == nil && oldNetwork.Spec.Type != "" && in.Spec.ID != nil) {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.id"), in.Spec.ID, "network ID change after assignment is disallowed; resource should be released (deleted) first"))
 	}
 
-	if err := n.validateID(); err != nil {
+	if err := in.validateID(); err != nil {
 		allErrs = append(allErrs, err)
 	}
 
 	if len(allErrs) > 0 {
-		gvk := n.GroupVersionKind()
+		gvk := in.GroupVersionKind()
 		gk := schema.GroupKind{
 			Group: gvk.Group,
 			Kind:  gvk.Kind,
 		}
-		return apierrors.NewInvalid(gk, n.Name, allErrs)
+		return apierrors.NewInvalid(gk, in.Name, allErrs)
 	}
 
 	return nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (n *Network) ValidateDelete() error {
-	networklog.Info("validate delete", "name", n.Name)
+func (in *Network) ValidateDelete() error {
+	networklog.Info("validate delete", "name", in.Name)
 	return nil
 }
 
-func (n *Network) validateID() *field.Error {
-	if n.Spec.ID == nil {
+func (in *Network) validateID() *field.Error {
+	if in.Spec.ID == nil {
 		return nil
 	}
 
-	switch n.Spec.Type {
+	switch in.Spec.Type {
 	case CVXLANNetworkType:
-		if n.Spec.ID.Cmp(&CVXLANFirstAvaliableID.Int) < 0 ||
-			n.Spec.ID.Cmp(&CVXLANMaxID.Int) > 0 {
-			return field.Invalid(field.NewPath("spec.id"), n.Spec.ID, fmt.Sprintf("value for the ID for network type %s should be in interval [%s; %s]", n.Spec.Type, CVXLANFirstAvaliableID, CVXLANMaxID))
+		if in.Spec.ID.Cmp(&CVXLANFirstAvaliableID.Int) < 0 ||
+			in.Spec.ID.Cmp(&CVXLANMaxID.Int) > 0 {
+			return field.Invalid(field.NewPath("spec.id"), in.Spec.ID, fmt.Sprintf("value for the ID for network type %s should be in interval [%s; %s]", in.Spec.Type, CVXLANFirstAvaliableID, CVXLANMaxID))
 		}
 	case CGENEVENetworkType:
-		if n.Spec.ID.Cmp(&CGENEVEFirstAvaliableID.Int) < 0 ||
-			n.Spec.ID.Cmp(&CGENEVEMaxID.Int) > 0 {
-			return field.Invalid(field.NewPath("spec.id"), n.Spec.ID, fmt.Sprintf("value for the ID for network type %s should be in interval [%s; %s]", n.Spec.Type, CGENEVEFirstAvaliableID, CGENEVEMaxID))
+		if in.Spec.ID.Cmp(&CGENEVEFirstAvaliableID.Int) < 0 ||
+			in.Spec.ID.Cmp(&CGENEVEMaxID.Int) > 0 {
+			return field.Invalid(field.NewPath("spec.id"), in.Spec.ID, fmt.Sprintf("value for the ID for network type %s should be in interval [%s; %s]", in.Spec.Type, CGENEVEFirstAvaliableID, CGENEVEMaxID))
 		}
 	case CMPLSNetworkType:
-		if n.Spec.ID.Cmp(&CMPLSFirstAvailableID.Int) < 0 {
-			return field.Invalid(field.NewPath("spec.id"), n.Spec.ID, fmt.Sprintf("value for the ID for network type %s should be in interval [%s; %f]", n.Spec.Type, CMPLSFirstAvailableID, math.Inf(1)))
+		if in.Spec.ID.Cmp(&CMPLSFirstAvailableID.Int) < 0 {
+			return field.Invalid(field.NewPath("spec.id"), in.Spec.ID, fmt.Sprintf("value for the ID for network type %s should be in interval [%s; %f]", in.Spec.Type, CMPLSFirstAvailableID, math.Inf(1)))
 		}
 	default:
-		return field.Invalid(field.NewPath("spec.type"), n.Spec.Type, "unknown network type")
+		return field.Invalid(field.NewPath("spec.type"), in.Spec.Type, "unknown network type")
 	}
 
 	return nil

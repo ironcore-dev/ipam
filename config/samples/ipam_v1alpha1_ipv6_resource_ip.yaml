@@ -1,10 +1,10 @@
 apiVersion: ipam.onmetal.de/v1alpha1
-kind: Ip
+kind: IP
 metadata:
   name: ipv6-resource-ip-sample
 spec:
-  subnet: ipv6-child-cidr-subnet-sample
-  crd:
-    groupVersion: ipam.onmetal.de/v1alpha1
+  subnetName: ipv6-child-cidr-subnet-sample
+  resourceReference:
+    apiVersion: ipam.onmetal.de/v1alpha1
     kind: NetworkCounter
     name: referred-networkcounter-sample

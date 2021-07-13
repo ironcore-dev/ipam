@@ -9,7 +9,6 @@ import (
 )
 
 var _ = Describe("IP operations", func() {
-
 	Context("When JSON is deserialized to IP", func() {
 		It("Should accept IP string", func() {
 			testCases := []string{
@@ -22,9 +21,8 @@ var _ = Describe("IP operations", func() {
 
 			for i, testCase := range testCases {
 				By(fmt.Sprintf("Deserializing IP string %d", i))
-				ip := IP{}
+				ip := IPAddr{}
 				Expect(json.Unmarshal([]byte(testCase), &ip)).To(Succeed())
-
 			}
 		})
 	})
@@ -32,29 +30,29 @@ var _ = Describe("IP operations", func() {
 	Context("When IP is serialized to JSON", func() {
 		It("Should produce valid IP string", func() {
 			testCases := []struct {
-				ip           *IP
+				ip           *IPAddr
 				expectedJSON string
 			}{
 				{
-					ip: &IP{
+					ip: &IPAddr{
 						Net: []byte{192, 168, 1, 0},
 					},
 					expectedJSON: `"192.168.1.0"`,
 				},
 				{
-					ip: &IP{
+					ip: &IPAddr{
 						Net: []byte{0, 0, 0, 0},
 					},
 					expectedJSON: `"0.0.0.0"`,
 				},
 				{
-					ip: &IP{
+					ip: &IPAddr{
 						Net: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 					},
 					expectedJSON: `"::"`,
 				},
 				{
-					ip: &IP{
+					ip: &IPAddr{
 						Net: []byte{0x20, 0x1, 0xd, 0xb8, 0x12, 0x34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 					},
 					expectedJSON: `"2001:db8:1234::"`,

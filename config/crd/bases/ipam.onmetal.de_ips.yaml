@@ -10,37 +10,45 @@ metadata:
 spec:
   group: ipam.onmetal.de
   names:
-    kind: Ip
-    listKind: IpList
+    kind: IP
+    listKind: IPList
     plural: ips
     singular: ip
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
     - description: IP Address
-      jsonPath: .spec.ip
+      jsonPath: .status.reserved
       name: IP
       type: string
     - description: Subnet
-      jsonPath: .spec.subnet
+      jsonPath: .spec.subnetName
       name: Subnet
       type: string
     - description: Resource Group
-      jsonPath: .spec.crd.groupVersion
+      jsonPath: .spec.resourceReference.apiVersion
       name: Resource Group
       type: string
     - description: Resource Kind
-      jsonPath: .spec.crd.kind
+      jsonPath: .spec.resourceReference.kind
       name: Resource Kind
       type: string
     - description: Resource Name
-      jsonPath: .spec.crd.name
+      jsonPath: .spec.resourceReference.name
       name: Resource Name
+      type: string
+    - description: Processing state
+      jsonPath: .status.state
+      name: State
+      type: string
+    - description: Message
+      jsonPath: .status.message
+      name: Message
       type: string
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Ip is the Schema for the ips API
+        description: IP is the Schema for the ips API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -55,32 +63,58 @@ spec:
           metadata:
             type: object
           spec:
-            description: IpSpec defines the desired state of Ip
+            description: IPSpec defines the desired state of IP
             properties:
-              crd:
-                description: CRD find IP for
+              ip:
+                description: IP allows to set desired IP address explicitly
+                type: string
+              resourceReference:
+                description: ResourceReference refers to resource IP has been booked
+                  for
                 properties:
-                  groupVersion:
-                    description: Kind is CRD Kind for lookup
+                  apiVersion:
+                    description: APIVersion is resource's API group
+                    maxLength: 253
+                    minLength: 1
+                    pattern: ^[a-z0-9]([-./a-z0-9]*[a-z0-9])?$
                     type: string
                   kind:
                     description: Kind is CRD Kind for lookup
+                    maxLength: 63
+                    minLength: 1
+                    pattern: ^[A-Z]([-A-Za-z0-9]*[A-Za-z0-9])?$
                     type: string
                   name:
                     description: Name is CRD Name for lookup
+                    maxLength: 63
+                    minLength: 1
+                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
                     type: string
+                required:
+                - kind
+                - name
                 type: object
-              ip:
-                description: IP to request, if not specified - will be added automatically
+              subnetName:
+                description: SubnetName is referring to parent subnet that holds requested
+                  IP
+                maxLength: 63
+                minLength: 1
+                pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
                 type: string
-              subnet:
-                description: Subnet to get IP from
-                type: string
+            required:
+            - subnetName
             type: object
           status:
-            description: IpStatus defines the observed state of Ip
+            description: IPStatus defines the observed state of IP
             properties:
-              lastUsedIp:
+              message:
+                description: Message contains error details if the one has occurred
+                type: string
+              reserved:
+                description: Reserved is a reserved IP
+                type: string
+              state:
+                description: State is a network creation request processing state
                 type: string
             type: object
         type: object
