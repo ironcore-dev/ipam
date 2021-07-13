@@ -40,18 +40,24 @@ type SubnetSpec struct {
 	Capacity *resource.Quantity `json:"capacity,omitempty"`
 	// ParentSubnetName contains a reference (name) to the parent subent
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=63
 	ParentSubnetName string `json:"parentSubnetName,omitempty"`
 	// NetworkName contains a reference (name) to the network
 	// +kubebuilder:validation:Required
-	NetworkName string `json:"networkName,omitempty"`
+	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=63
+	NetworkName string `json:"networkName"`
 	// Regions represents the network service location
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
-	Regions []string `json:"regions,omitempty"`
+	Regions []string `json:"regions"`
 	// AvailabilityZones represents the locality of the network segment
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
-	AvailabilityZones []string `json:"availabilityZones,omitempty"`
+	AvailabilityZones []string `json:"availabilityZones"`
 }
 
 const (

@@ -35,6 +35,14 @@ spec:
           jsonPath: .spec.resourceReference.name
           name: Resource Name
           type: string
+        - description: Processing state
+          jsonPath: .status.state
+          name: State
+          type: string
+        - description: Message
+          jsonPath: .status.message
+          name: Message
+          type: string
       name: v1alpha1
       schema:
         openAPIV3Schema:
@@ -64,18 +72,35 @@ spec:
                   properties:
                     apiVersion:
                       description: APIVersion is resource's API group
+                      maxLength: 253
+                      minLength: 1
+                      pattern: ^[a-z0-9]([-./a-z0-9]*[a-z0-9])?$
                       type: string
                     kind:
                       description: Kind is CRD Kind for lookup
+                      maxLength: 63
+                      minLength: 1
+                      pattern: ^[A-Z]([-A-Za-z0-9]*[A-Za-z0-9])?$
                       type: string
                     name:
                       description: Name is CRD Name for lookup
+                      maxLength: 63
+                      minLength: 1
+                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
                       type: string
+                  required:
+                    - kind
+                    - name
                   type: object
                 subnetName:
                   description: SubnetName is referring to parent subnet that holds requested
                     IP
+                  maxLength: 63
+                  minLength: 1
+                  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
                   type: string
+              required:
+                - subnetName
               type: object
             status:
               description: IPStatus defines the observed state of IP

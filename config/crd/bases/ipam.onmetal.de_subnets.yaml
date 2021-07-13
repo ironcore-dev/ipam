@@ -97,10 +97,16 @@ spec:
                 type: string
               networkName:
                 description: NetworkName contains a reference (name) to the network
+                maxLength: 63
+                minLength: 1
+                pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
                 type: string
               parentSubnetName:
                 description: ParentSubnetName contains a reference (name) to the parent
                   subent
+                maxLength: 63
+                minLength: 1
+                pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
                 type: string
               prefixBits:
                 description: PrefixBits is an amount of ones zero bits at the beginning
@@ -114,6 +120,10 @@ spec:
                   type: string
                 minItems: 1
                 type: array
+            required:
+            - availabilityZones
+            - networkName
+            - regions
             type: object
           status:
             description: SubnetStatus defines the observed state of Subnet

@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -12,19 +13,11 @@ import (
 
 var _ = Describe("IP webhook", func() {
 	const (
-		IPNamespace  = "default"
-		IPApiVersion = "ipam.onmetal.de/v1alpha1"
-		timeout      = time.Second * 10
-		interval     = time.Millisecond * 100
+		IPNamespace = "default"
+		timeout     = time.Second * 10
+		interval    = time.Millisecond * 100
 	)
 
-	cidrMustParse := func(cidrString string) *CIDR {
-		cidr, err := CIDRFromString(cidrString)
-		if err != nil {
-			panic(err)
-		}
-		return cidr
-	}
 	ipMustParse := func(ipString string) *IPAddr {
 		ip, err := IPAddrFromString(ipString)
 		if err != nil {
@@ -33,178 +26,186 @@ var _ = Describe("IP webhook", func() {
 		return ip
 	}
 
-	Context("IP webhook test", func() {
-		It("Should fail with nonexistent related CRD", func() {
-			ctx := context.Background()
-			ip := &IP{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "ip0",
-					Namespace: IPNamespace,
-				},
-				Spec: IPSpec{
-					SubnetName: "subnet1",
-					ResourceReference: &ResourceReference{
-						APIVersion: "v1",
-						Kind:       "ConfigMap",
-						Name:       "configmap-that-doesnt-exist",
+	Context("When IP is not created", func() {
+		It("Should check that invalid CR will be rejected", func() {
+			crs := []IP{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "without-subnet-name",
+						Namespace: IPNamespace,
 					},
-					IP: ipMustParse("1.12.12.123"),
+					Spec: IPSpec{},
 				},
-			}
-			Expect(k8sClient.Create(ctx, ip)).ShouldNot(Succeed())
-		})
-
-		It("Should allocate free IP", func() {
-			referredResource := &NetworkCounter{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "referred-networkcounter",
-					Namespace: IPNamespace,
-				},
-				Spec: NetworkCounterSpec{},
-			}
-			By("Expecting referred resource to be created successfully")
-			Expect(k8sClient.Create(ctx, referredResource)).Should(Succeed())
-
-			subnet := &Subnet{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "subnet1",
-					Namespace: IPNamespace,
-				},
-				Spec: SubnetSpec{
-					CIDR:              cidrMustParse("10.12.34.0/24"),
-					NetworkName:       "ng1",
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
-				},
-				Status: SubnetStatus{
-					Type: CIPv4SubnetType,
-				},
-			}
-			By("Expecting Subnet 1 Create Successful")
-			Expect(k8sClient.Create(ctx, subnet)).Should(Succeed())
-
-			subnet2 := &Subnet{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "subnet2",
-					Namespace: IPNamespace,
-				},
-				Spec: SubnetSpec{
-					CIDR:              cidrMustParse("10.12.34.0/26"),
-					ParentSubnetName:  "subnet1",
-					NetworkName:       "ng1",
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
-				},
-				Status: SubnetStatus{
-					Type: CIPv4SubnetType,
-				},
-			}
-			By("Expecting Subnet 2 Create Successful")
-			Expect(k8sClient.Create(ctx, subnet2)).Should(Succeed())
-
-			subnet3 := &Subnet{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "subnet3",
-					Namespace: IPNamespace,
-				},
-				Spec: SubnetSpec{
-					CIDR:              cidrMustParse("10.12.34.128/25"),
-					ParentSubnetName:  "subnet1",
-					NetworkName:       "ng1",
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
-				},
-				Status: SubnetStatus{
-					Type: CIPv4SubnetType,
-				},
-			}
-			By("Expecting Subnet 3 Create Successful")
-			Expect(k8sClient.Create(ctx, subnet3)).Should(Succeed())
-
-			ip := &IP{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "ip1",
-					Namespace: IPNamespace,
-				},
-				Spec: IPSpec{
-					SubnetName: "subnet1",
-					ResourceReference: &ResourceReference{
-						APIVersion: IPApiVersion,
-						Kind:       "NetworkCounter",
-						Name:       "referred-networkcounter",
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "with-invalid-resource-ref",
+						Namespace: IPNamespace,
+					},
+					Spec: IPSpec{
+						SubnetName: "sample-subnet",
+						ResourceReference: &ResourceReference{
+							Kind: "",
+							Name: "",
+						},
 					},
 				},
 			}
-			By("Expecting IP Create Successful")
-			Expect(k8sClient.Create(ctx, ip)).Should(Succeed())
 
-			key := types.NamespacedName{
-				Name:      "ip1",
-				Namespace: IPNamespace,
+			ctx := context.Background()
+
+			for _, cr := range crs {
+				By(fmt.Sprintf("Attempting to create IP with invalid configuration %s", cr.Name))
+				Expect(k8sClient.Create(ctx, &cr)).ShouldNot(Succeed())
 			}
-			Eventually(func() bool {
-				ip := &IP{}
-				_ = k8sClient.Get(context.Background(), key, ip)
-				return ip.Spec.IP.Equal(ipMustParse("10.12.34.64"))
-			}, timeout, interval).Should(BeTrue())
 		})
 
-		It("Should create without CRD specified", func() {
-			ctx := context.Background()
-			ip := &IP{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "ip2",
-					Namespace: IPNamespace,
-				},
-				Spec: IPSpec{
-					SubnetName: "subnet1",
-					IP:         ipMustParse("0.0.0.1"),
-				},
-			}
-			By("Expecting IP Create Successful")
-			Expect(k8sClient.Create(ctx, ip)).Should(Succeed())
-		})
-
-		It("Should not allow to use already allocated IP", func() {
-			ctx := context.Background()
-			ip := &IP{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "ip2",
-					Namespace: IPNamespace,
-				},
-				Spec: IPSpec{
-					SubnetName: "subnet1",
-					ResourceReference: &ResourceReference{
-						APIVersion: IPApiVersion,
-						Kind:       "NetworkCounter",
-						Name:       "referred-networkcounter",
+		It("Should check that valid CR will be accepted", func() {
+			crs := []IP{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "with-subnet",
+						Namespace: IPNamespace,
 					},
-					IP: ipMustParse("10.12.34.64"),
-				},
-			}
-			By("Expecting IP Create Successful")
-			Expect(k8sClient.Create(ctx, ip)).ShouldNot(Succeed())
-		})
-
-		It("Should not allow to use IP from child subnet", func() {
-			ctx := context.Background()
-			ip := &IP{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "ip3",
-					Namespace: IPNamespace,
-				},
-				Spec: IPSpec{
-					SubnetName: "subnet1",
-					ResourceReference: &ResourceReference{
-						APIVersion: IPApiVersion,
-						Kind:       "NetworkCounter",
-						Name:       "referred-networkcounter",
+					Spec: IPSpec{
+						SubnetName: "sample-subnet",
 					},
-					IP: ipMustParse("10.12.34.255"),
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "with-subnet-and-resource",
+						Namespace: IPNamespace,
+					},
+					Spec: IPSpec{
+						SubnetName: "sample-subnet",
+						ResourceReference: &ResourceReference{
+							Kind: "SampleKind",
+							Name: "sample-name",
+						},
+					},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "with-subnet-and-ip",
+						Namespace: IPNamespace,
+					},
+					Spec: IPSpec{
+						SubnetName: "sample-subnet",
+						IP:         ipMustParse("192.168.1.1"),
+					},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "with-subnet-ip-and-resource",
+						Namespace: IPNamespace,
+					},
+					Spec: IPSpec{
+						SubnetName: "sample-subnet",
+						ResourceReference: &ResourceReference{
+							APIVersion: "sample.api/v1alpha1",
+							Kind:       "SampleKind",
+							Name:       "sample-name",
+						},
+						IP: ipMustParse("192.168.1.1"),
+					},
 				},
 			}
-			By("Expecting IP Create Successful")
-			Expect(k8sClient.Create(ctx, ip)).ShouldNot(Succeed())
+
+			ctx := context.Background()
+
+			for _, cr := range crs {
+				By(fmt.Sprintf("Attempting to create IP with valid configuration %s", cr.Name))
+				Expect(k8sClient.Create(ctx, &cr)).Should(Succeed())
+			}
+		})
+	})
+
+	Context("When IP is created", func() {
+		It("Should not allow to change IP or subnet", func() {
+			crs := []IP{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test-ip-with-subnet",
+						Namespace: IPNamespace,
+					},
+					Spec: IPSpec{
+						SubnetName: "sample-subnet",
+					},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test-ip-with-subnet-and-resource",
+						Namespace: IPNamespace,
+					},
+					Spec: IPSpec{
+						SubnetName: "sample-subnet",
+						ResourceReference: &ResourceReference{
+							Kind: "SampleKind",
+							Name: "sample-name",
+						},
+					},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test-ip-with-subnet-and-ip",
+						Namespace: IPNamespace,
+					},
+					Spec: IPSpec{
+						SubnetName: "sample-subnet",
+						IP:         ipMustParse("192.168.1.1"),
+					},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test-ip-with-subnet-ip-and-resource",
+						Namespace: IPNamespace,
+					},
+					Spec: IPSpec{
+						SubnetName: "sample-subnet",
+						ResourceReference: &ResourceReference{
+							APIVersion: "sample.api/v1alpha1",
+							Kind:       "SampleKind",
+							Name:       "sample-name",
+						},
+						IP: ipMustParse("192.168.1.1"),
+					},
+				},
+			}
+
+			ctx := context.Background()
+
+			for _, cr := range crs {
+				By(fmt.Sprintf("Сreating IP with name %s", cr.Name))
+				Expect(k8sClient.Create(ctx, &cr)).Should(Succeed())
+
+				Eventually(func() bool {
+					namespacedName := types.NamespacedName{
+						Namespace: cr.Namespace,
+						Name:      cr.Name,
+					}
+					err := k8sClient.Get(ctx, namespacedName, &cr)
+					if err != nil {
+						return false
+					}
+					return true
+				}, timeout, interval).Should(BeTrue())
+
+				By(fmt.Sprintf("Attempting to update IP with name %s", cr.Name))
+				crCopy := cr.DeepCopy()
+				crCopy.Spec.IP = ipMustParse("127.0.0.1")
+				Expect(k8sClient.Update(ctx, crCopy)).ShouldNot(Succeed())
+
+				crCopy = cr.DeepCopy()
+				crCopy.Spec.SubnetName = "another-sample-subnet"
+				Expect(k8sClient.Update(ctx, crCopy)).ShouldNot(Succeed())
+
+				crCopy = cr.DeepCopy()
+				crCopy.Spec.ResourceReference = &ResourceReference{
+					APIVersion: "sample.api/v1alpha1",
+					Kind:       "SampleKind",
+					Name:       "another-sample-name",
+				}
+				Expect(k8sClient.Update(ctx, crCopy)).Should(Succeed())
+			}
 		})
 	})
 })

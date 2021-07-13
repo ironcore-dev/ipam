@@ -33,7 +33,10 @@ type IPState string
 type IPSpec struct {
 	// SubnetName is referring to parent subnet that holds requested IP
 	// +kubebuilder:validation:Required
-	SubnetName string `json:"subnetName,omitempty"`
+	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=63
+	SubnetName string `json:"subnetName"`
 	// ResourceReference refers to resource IP has been booked for
 	// +kubebuilder:validation:Optional
 	ResourceReference *ResourceReference `json:"resourceReference,omitempty"`
@@ -52,6 +55,7 @@ type IPStatus struct {
 	Message string `json:"message,omitempty"`
 }
 
+// IP is the Schema for the ips API
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="IP",type=string,JSONPath=`.status.reserved`,description="IP Address"
@@ -59,7 +63,8 @@ type IPStatus struct {
 // +kubebuilder:printcolumn:name="Resource Group",type=string,JSONPath=`.spec.resourceReference.apiVersion`,description="Resource Group"
 // +kubebuilder:printcolumn:name="Resource Kind",type=string,JSONPath=`.spec.resourceReference.kind`,description="Resource Kind"
 // +kubebuilder:printcolumn:name="Resource Name",type=string,JSONPath=`.spec.resourceReference.name`,description="Resource Name"
-// IP is the Schema for the ips API
+// +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`,description="Processing state"
+// +kubebuilder:printcolumn:name="Message",type=string,JSONPath=`.status.message`,description="Message"
 type IP struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -68,9 +73,8 @@ type IP struct {
 	Status IPStatus `json:"status,omitempty"`
 }
 
-// +kubebuilder:object:root=true
-
 // IPList contains a list of IP
+// +kubebuilder:object:root=true
 type IPList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -81,14 +85,25 @@ func init() {
 	SchemeBuilder.Register(&IP{}, &IPList{})
 }
 
+// ResourceReference allows to refer a resource of particular type at the same namespace
 type ResourceReference struct {
 	// APIVersion is resource's API group
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Pattern=^[a-z0-9]([-./a-z0-9]*[a-z0-9])?$
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=253
 	APIVersion string `json:"apiVersion,omitempty"`
 	// Kind is CRD Kind for lookup
 	// +kubebuilder:validation:Required
-	Kind string `json:"kind,omitempty"`
+	// +kubebuilder:validation:Pattern=^[A-Z]([-A-Za-z0-9]*[A-Za-z0-9])?$
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=63
+	Kind string `json:"kind"`
 	// Name is CRD Name for lookup
 	// +kubebuilder:validation:Required
-	Name string `json:"name,omitempty"`
+	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=63
+	Name string `json:"name"`
 }
