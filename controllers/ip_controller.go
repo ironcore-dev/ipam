@@ -156,6 +156,8 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 		return ctrl.Result{}, err
 	}
 
+	ip.Status.State = v1alpha1.CFinishedIPState
+	ip.Status.Reserved = ipCidrToReserve.AsIPAddr()
 	if err := r.Status().Update(ctx, ip); err != nil {
 		log.Error(err, "unable to update ip status after ip reservation", "name", req.NamespacedName, "subnet name", subnetNamespacedName)
 		return ctrl.Result{}, err

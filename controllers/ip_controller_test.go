@@ -2,13 +2,14 @@ package controllers
 
 import (
 	"context"
+	"time"
 
-	"github.com/onmetal/ipam/api/v1alpha1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"time"
+	"github.com/onmetal/ipam/api/v1alpha1"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -21,7 +22,7 @@ var _ = Describe("IP controller", func() {
 
 		Namespace   = "default"
 		NetworkName = "test-network"
-		SubnetName  = "test-subent"
+		SubnetName  = "test-subnet"
 		IPName      = "test-ip"
 	)
 
@@ -129,14 +130,14 @@ var _ = Describe("IP controller", func() {
 
 			Expect(k8sClient.Create(ctx, subnet)).Should(Succeed())
 
-			namespacedName := types.NamespacedName{
+			subnetNamespacedName := types.NamespacedName{
 				Name:      SubnetName,
 				Namespace: Namespace,
 			}
 			createdSubnet := &v1alpha1.Subnet{}
 
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, namespacedName, createdSubnet)
+				err := k8sClient.Get(ctx, subnetNamespacedName, createdSubnet)
 				if err != nil {
 					return false
 				}
@@ -164,9 +165,26 @@ var _ = Describe("IP controller", func() {
 
 			Expect(k8sClient.Create(ctx, ip)).Should(Succeed())
 
+			ipNamespacedName := types.NamespacedName{
+				Name:      IPName,
+				Namespace: Namespace,
+			}
+			createdIP := &v1alpha1.IP{}
+
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, ipNamespacedName, createdIP)
+				if err != nil {
+					return false
+				}
+				if createdIP.Status.State != v1alpha1.CFinishedIPState {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+
 			By("IP reserved in subnet")
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, namespacedName, createdSubnet)
+				err := k8sClient.Get(ctx, subnetNamespacedName, createdSubnet)
 				if err != nil {
 					return false
 				}
@@ -176,9 +194,17 @@ var _ = Describe("IP controller", func() {
 			By("IP is deleted")
 			Expect(k8sClient.Delete(ctx, ip)).Should(Succeed())
 
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, ipNamespacedName, createdIP)
+				if !apierrors.IsNotFound(err) {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+
 			By("IP is released in subnet")
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, namespacedName, createdSubnet)
+				err := k8sClient.Get(ctx, subnetNamespacedName, createdSubnet)
 				if err != nil {
 					return false
 				}

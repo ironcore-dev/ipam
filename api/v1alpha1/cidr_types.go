@@ -314,6 +314,12 @@ func (in *CIDR) String() string {
 	return in.Net.String()
 }
 
+func (in *CIDR) AsIPAddr() *IPAddr {
+	return &IPAddr{
+		Net: in.IPBytes(),
+	}
+}
+
 func (in *CIDR) IPBytes() net.IP {
 	ip := in.Net.IP.To4()
 	if ip == nil {
