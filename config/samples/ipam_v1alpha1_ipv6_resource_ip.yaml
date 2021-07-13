@@ -1,5 +1,5 @@
 apiVersion: ipam.onmetal.de/v1alpha1
-kind: Ip
+kind: IP
 metadata:
   name: ipv6-resource-ip-sample
 spec:
