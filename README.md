@@ -200,7 +200,7 @@ value; it means that there is no limitation on min/max value.
 If `Vacant` collection is empty, then there are no intervals left.
 
 ```shell
-[aivashch@localhost ~]$ kubectl describe networkcounter k8s-vxlan-network-counter
+[user@localhost ~]$ kubectl describe networkcounter k8s-vxlan-network-counter
 Name:         k8s-vxlan-network-counter
 Namespace:    default
 API Version:  ipam.onmetal.de/v1alpha1
