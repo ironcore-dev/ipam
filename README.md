@@ -281,17 +281,21 @@ spec:
   networkName: network-sample
   # Regions is a list of regions subnet is attached to
   # Required
-  # Set of strings
-  # If parent subnet is set, should be a subset of parent's region set
+  # Set of objects (uniqueness is defined by name)
+  # If parent subnet is set, should be a subset of parent's region set, including AZ sets in matching regions
   regions:
-    - euw
-  # AvailabilityZOnes is a list of availability zones subnet is attached to
-  # Required
-  # Set of strings
-  # If parent subnet is set, should be a subset of parent's az set
-  availabilityZones:
-    - a
-    - b
+      # Name is a unique name of the region for subnet tree 
+      # Required
+      # String 
+      # Should meet DNS label rules
+    - name: euw
+      # AvailabilityZones is a list of availability zones subnet is attached to
+      # Required
+      # Set of strings
+      # If parent subnet is set, should be a subset of parent's az set in matching region
+      availabilityZones:
+        - a
+        - b
 ```
 
 Apart of the data specified in manifest, Subnet's status also contains its address capacity (count) and capacity left,

@@ -75,13 +75,6 @@ spec:
             spec:
               description: SubnetSpec defines the desired state of Subnet
               properties:
-                availabilityZones:
-                  description: AvailabilityZones represents the locality of the network
-                    segment
-                  items:
-                    type: string
-                  minItems: 1
-                  type: array
                 capacity:
                   anyOf:
                     - type: integer
@@ -115,11 +108,24 @@ spec:
                 regions:
                   description: Regions represents the network service location
                   items:
-                    type: string
+                    properties:
+                      availabilityZones:
+                        items:
+                          type: string
+                        minItems: 1
+                        type: array
+                      name:
+                        maxLength: 63
+                        minLength: 1
+                        pattern: ^[a-z0-9]([-./a-z0-9]*[a-z0-9])?$
+                        type: string
+                    required:
+                      - availabilityZones
+                      - name
+                    type: object
                   minItems: 1
                   type: array
               required:
-                - availabilityZones
                 - networkName
                 - regions
               type: object

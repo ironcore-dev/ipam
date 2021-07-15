@@ -6,8 +6,8 @@ spec:
   cidr: "fd34:5d8f:e75e:f3a2::/64"
   networkName: network-sample
   regions:
-    - euw
-  availabilityZones:
-    - a
-    - b
-    - c
+    - name: euw
+      availabilityZones:
+        - a
+        - b
+        - c

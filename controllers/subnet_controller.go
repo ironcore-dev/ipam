@@ -192,7 +192,7 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, err
 	}
 
-	if err := subset(parentSubnet.Spec.Regions, subnet.Spec.Regions); err != nil {
+	if err := regionSubset(parentSubnet.Spec.Regions, subnet.Spec.Regions); err != nil {
 		err := errors.Wrap(err, "subnet's region set is not a part of parent region set")
 		log.Error(err, "unable to use provided region set", "name", req.NamespacedName, "parent name", parentSubnetNamespacedName)
 		subnet.Status.State = v1alpha1.CFailedSubnetState
@@ -204,7 +204,8 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		r.EventRecorder.Event(subnet, v1.EventTypeWarning, CChildSubnetRegionScopeFailureReason, subnet.Status.Message)
 		return ctrl.Result{}, err
 	}
-	if err := subset(parentSubnet.Spec.AvailabilityZones, subnet.Spec.AvailabilityZones); err != nil {
+
+	if err := azSubset(parentSubnet.Spec.Regions, subnet.Spec.Regions); err != nil {
 		err := errors.Wrap(err, "subnet's az set is not a part of parent az set")
 		log.Error(err, "unable to use provided az set", "name", req.NamespacedName, "parent name", parentSubnetNamespacedName)
 		subnet.Status.State = v1alpha1.CFailedSubnetState
@@ -357,8 +358,41 @@ func (r *SubnetReconciler) finalizeSubnet(ctx context.Context, log logr.Logger, 
 	return nil
 }
 
+func regionSubset(set []v1alpha1.Region, subset []v1alpha1.Region) error {
+	nameSet := make([]string, len(set))
+	for i := range set {
+		nameSet[i] = set[i].Name
+	}
+	nameSubset := make([]string, len(subset))
+	for i := range subset {
+		nameSubset[i] = subset[i].Name
+	}
+	return isSubset(nameSet, nameSubset)
+}
+
+func azSubset(set []v1alpha1.Region, subset []v1alpha1.Region) error {
+	setIndices := make(map[string]int)
+
+	for i := range set {
+		setIndices[set[i].Name] = i
+	}
+
+	for i := range subset {
+		setIdx, ok := setIndices[subset[i].Name]
+		if !ok {
+			return errors.Errorf("parent region set does not have region %s", subset[i].Name)
+		}
+
+		if err := isSubset(set[setIdx].AvailabilityZones, subset[i].AvailabilityZones); err != nil {
+			return errors.Wrapf(err, "az list of %s is not a subset of %s az list", subset[i].Name, set[setIdx].Name)
+		}
+	}
+
+	return nil
+}
+
 // Returns error if b is not a subset of a
-func subset(set []string, subset []string) error {
+func isSubset(set []string, subset []string) error {
 	setmap := make(map[string]bool)
 
 	for _, val := range set {

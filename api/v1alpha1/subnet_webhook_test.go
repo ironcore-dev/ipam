@@ -36,10 +36,14 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						ParentSubnetName:  "parent-subnet",
-						NetworkName:       "parent-net",
-						Regions:           []string{"euw"},
-						AvailabilityZones: []string{"a"},
+						ParentSubnetName: "parent-subnet",
+						NetworkName:      "parent-net",
+						Regions: []Region{
+							{
+								Name:              "euw",
+								AvailabilityZones: []string{"a"},
+							},
+						},
 					},
 				},
 				{
@@ -48,12 +52,16 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						CIDR:              cidrMustParse("127.0.0.0/24"),
-						Capacity:          resource.NewScaledQuantity(60, 0),
-						ParentSubnetName:  "parent-subnet",
-						NetworkName:       "parent-net",
-						Regions:           []string{"euw"},
-						AvailabilityZones: []string{"a"},
+						CIDR:             cidrMustParse("127.0.0.0/24"),
+						Capacity:         resource.NewScaledQuantity(60, 0),
+						ParentSubnetName: "parent-subnet",
+						NetworkName:      "parent-net",
+						Regions: []Region{
+							{
+								Name:              "euw",
+								AvailabilityZones: []string{"a"},
+							},
+						},
 					},
 				},
 				{
@@ -62,10 +70,14 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						Capacity:          resource.NewScaledQuantity(60, 0),
-						NetworkName:       "parent-net",
-						Regions:           []string{"euw"},
-						AvailabilityZones: []string{"a"},
+						Capacity:    resource.NewScaledQuantity(60, 0),
+						NetworkName: "parent-net",
+						Regions: []Region{
+							{
+								Name:              "euw",
+								AvailabilityZones: []string{"a"},
+							},
+						},
 					},
 				},
 				{
@@ -74,10 +86,14 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						Capacity:          resource.NewScaledQuantity(0, 0),
-						NetworkName:       "parent-net",
-						Regions:           []string{"euw"},
-						AvailabilityZones: []string{"a"},
+						Capacity:    resource.NewScaledQuantity(0, 0),
+						NetworkName: "parent-net",
+						Regions: []Region{
+							{
+								Name:              "euw",
+								AvailabilityZones: []string{"a"},
+							},
+						},
 					},
 				},
 				{
@@ -86,10 +102,14 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						Capacity:          resource.NewScaledQuantity(math.MaxInt64, resource.Exa),
-						NetworkName:       "parent-net",
-						Regions:           []string{"euw"},
-						AvailabilityZones: []string{"a"},
+						Capacity:    resource.NewScaledQuantity(math.MaxInt64, resource.Exa),
+						NetworkName: "parent-net",
+						Regions: []Region{
+							{
+								Name:              "euw",
+								AvailabilityZones: []string{"a"},
+							},
+						},
 					},
 				},
 				{
@@ -98,11 +118,19 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						CIDR:              cidrMustParse("127.0.0.0/24"),
-						ParentSubnetName:  "parent-subnet",
-						NetworkName:       "parent-net",
-						Regions:           []string{"euw", "euw"},
-						AvailabilityZones: []string{"a"},
+						CIDR:             cidrMustParse("127.0.0.0/24"),
+						ParentSubnetName: "parent-subnet",
+						NetworkName:      "parent-net",
+						Regions: []Region{
+							{
+								Name:              "euw",
+								AvailabilityZones: []string{"a"},
+							},
+							{
+								Name:              "euw",
+								AvailabilityZones: []string{"a"},
+							},
+						},
 					},
 				},
 				{
@@ -111,11 +139,19 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						CIDR:              cidrMustParse("127.0.0.0/24"),
-						ParentSubnetName:  "parent-subnet",
-						NetworkName:       "parent-net",
-						Regions:           []string{"eun", "euw"},
-						AvailabilityZones: []string{"a", "a"},
+						CIDR:             cidrMustParse("127.0.0.0/24"),
+						ParentSubnetName: "parent-subnet",
+						NetworkName:      "parent-net",
+						Regions: []Region{
+							{
+								Name:              "euw",
+								AvailabilityZones: []string{"a", "a"},
+							},
+							{
+								Name:              "eun",
+								AvailabilityZones: []string{"a"},
+							},
+						},
 					},
 				},
 			}
@@ -138,11 +174,19 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						CIDR:              cidrMustParse("127.0.0.0/24"),
-						ParentSubnetName:  "parent-subnet",
-						NetworkName:       "parent-net",
-						Regions:           []string{"euw", "na"},
-						AvailabilityZones: []string{"a"},
+						CIDR:             cidrMustParse("127.0.0.0/24"),
+						ParentSubnetName: "parent-subnet",
+						NetworkName:      "parent-net",
+						Regions: []Region{
+							{
+								Name:              "euw",
+								AvailabilityZones: []string{"a"},
+							},
+							{
+								Name:              "na",
+								AvailabilityZones: []string{"a"},
+							},
+						},
 					},
 				},
 				{
@@ -151,11 +195,15 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						Capacity:          resource.NewScaledQuantity(60, 0),
-						ParentSubnetName:  "parent-subnet",
-						NetworkName:       "parent-net",
-						Regions:           []string{"euw"},
-						AvailabilityZones: []string{"a", "b", "c"},
+						Capacity:         resource.NewScaledQuantity(60, 0),
+						ParentSubnetName: "parent-subnet",
+						NetworkName:      "parent-net",
+						Regions: []Region{
+							{
+								Name:              "euw",
+								AvailabilityZones: []string{"a", "b", "c"},
+							},
+						},
 					},
 				},
 				{
@@ -164,11 +212,15 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						PrefixBits:        bytePtr(20),
-						ParentSubnetName:  "parent-subnet",
-						NetworkName:       "parent-net",
-						Regions:           []string{"euw"},
-						AvailabilityZones: []string{"a"},
+						PrefixBits:       bytePtr(20),
+						ParentSubnetName: "parent-subnet",
+						NetworkName:      "parent-net",
+						Regions: []Region{
+							{
+								Name:              "euw",
+								AvailabilityZones: []string{"a"},
+							},
+						},
 					},
 				},
 				{
@@ -177,10 +229,14 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						CIDR:              cidrMustParse("127.0.0.0/24"),
-						NetworkName:       "parent-net",
-						Regions:           []string{"euw"},
-						AvailabilityZones: []string{"a"},
+						CIDR:        cidrMustParse("127.0.0.0/24"),
+						NetworkName: "parent-net",
+						Regions: []Region{
+							{
+								Name:              "euw",
+								AvailabilityZones: []string{"a"},
+							},
+						},
 					},
 				},
 			}
@@ -209,11 +265,15 @@ var _ = Describe("Subnet webhook", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: SubnetSpec{
-					CIDR:              testCidr,
-					ParentSubnetName:  "ps",
-					NetworkName:       "ng",
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
+					CIDR:             testCidr,
+					ParentSubnetName: "ps",
+					NetworkName:      "ng",
+					Regions: []Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
 				},
 			}
 

@@ -108,10 +108,14 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              testCidr,
-					NetworkName:       NetworkName,
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
+					CIDR:        testCidr,
+					NetworkName: NetworkName,
+					Regions: []v1alpha1.Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
 				},
 			}
 
@@ -210,10 +214,14 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              parentSubnetCidr,
-					NetworkName:       NetworkName,
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
+					CIDR:        parentSubnetCidr,
+					NetworkName: NetworkName,
+					Regions: []v1alpha1.Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
 				},
 			}
 
@@ -247,11 +255,15 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              testCidr,
-					NetworkName:       NetworkName,
-					ParentSubnetName:  ParentSubnetName,
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
+					CIDR:             testCidr,
+					NetworkName:      NetworkName,
+					ParentSubnetName: ParentSubnetName,
+					Regions: []v1alpha1.Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
 				},
 			}
 
@@ -345,10 +357,14 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              parentSubnetCidr,
-					NetworkName:       NetworkName,
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
+					CIDR:        parentSubnetCidr,
+					NetworkName: NetworkName,
+					Regions: []v1alpha1.Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
 				},
 			}
 
@@ -380,11 +396,15 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					Capacity:          resource.NewScaledQuantity(childSubnetCapacity, 0),
-					NetworkName:       NetworkName,
-					ParentSubnetName:  ParentSubnetName,
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
+					Capacity:         resource.NewScaledQuantity(childSubnetCapacity, 0),
+					NetworkName:      NetworkName,
+					ParentSubnetName: ParentSubnetName,
+					Regions: []v1alpha1.Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
 				},
 			}
 
@@ -465,10 +485,14 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              parentSubnetCidr,
-					NetworkName:       NetworkName,
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
+					CIDR:        parentSubnetCidr,
+					NetworkName: NetworkName,
+					Regions: []v1alpha1.Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
 				},
 			}
 
@@ -499,11 +523,15 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					PrefixBits:        &hib,
-					NetworkName:       NetworkName,
-					ParentSubnetName:  ParentSubnetName,
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
+					PrefixBits:       &hib,
+					NetworkName:      NetworkName,
+					ParentSubnetName: ParentSubnetName,
+					Regions: []v1alpha1.Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
 				},
 			}
 
@@ -587,10 +615,14 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              parentSubnetCidr,
-					NetworkName:       NetworkName,
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
+					CIDR:        parentSubnetCidr,
+					NetworkName: NetworkName,
+					Regions: []v1alpha1.Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
 				},
 			}
 
@@ -625,10 +657,14 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              parentSubnetCidr,
-					NetworkName:       NetworkName,
-					Regions:           []string{"eun"},
-					AvailabilityZones: []string{"b"},
+					CIDR:        parentSubnetCidr,
+					NetworkName: NetworkName,
+					Regions: []v1alpha1.Region{
+						{
+							Name:              "eun",
+							AvailabilityZones: []string{"b"},
+						},
+					},
 				},
 			}
 
@@ -657,11 +693,15 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              testCidr,
-					NetworkName:       NetworkName,
-					ParentSubnetName:  ParentSubnetName,
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
+					CIDR:             testCidr,
+					NetworkName:      NetworkName,
+					ParentSubnetName: ParentSubnetName,
+					Regions: []v1alpha1.Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
 				},
 			}
 
@@ -696,11 +736,15 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              testCidr,
-					NetworkName:       NetworkName,
-					ParentSubnetName:  ParentSubnetName,
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
+					CIDR:             testCidr,
+					NetworkName:      NetworkName,
+					ParentSubnetName: ParentSubnetName,
+					Regions: []v1alpha1.Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
 				},
 			}
 
@@ -748,10 +792,18 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              parentSubnetCidr,
-					NetworkName:       NetworkName,
-					Regions:           []string{"euw", "eun"},
-					AvailabilityZones: []string{"a", "b", "c"},
+					CIDR:        parentSubnetCidr,
+					NetworkName: NetworkName,
+					Regions: []v1alpha1.Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a", "b", "c"},
+						},
+						{
+							Name:              "eun",
+							AvailabilityZones: []string{"a", "b", "c"},
+						},
+					},
 				},
 			}
 
@@ -786,11 +838,15 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					Capacity:          resource.NewScaledQuantity(120, 0),
-					NetworkName:       NetworkName,
-					ParentSubnetName:  ParentSubnetName,
-					Regions:           []string{"us"},
-					AvailabilityZones: []string{"a"},
+					Capacity:         resource.NewScaledQuantity(120, 0),
+					NetworkName:      NetworkName,
+					ParentSubnetName: ParentSubnetName,
+					Regions: []v1alpha1.Region{
+						{
+							Name:              "us",
+							AvailabilityZones: []string{"a"},
+						},
+					},
 				},
 			}
 
@@ -820,11 +876,15 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					Capacity:          resource.NewScaledQuantity(120, 0),
-					NetworkName:       NetworkName,
-					ParentSubnetName:  ParentSubnetName,
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"b", "f"},
+					Capacity:         resource.NewScaledQuantity(120, 0),
+					NetworkName:      NetworkName,
+					ParentSubnetName: ParentSubnetName,
+					Regions: []v1alpha1.Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"b", "f"},
+						},
+					},
 				},
 			}
 

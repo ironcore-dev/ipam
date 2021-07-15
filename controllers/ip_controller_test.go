@@ -121,10 +121,14 @@ var _ = Describe("IP controller", func() {
 					Namespace: Namespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:              cidrMustParse("10.0.0.0/30"),
-					NetworkName:       NetworkName,
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
+					CIDR:        cidrMustParse("10.0.0.0/30"),
+					NetworkName: NetworkName,
+					Regions: []v1alpha1.Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
 				},
 			}
 
