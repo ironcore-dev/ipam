@@ -7,7 +7,7 @@ spec:
   parentSubnetName: "ipv6-parent-cidr-subnet-sample"
   networkName: network-sample
   regions:
-    - euw
-  availabilityZones:
-    - a
-    - b
+    - name: euw
+      availabilityZones:
+        - a
+        - b

@@ -43,11 +43,15 @@ var _ = Describe("Subnet client", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					PrefixBits:        &prefixBits,
-					ParentSubnetName:  "test-parent-subnet",
-					NetworkName:       "test-network",
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
+					PrefixBits:       &prefixBits,
+					ParentSubnetName: "test-parent-subnet",
+					NetworkName:      "test-network",
+					Regions: []v1alpha1.Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
 				},
 			}
 
@@ -76,7 +80,16 @@ var _ = Describe("Subnet client", func() {
 			<-finished
 
 			By("Updating Subnet")
-			createdSubnet.Spec.Regions = []string{"b", "c"}
+			createdSubnet.Spec.Regions = []v1alpha1.Region{
+				{
+					Name:              "b",
+					AvailabilityZones: []string{"a"},
+				},
+				{
+					Name:              "c",
+					AvailabilityZones: []string{"a"},
+				},
+			}
 			updatedSubnet := &v1alpha1.Subnet{}
 			go func() {
 				defer GinkgoRecover()
@@ -119,7 +132,7 @@ var _ = Describe("Subnet client", func() {
 				Value string `json:"value"`
 			}{{
 				Op:    "replace",
-				Path:  "/spec/regions/1",
+				Path:  "/spec/regions/1/name",
 				Value: "q",
 			}}
 
@@ -130,7 +143,7 @@ var _ = Describe("Subnet client", func() {
 				defer GinkgoRecover()
 				patchedSubnet, err := client.Patch(ctx, SubnetName, types.JSONPatchType, patchData, v1.PatchOptions{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(patchedSubnet.Spec.Regions[1]).Should(Equal(patch[0].Value))
+				Expect(patchedSubnet.Spec.Regions[1].Name).Should(Equal(patch[0].Value))
 				finished <- true
 			}()
 
@@ -138,7 +151,7 @@ var _ = Describe("Subnet client", func() {
 			Expect(event.Type).To(Equal(watch.Modified))
 			eventSubnet = event.Object.(*v1alpha1.Subnet)
 			Expect(eventSubnet).NotTo(BeNil())
-			Expect(eventSubnet.Spec.Regions[1]).Should(Equal(patch[0].Value))
+			Expect(eventSubnet.Spec.Regions[1].Name).Should(Equal(patch[0].Value))
 
 			<-finished
 
@@ -151,10 +164,14 @@ var _ = Describe("Subnet client", func() {
 					},
 				},
 				Spec: v1alpha1.SubnetSpec{
-					ParentSubnetName:  "test-parent-subnet",
-					NetworkName:       "test-network",
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
+					ParentSubnetName: "test-parent-subnet",
+					NetworkName:      "test-network",
+					Regions: []v1alpha1.Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
 				},
 			}
 

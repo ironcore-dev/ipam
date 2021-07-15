@@ -75,12 +75,14 @@ func (in *Subnet) ValidateCreate() error {
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.capacity"), in.Spec.CIDR, "if set, capacity value should be between 1 and 2^128"))
 	}
 
-	if !in.uniqueAZSet() {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.availabilityZones"), in.Spec.AvailabilityZones, "availability zone values should be unique"))
-	}
-
 	if !in.uniqueRegionSet() {
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.regions"), in.Spec.Regions, "region values should be unique"))
+	}
+
+	for i, region := range in.Spec.Regions {
+		if !in.uniqueAZSet(region.AvailabilityZones) {
+			allErrs = append(allErrs, field.Invalid(field.NewPath(fmt.Sprintf("spec.regions[%d].availabilityZones", i)), region.AvailabilityZones, "availability zone values should be unique"))
+		}
 	}
 
 	if len(allErrs) > 0 {
@@ -139,10 +141,6 @@ func (in *Subnet) ValidateUpdate(old runtime.Object) error {
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.regions"), in.Spec.CIDR, "Regions change is disallowed"))
 	}
 
-	if !reflect.DeepEqual(oldSubnet.Spec.AvailabilityZones, in.Spec.AvailabilityZones) {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.availabilityZones"), in.Spec.CIDR, "Availability zones change is disallowed"))
-	}
-
 	if len(allErrs) > 0 {
 		return apierrors.NewInvalid(
 			schema.GroupKind{
@@ -176,21 +174,32 @@ func (in *Subnet) countCIDRReservationRules() int {
 }
 
 func (in *Subnet) uniqueRegionSet() bool {
-	return uniqueSet(in.Spec.Regions)
-}
-
-func (in *Subnet) uniqueAZSet() bool {
-	return uniqueSet(in.Spec.AvailabilityZones)
-}
-
-func uniqueSet(set []string) bool {
-	setmap := make(map[string]struct{})
-	for _, item := range set {
-		_, ok := setmap[item]
-		if ok {
+	regionset := make(StringSet)
+	for _, item := range in.Spec.Regions {
+		if err := regionset.Put(item.Name); err != nil {
 			return false
 		}
-		setmap[item] = struct{}{}
 	}
 	return true
+}
+
+func (in *Subnet) uniqueAZSet(azs []string) bool {
+	azset := make(StringSet)
+	for _, item := range azs {
+		if err := azset.Put(item); err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+type StringSet map[string]struct{}
+
+func (s StringSet) Put(item string) error {
+	_, ok := s[item]
+	if ok {
+		return errors.Errorf("set already has value %s", item)
+	}
+	s[item] = struct{}{}
+	return nil
 }

@@ -273,9 +273,13 @@ var _ = Describe("Subnet operations", func() {
 			localCidr := cidrMustParse("0.0.0.0/1")
 			localSubnet := Subnet{
 				Spec: SubnetSpec{
-					CIDR:              localCidr,
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a"},
+					CIDR: localCidr,
+					Regions: []Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
 				},
 			}
 
@@ -293,9 +297,13 @@ var _ = Describe("Subnet operations", func() {
 			regionalCidr := cidrMustParse("::/1")
 			regionalSubnet := Subnet{
 				Spec: SubnetSpec{
-					CIDR:              regionalCidr,
-					Regions:           []string{"euw"},
-					AvailabilityZones: []string{"a", "b"},
+					CIDR: regionalCidr,
+					Regions: []Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a", "b"},
+						},
+					},
 				},
 			}
 
@@ -313,9 +321,17 @@ var _ = Describe("Subnet operations", func() {
 			multiregionalCidr := cidrMustParse("::/1")
 			multiregionalSubnet := Subnet{
 				Spec: SubnetSpec{
-					CIDR:              multiregionalCidr,
-					Regions:           []string{"euw", "eun"},
-					AvailabilityZones: []string{"a", "b"},
+					CIDR: multiregionalCidr,
+					Regions: []Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a", "b"},
+						},
+						{
+							Name:              "eun",
+							AvailabilityZones: []string{"a", "b"},
+						},
+					},
 				},
 			}
 

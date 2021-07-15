@@ -53,11 +53,7 @@ type SubnetSpec struct {
 	// Regions represents the network service location
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
-	Regions []string `json:"regions"`
-	// AvailabilityZones represents the locality of the network segment
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	AvailabilityZones []string `json:"availabilityZones"`
+	Regions []Region `json:"regions"`
 }
 
 const (
@@ -72,6 +68,17 @@ const (
 	CProcessingSubnetState SubnetState = "Processing"
 	CFinishedSubnetState   SubnetState = "Finished"
 )
+
+type Region struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Pattern=^[a-z0-9]([-./a-z0-9]*[a-z0-9])?$
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=63
+	Name string `json:"name"`
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	AvailabilityZones []string `json:"availabilityZones"`
+}
 
 // SubnetLocalityType is a type of subnet coverage
 type SubnetLocalityType string
@@ -142,7 +149,12 @@ func init() {
 func (in *Subnet) PopulateStatus() {
 	in.Status.State = CProcessingSubnetState
 
-	azCount := len(in.Spec.AvailabilityZones)
+	// Validator checks that slice has at least one element,
+	// so it is safe to assume that there is an element on zero index.
+	// It is also okay to check AZ count only for first region,
+	// since if there is more than one region, it gets classified as
+	// multiregion subnet.
+	azCount := len(in.Spec.Regions[0].AvailabilityZones)
 	regionCount := len(in.Spec.Regions)
 	if azCount == 1 && regionCount == 1 {
 		in.Status.Locality = CLocalSubnetLocalityType
