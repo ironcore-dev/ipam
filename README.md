@@ -25,7 +25,7 @@ Following tools are required to work on that package.
 
 ### Prepare environment
 
-If you have access to the docker registry and k8s installation that you can use for development purposes, you may skip
+If you have an access to the docker registry and k8s installation that you can use for development purposes, you may skip
 corresponding steps.
 
 Otherwise, create a local instance of docker registry and k8s.
@@ -110,7 +110,7 @@ Operator can be deployed to the environment with kubectl, kustomize or Helm. Use
 ### Resources
 
 IPAM process is held by 3 main resources: Networks, Subnets and IPs.
-There is also a supplicant Network Counter resource that handle unique network IP accounting and acquisition.
+There is also a supplicant Network Counter resource that handles unique network IP accounting and acquisition.
 
 All resources are sharing similar concepts in status representation. 
 Every resource has a `state`, that may have `Processing`, `Finished` or `Failed` value.
@@ -124,7 +124,7 @@ Network is a top level resource that identifies unique address space.
 It means that 2 different Networks may have clashing address zones, and, on the other hand, it is not possible to have 
 matching addresses at the same subnet. 
 
-Main responsibilities of the Network resource is to handle address space integrity, account child subnets and supply 
+Main responsibilities of the Network resource are to handle address space integrity, account child subnets and supply 
 networks with valid unique IDs corresponding to network technology.
 
 Network is able to handle both IPv4 and IPv6 address spaces simultaneously.
@@ -141,21 +141,21 @@ spec:
   # Optional
   # String
   description: sample
-  # ID is a network identifier for 
+  # ID is a network identifier  
   # Optional, will be generated if not set
   # Numeric string
   # Valid values for VXLAN: from 100 to 2^24 (3 byte value)
   # Valid values for GENEVE: from 100 to 2^24 (3 byte value)
   # Valid values for MPLS: from 16 to +inf (composite of 20 bit labels)
   id: "1000"
-  # Type is a type of technology used t oorganize network
+  # Type is a type of technology used to organize network
   # Optional, but required if ID is set
   # String (enum)
   # Valid values: VXLAN, GENEVE, MPLS
   type: GENEVE
 ```
 
-When network is in use, `kubectl` is able to show its type, reserved ID, total amount of addresses in child subnets. 
+When network is in use, `kubectl` is able to show its type, reserved ID and total amount of addresses in child subnets. 
 
 ```shell
 [user@localhost ~]$ kubectl get networks
@@ -163,7 +163,7 @@ NAME                    TYPE     RESERVED   IPV4 CAPACITY   IPV6 CAPACITY       
 network-sample          MPLS     16         16777216        18446744073709551616   mpls net      Finished
 ```
 
-If there is a need to have a more precise date on ranges' availability for the selected network, Network request status
+If there is a need to have more precise date on ranges' availability for the selected network, Network request status
 may be inspected. It contains a list of address ranges booked by subnets.  
 
 ```shell
@@ -194,7 +194,7 @@ k8s-mpls-network-counter         6d
 k8s-vxlan-network-counter        6d
 ```
 
-Counter itself maintains ranges of vacant inclusive ID intervals. If interval has an `Exact` field set, like in example,
+Counter itself maintains ranges of vacant inclusive ID intervals. If interval has an `Exact` field set, as in example,
 it means that it has only one value in the interval. Interval may also have an open border, i.e. no `Begin` or `End`
 value; it means that there is no limitation on min/max value.
 If `Vacant` collection is empty, then there are no intervals left.
@@ -223,7 +223,7 @@ Examples:
 Subnets are representing an IP address ranges in a CIDR format.
 
 Subnets may be split into 2 categories by their relations: 
-1. Top level Subnets. These Subnets don't have a parent Subnet, and they may define any unoccupied CIDR in the Network.
+1. Top level Subnets. These Subnets don't have a parent Subnet, they may define any unoccupied CIDR in the Network.
    To allocate a top level Subnet, it should specify CIDR explicitly.
 2. Child Subnets. These Subnets have other Subnet as a parent, and their address range and region scope 
    should be within the scope of a parent. For child Subnets it is also possible to specify required address ranges 
@@ -231,8 +231,8 @@ Subnets may be split into 2 categories by their relations:
    mey be picked.
    
 Subnets may be also categorized by their regional affiliation:
-1. Multiregional - Subnet that have more than one Region specified.
-2. Regional - Subnet that have one region and multiple availability zones.
+1. Multiregional - Subnet that has more than one Region specified.
+2. Regional - Subnet that has one region and multiple availability zones.
 3. Local - Subnet with one region and one availability zone.
 
 Here is an explanation on how to setup the Subnet.
@@ -377,7 +377,7 @@ spec:
   # SubnetName is a reference to subnet where IP should be reserved
   # Required
   # String
-  # Should refer to existing subnet at the same namespace
+  # Should refer to an existing subnet at the same namespace
   subnetName: ipv4-child-cidr-subnet-sample
   # Resource is a reference to k8s resource IP would be bountd to
   # Optional
@@ -437,7 +437,7 @@ Package provides a client library written in go for programmatic interactions wi
 
 Clients for corresponding API versions are located in `clientset/` and act similar to [client-go](https://github.com/kubernetes/client-go).
 
-Below are two examples, for inbound (from the pod deployed on a cluster) and outbound (from the program running on 3rd party resources) interactions.
+Below there are two examples, for inbound (from the pod deployed on a cluster) and outbound (from the program running on 3rd party resources) interactions.
 
 ### Inbound example
 
@@ -578,7 +578,7 @@ One should not modify API once it got to be used.
 
 Instead, in order to introduce breaking changes to the API, a new API version should be created.
 
-First, move the existing controller to the different file, as generator will try to put a new controller into the same location, e.g.
+First, move the existing controller to a different file, as generator will try to put a new controller into the same location, e.g.
 
     mv controllers/network_controller.go controllers/network_v1alpha1_controller.go
 
