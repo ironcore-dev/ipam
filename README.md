@@ -1,11 +1,19 @@
 # IPAM
 
-k8s operator for IPAM.
+k8s operator for IPAM
 
-With this operator it is possible to:
-- manage networks and their IDs for VXLAN, MPLS and GENEVE types;
-- manage subnets and their CIDRs;
-- manage IP allocations.
+### What is it 
+
+IPAM (IP Address Manager) is an important tool for network administrators. It`s inventory management  includes planning, collection, allocation, and management of the information associated with a network’s Internet Protocol (IP) address space.  
+
+### What is IPAM used for  
+- manage networks and their IDs for:  
+VXLAN (Virtual eXtensible Local Area Network)
+MPLS  (Multiprotocol Label Switching)
+GENEVE (Generic Network Virtualization Encapsulation) types;
+- manage subnets and their CIDRs (Classless Inter-Domain Routing);
+- manage IP allocations. 
+
 
 ## Getting started
 
@@ -16,11 +24,11 @@ Following tools are required to work on that package.
 - k8s cluster access to deploy and test the result (via minikube or docker desktop locally)
 - [make](https://www.gnu.org/software/make/) - to execute build goals
 - [golang](https://golang.org/) - to compile the code
-- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) - to interact with k8s cluster via CLI
+- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) - to interact with k8s cluster via CLI (command-line interface)
 - [kustomize](https://kustomize.io/) - to generate deployment configs
 - [kubebuilder](https://book.kubebuilder.io) - framework to build operators
 - [operator framework](https://operatorframework.io/) - framework to maintain project structure
-- [helm](https://helm.sh/) - to work with helm charts
+- [helm](https://helm.sh/) - the package manager for k8s that works with helm charts to define, install, and upgrade even the most complex application.
 - [cert-manager](https://cert-manager.io/) - to issue certificates for webhook endpoints
 
 ### Prepare environment
@@ -47,7 +55,7 @@ In order to build and deploy, execute following command set.
 
 Docker registry is required to build and push an image.
 
-Replace `localhost:5000` with your registry if you're using quay or anything else.
+Replace `localhost:5000` with your registry if you're using quay (container image registry that enables you to build, organize, distribute, and deploy containers) or anything else.
 
     # generate code and configs
     make fmt vet generate manifests kustomize
@@ -82,7 +90,7 @@ After development is done, clean up local environment.
 
 ## Deployment
 
-Operator can be deployed to the environment with kubectl, kustomize or Helm. User may choose one that is more suitable.
+Operator can be deployed to the environment with [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) , [kustomize](https://kustomize.io/) or [helm](https://helm.sh/). User may choose one that is more suitable.
 
 ### With kubectl using kustomize configs
 
@@ -128,6 +136,11 @@ Main responsibilities of the Network resource are to handle address space integr
 networks with valid unique IDs corresponding to network technology.
 
 Network is able to handle both IPv4 and IPv6 address spaces simultaneously.
+IPv4 (IP version 4) addresses are 32-bit integers that can be expressed in hexadecimal notation. The more common format, known as dotted quad or dotted decimal, is x.x.x.x, where each x can be any value between 0 and 255. 
+For example, 192.0.2.146 is a valid IPv4 address.
+
+While IPv4 still routes most of today’s internet traffic, we’ve run out of address space. As a result, the internet is undergoing a gradual transition to IPv6. 
+This latest version of IP is a 128-bit address space, with both letters and numbers expressed in hexadecimal format (for example, 2002:db8::8a3f:362:7897).
 
 A proper Network CR should be formed following the rules below. 
 
@@ -220,7 +233,9 @@ Examples:
 
 ### Subnets 
 
-Subnets are representing an IP address ranges in a CIDR format.
+Subnets are representing an IP address ranges in a CIDR  format.
+CIDR stands for Classless Inter-Domain Routing, and refers to the standard of dividing the entire IP address space into smaller networks of variable size.
+
 
 Subnets may be split into 2 categories by their relations: 
 1. Top level Subnets. These Subnets don't have a parent Subnet, they may define any unoccupied CIDR in the Network.
@@ -231,7 +246,7 @@ Subnets may be split into 2 categories by their relations:
    mey be picked.
    
 Subnets may be also categorized by their regional affiliation:
-1. Multiregional - Subnet that has more than one Region specified.
+1. Multiregional - Subnet that has more than one region specified.
 2. Regional - Subnet that has one region and multiple availability zones.
 3. Local - Subnet with one region and one availability zone.
 
@@ -361,7 +376,8 @@ Examples:
 
 ### IPs
 
-IPs are basically individual addresses, and the may be also represented in a form of /32 or /128 CIDRs for IPv4 and IPv6
+IPs are basically  strings of numbers separated by periods. In other words IPs are unique addresses, that identifies a device on the internet or a local network. 
+IP stands for "Internet Protocol," which is the set of rules governing the format of data sent via the internet or local network. IP address may be  represented in a form of /32 or /128 CIDRs for IPv4 and IPv6
 correspondingly.
 
 IPs are always booked on specified Subnet as CIDRs, reducing their capacity.
@@ -433,7 +449,7 @@ Examples:
 
 ## Consuming API with client
 
-Package provides a client library written in go for programmatic interactions with API.
+Package provides a client library written in 'go' for programmatic interactions with API.
 
 Clients for corresponding API versions are located in `clientset/` and act similar to [client-go](https://github.com/kubernetes/client-go).
 
@@ -595,7 +611,7 @@ Following actions should be applied to other parts of project:
 
 ### Deprecating old APIs
 
-Since there is no version deprecation marker available now, old APIs may be deprecated with `kustomize` patches
+Since there is no version deprecation marker available, old APIs may be deprecated with `kustomize` patches
 
 Describe deprecation status and deprecation warning in patch file, e.g. `crd_patch.yaml`
 
