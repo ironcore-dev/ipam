@@ -4,13 +4,10 @@ k8s operator for IPAM
 
 ### What is it 
 
-IPAM (IP Address Manager) is an important tool for network administrators. It`s inventory management  includes planning, collection, allocation, and management of the information associated with a network’s Internet Protocol (IP) address space.  
+IPAM (IP Address Manager) is  an inventory management  which includes planning, collection, allocation, and management of the information associated with a network’s IP address space.  
 
 ### What is IPAM used for  
-- manage networks and their IDs for:  
-VXLAN (Virtual eXtensible Local Area Network)
-MPLS  (Multiprotocol Label Switching)
-GENEVE (Generic Network Virtualization Encapsulation) types;
+- manage networks and their IDs for:   VXLAN, MPLS, GENEVE types;
 - manage subnets and their CIDRs (Classless Inter-Domain Routing);
 - manage IP allocations. 
 
@@ -136,11 +133,6 @@ Main responsibilities of the Network resource are to handle address space integr
 networks with valid unique IDs corresponding to network technology.
 
 Network is able to handle both IPv4 and IPv6 address spaces simultaneously.
-IPv4 (IP version 4) addresses are 32-bit integers that can be expressed in hexadecimal notation. The more common format, known as dotted quad or dotted decimal, is x.x.x.x, where each x can be any value between 0 and 255. 
-For example, 192.0.2.146 is a valid IPv4 address.
-
-While IPv4 still routes most of today’s internet traffic, we’ve run out of address space. As a result, the internet is undergoing a gradual transition to IPv6. 
-This latest version of IP is a 128-bit address space, with both letters and numbers expressed in hexadecimal format (for example, 2002:db8::8a3f:362:7897).
 
 A proper Network CR should be formed following the rules below. 
 
@@ -377,7 +369,7 @@ Examples:
 ### IPs
 
 IPs are basically  strings of numbers separated by periods. In other words IPs are unique addresses, that identifies a device on the internet or a local network. 
-IP stands for "Internet Protocol," which is the set of rules governing the format of data sent via the internet or local network. IP address may be  represented in a form of /32 or /128 CIDRs for IPv4 and IPv6
+IP address may be  represented in a form of /32 or /128 CIDRs for IPv4 and IPv6
 correspondingly.
 
 IPs are always booked on specified Subnet as CIDRs, reducing their capacity.

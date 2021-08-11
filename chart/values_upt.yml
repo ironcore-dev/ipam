@@ -1,0 +1,87 @@
+
+#Values files can declare values for the top-level chart, as well as for any of the charts that are included in that chart's charts/ directory. Or, to put it simply, a values file can supply values to the chart as well as to any of its dependencies.
+
+
+imagePullSecrets: [] #- registrySecretName
+
+proxy:
+  image:
+    repository: gcr.io/kubebuilder/kube-rbac-proxy
+    pullPolicy: IfNotPresent
+    tag: "v0.5.0"
+manager:
+  image:
+    repository: localhost:5000/onmetal/ipam
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  resources:
+    limits:
+      cpu: 100m
+      memory: 30Mi
+    requests:
+      cpu: 100m
+      memory: 20Mi
+  securityContext:  #is used to  hold security configuration that will be applied to a container.
+    allowPrivilegeEscalation: false #controls whether a process can gain more privileges. This boolen value directly controls if the no_new_privs flag will be set on the container process.
+
+podAnnotations: {}  # Annotations will guarantee scheduling for critical add-on pods.
+# More info at: https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/
+
+
+podSecurityContext: # Is used to hold pod-level security attributes and common container settings.
+  runAsUser: 65532 #The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified.
+
+replicaCount: 1
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+metricsService: #is a scalable and efficient source of container resource metrics for K8s built-in autoscaling pipelines. Note: This Helm chart isn't supported by Metrics Server maintainers.
+
+  type: ClusterIP
+  port: 8443
+
+webhookService:
+  type: ClusterIP
+  port: 443
+
+cluster:
+  domain: cluster.local
+
+crd: #CustomResourceDefinition is an object that extends the K8s API or allows you to introduce your own API into a project or a cluster.
+# Note that for a CRD, the declaration must be registered before any resources of that CRDs kind(s) can be used.
+  ip:
+    group: ipam.onmetal.de
+    plural: ips
+    singular: ip
+    kind: IP
+    listKind: IPList
+    scope: Namespaced
+  subnet:
+    group: ipam.onmetal.de
+    plural: subnets
+    singular: subnet
+    kind: Subnet
+    listKind: SubnetList
+    scope: Namespaced
+  network:
+    group: ipam.onmetal.de
+    plural: networks
+    singular: network
+    kind: Network
+    listKind: NetworkList
+    scope: Namespaced
+  networkcounter:
+    group: ipam.onmetal.de
+    plural: networkcounters
+    singular: networkcounter
+    kind: NetworkCounter
+    listKind: NetworkCounterList
+    scope: Namespaced
+
+leaderElection: 
+  leaderElect: true
+  resourceName: f42c18d5.onmetal.de

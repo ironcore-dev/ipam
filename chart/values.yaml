@@ -1,32 +1,43 @@
 
-imagePullSecrets: []
+
+imagePullSecrets: [] ##Optionally specify an array of imagePullSecrets.
+  ## Secrets must be manually created in the namespace.
 
 proxy:
   image:
     repository: gcr.io/kubebuilder/kube-rbac-proxy
-    pullPolicy: IfNotPresent
+    pullPolicy: IfNotPresent # -- # Specify a imagePullPolicy. Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
     tag: "v0.5.0"
 manager:
   image:
     repository: localhost:5000/onmetal/ipam
     pullPolicy: IfNotPresent
     tag: "latest"
-  resources:
+  resources: # -- resource limits & requests
+# ref: https://kubernetes.io/docs/user-guide/compute-resources/
     limits:
       cpu: 100m
       memory: 30Mi
     requests:
       cpu: 100m
       memory: 20Mi
-  securityContext:
-    allowPrivilegeEscalation: false
+  securityContext:  # -- hold security configuration that apply to a container.
+    allowPrivilegeEscalation: false # -- This boolen value directly controls if the no_new_privs flag will be set on the container process.
 
-podAnnotations: {}
+podAnnotations: {}  # Add deployment annotation
+
 
 podSecurityContext:
-  runAsUser: 65532
+  runAsUser: 65532 #The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified.
 
 replicaCount: 1
+
+# Autoscaling configuration
+## ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
+## @param autoscaling.enabled Enable Horizontal POD autoscaling
+## @param autoscaling.minReplicas Minimum number of  replicas
+## @param autoscaling.maxReplicas Maximum number of  replicas
+## @param autoscaling.targetCPU Target CPU utilization percentage
 
 autoscaling:
   enabled: false
@@ -34,9 +45,11 @@ autoscaling:
   maxReplicas: 100
   targetCPUUtilizationPercentage: 80
 
-metricsService:
-  type: ClusterIP
-  port: 8443
+metricsService: # -- scalable and efficient source of container resource metrics for K8s built-in autoscaling pipelines. Note: This Helm chart isn't supported by Metrics Server maintainers.
+
+  type: ClusterIP # -- Type of service to create.
+  port: 8443 # -- Service port to expose.
+
 
 webhookService:
   type: ClusterIP
@@ -45,7 +58,7 @@ webhookService:
 cluster:
   domain: cluster.local
 
-crd:
+crd:# -- Note: that for a CRD, the declaration must be registered before any resources of that CRDs kind(s) can be used.
   ip:
     group: ipam.onmetal.de
     plural: ips
@@ -75,6 +88,6 @@ crd:
     listKind: NetworkCounterList
     scope: Namespaced
 
-leaderElection:
+leaderElection: 
   leaderElect: true
   resourceName: f42c18d5.onmetal.de
