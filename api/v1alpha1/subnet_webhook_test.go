@@ -252,7 +252,7 @@ var _ = Describe("Subnet webhook", func() {
 
 	Context("When Subnet is created", func() {
 		It("Should not allow to update CR", func() {
-			By(fmt.Sprintf("Create Subnet CR"))
+			By("Create Subnet CR")
 			ctx := context.Background()
 
 			testCidr, err := CIDRFromString("10.0.0.0/8")
@@ -290,7 +290,7 @@ var _ = Describe("Subnet webhook", func() {
 				return true
 			}).Should(BeTrue())
 
-			By(fmt.Sprintf("Try to update Subnet CR"))
+			By("Try to update Subnet CR")
 			cr.Spec.ParentSubnetName = "new"
 			Expect(k8sClient.Update(ctx, &cr)).ShouldNot(Succeed())
 		})

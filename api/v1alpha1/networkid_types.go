@@ -69,5 +69,4 @@ func (in *NetworkID) DeepCopyInto(out *NetworkID) {
 	*out = *in
 	bi := new(big.Int).Set(&in.Int)
 	out.Int = *bi
-	return
 }

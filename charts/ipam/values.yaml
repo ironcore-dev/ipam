@@ -1,0 +1,80 @@
+
+imagePullSecrets: []
+
+proxy:
+  image:
+    repository: gcr.io/kubebuilder/kube-rbac-proxy
+    pullPolicy: IfNotPresent
+    tag: "v0.5.0"
+manager:
+  image:
+    repository: core.harbor.onmetal.de/onmetal/ipam
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  resources:
+    limits:
+      cpu: 100m
+      memory: 30Mi
+    requests:
+      cpu: 100m
+      memory: 20Mi
+  securityContext:
+    allowPrivilegeEscalation: false
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsUser: 65532
+
+replicaCount: 1
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+metricsService:
+  type: ClusterIP
+  port: 8443
+
+webhookService:
+  type: ClusterIP
+  port: 443
+
+cluster:
+  domain: cluster.local
+
+crd:
+  ip:
+    group: ipam.onmetal.de
+    plural: ips
+    singular: ip
+    kind: IP
+    listKind: IPList
+    scope: Namespaced
+  subnet:
+    group: ipam.onmetal.de
+    plural: subnets
+    singular: subnet
+    kind: Subnet
+    listKind: SubnetList
+    scope: Namespaced
+  network:
+    group: ipam.onmetal.de
+    plural: networks
+    singular: network
+    kind: Network
+    listKind: NetworkList
+    scope: Namespaced
+  networkcounter:
+    group: ipam.onmetal.de
+    plural: networkcounters
+    singular: networkcounter
+    kind: NetworkCounter
+    listKind: NetworkCounterList
+    scope: Namespaced
+
+leaderElection:
+  leaderElect: true
+  resourceName: f42c18d5.onmetal.de
