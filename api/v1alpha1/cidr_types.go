@@ -342,5 +342,4 @@ func (in *CIDR) DeepCopyInto(out *CIDR) {
 		}
 		out.Net = &nw
 	}
-	return
 }

@@ -78,10 +78,12 @@ var _ = BeforeSuite(func() {
 		Client: k8sManager.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("Subnet"),
 	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
 	err = (&NetworkReconciler{
 		Client: k8sManager.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("Network"),
 	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
 	err = (&IPReconciler{
 		Client: k8sManager.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("IP"),

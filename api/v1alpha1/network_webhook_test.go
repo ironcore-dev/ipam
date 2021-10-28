@@ -259,7 +259,7 @@ var _ = Describe("Network webhook", func() {
 				},
 			}
 
-			By(fmt.Sprintf("Create network CR"))
+			By("Create network CR")
 			Expect(k8sClient.Create(ctx, &cr)).Should(Succeed())
 			Eventually(func() bool {
 				namespacedName := types.NamespacedName{
@@ -273,7 +273,7 @@ var _ = Describe("Network webhook", func() {
 				return true
 			}).Should(BeTrue())
 
-			By(fmt.Sprintf("Try to update network CR"))
+			By("Try to update network CR")
 			cr.Spec.ID = NetworkIDFromInt64(10)
 			Expect(k8sClient.Update(ctx, &cr)).ShouldNot(Succeed())
 		})
@@ -291,7 +291,7 @@ var _ = Describe("Network webhook", func() {
 				},
 			}
 
-			By(fmt.Sprintf("Create network CR"))
+			By("Create network CR")
 			Expect(k8sClient.Create(ctx, &cr)).Should(Succeed())
 			Eventually(func() bool {
 				namespacedName := types.NamespacedName{
@@ -305,7 +305,7 @@ var _ = Describe("Network webhook", func() {
 				return true
 			}).Should(BeTrue())
 
-			By(fmt.Sprintf("Try to update network CR"))
+			By("Try to update network CR")
 			cr.Spec.ID = NetworkIDFromInt64(10)
 			Expect(k8sClient.Update(ctx, &cr)).ShouldNot(Succeed())
 		})
@@ -313,7 +313,7 @@ var _ = Describe("Network webhook", func() {
 
 	Context("When Network is created without ID and Type", func() {
 		It("Should allow to update CR with ID and Type", func() {
-			By(fmt.Sprintf("Create network CR"))
+			By("Create network CR")
 			cr := Network{
 				ObjectMeta: controllerruntime.ObjectMeta{
 					Name:      "network-without-id-and-type-succeed-to-update",
@@ -335,7 +335,7 @@ var _ = Describe("Network webhook", func() {
 				return true
 			}).Should(BeTrue())
 
-			By(fmt.Sprintf("Update empty network CR ID and Type with values"))
+			By("Update empty network CR ID and Type with values")
 			cr.Spec.ID = NetworkIDFromBytes([]byte{1, 11, 12, 13, 14, 15, 16})
 			cr.Spec.Type = CMPLSNetworkType
 
@@ -352,7 +352,7 @@ var _ = Describe("Network webhook", func() {
 				return true
 			}).Should(BeTrue())
 
-			By(fmt.Sprintf("Update network CR description"))
+			By("Update network CR description")
 			cr.Spec.Description = "sample description"
 			Expect(k8sClient.Update(ctx, &cr)).Should(Succeed())
 		})
