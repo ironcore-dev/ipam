@@ -16,12 +16,14 @@ var _ = Describe("Subnet operations", func() {
 	}
 
 	emptySubnetFromCidr := func(mainCidr string) *Subnet {
+		cidr := cidrMustParse(mainCidr)
 		return &Subnet{
 			Spec: SubnetSpec{
-				CIDR: cidrMustParse(mainCidr),
+				CIDR: cidr,
 			},
 			Status: SubnetStatus{
-				Vacant: []CIDR{},
+				Vacant:   []CIDR{},
+				Reserved: cidr,
 			},
 		}
 	}
@@ -36,12 +38,14 @@ var _ = Describe("Subnet operations", func() {
 			}
 		}
 
+		cidr := cidrMustParse(mainCidr)
 		return &Subnet{
 			Spec: SubnetSpec{
-				CIDR: cidrMustParse(mainCidr),
+				CIDR: cidr,
 			},
 			Status: SubnetStatus{
-				Vacant: cidrs,
+				Vacant:   cidrs,
+				Reserved: cidr,
 			},
 		}
 	}

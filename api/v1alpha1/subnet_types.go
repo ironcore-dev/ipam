@@ -295,8 +295,11 @@ func (in *Subnet) CanReserve(cidr *CIDR) bool {
 // Release puts CIDR to vacant range if there are no intersections
 // and joins neighbour networks
 func (in *Subnet) Release(cidr *CIDR) error {
-	if !in.Spec.CIDR.CanReserve(cidr) {
-		return errors.Errorf("cidr %s is not describing subent of %s", cidr.String(), in.Spec.CIDR.String())
+	if in.Status.Reserved == nil {
+		return errors.New("subnet address space hasn't been allocated yet")
+	}
+	if !in.Status.Reserved.CanReserve(cidr) {
+		return errors.Errorf("cidr %s is not describing subnet of %s", cidr.String(), in.Status.Reserved.String())
 	}
 
 	vacantLen := len(in.Status.Vacant)
@@ -368,7 +371,10 @@ func (in *Subnet) Release(cidr *CIDR) error {
 
 // CanRelease checks whether it is possible to release CIDR into current vacant range
 func (in *Subnet) CanRelease(cidr *CIDR) bool {
-	if !in.Spec.CIDR.CanReserve(cidr) {
+	if in.Status.Reserved == nil {
+		return false
+	}
+	if !in.Status.Reserved.CanReserve(cidr) {
 		return false
 	}
 
