@@ -12,8 +12,12 @@ With this operator it is possible to:
 - manage IP allocations.
 
 ## Installation, using and developing 
-
-For more details please refer to documentation folder `/docs` 
+To find out more, please refer to: 
+- [installation and deployment](/docs/installation.md)
+- [contribution guide](/docs/contribution.md)
+- [usage](/docs/usage.md)
+- [development](/docs/development.md)
+- [consuming api](docs/consuming_api.md)
 
 ## Contributing 
 
