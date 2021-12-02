@@ -14,10 +14,10 @@ With this operator it is possible to:
 ## Installation, using and developing 
 To find out more, please refer to: 
 - [installation and deployment](/docs/installation.md)
-- [contribution guide](/docs/contribution.md)
 - [usage](/docs/usage.md)
-- [development](/docs/development.md)
 - [consuming api](docs/consuming_api.md)
+- [development](/docs/development.md)
+- [contribution guide](/docs/contribution.md)
 
 ## Contributing 
 
