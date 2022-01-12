@@ -43,7 +43,7 @@ var _ = Describe("IP webhook", func() {
 					},
 					Spec: IPSpec{
 						SubnetName: "sample-subnet",
-						ResourceReference: &ResourceReference{
+						Consumer: &ResourceReference{
 							Kind: "",
 							Name: "",
 						},
@@ -77,7 +77,7 @@ var _ = Describe("IP webhook", func() {
 					},
 					Spec: IPSpec{
 						SubnetName: "sample-subnet",
-						ResourceReference: &ResourceReference{
+						Consumer: &ResourceReference{
 							Kind: "SampleKind",
 							Name: "sample-name",
 						},
@@ -100,7 +100,7 @@ var _ = Describe("IP webhook", func() {
 					},
 					Spec: IPSpec{
 						SubnetName: "sample-subnet",
-						ResourceReference: &ResourceReference{
+						Consumer: &ResourceReference{
 							APIVersion: "sample.api/v1alpha1",
 							Kind:       "SampleKind",
 							Name:       "sample-name",
@@ -138,7 +138,7 @@ var _ = Describe("IP webhook", func() {
 					},
 					Spec: IPSpec{
 						SubnetName: "sample-subnet",
-						ResourceReference: &ResourceReference{
+						Consumer: &ResourceReference{
 							Kind: "SampleKind",
 							Name: "sample-name",
 						},
@@ -161,7 +161,7 @@ var _ = Describe("IP webhook", func() {
 					},
 					Spec: IPSpec{
 						SubnetName: "sample-subnet",
-						ResourceReference: &ResourceReference{
+						Consumer: &ResourceReference{
 							APIVersion: "sample.api/v1alpha1",
 							Kind:       "SampleKind",
 							Name:       "sample-name",
@@ -199,7 +199,7 @@ var _ = Describe("IP webhook", func() {
 				Expect(k8sClient.Update(ctx, crCopy)).ShouldNot(Succeed())
 
 				crCopy = cr.DeepCopy()
-				crCopy.Spec.ResourceReference = &ResourceReference{
+				crCopy.Spec.Consumer = &ResourceReference{
 					APIVersion: "sample.api/v1alpha1",
 					Kind:       "SampleKind",
 					Name:       "another-sample-name",

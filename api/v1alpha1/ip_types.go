@@ -37,9 +37,9 @@ type IPSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=63
 	SubnetName string `json:"subnetName"`
-	// ResourceReference refers to resource IP has been booked for
+	// Consumer refers to resource IP has been booked for
 	// +kubebuilder:validation:Optional
-	ResourceReference *ResourceReference `json:"resourceReference,omitempty"`
+	Consumer *ResourceReference `json:"consumer,omitempty"`
 	// IP allows to set desired IP address explicitly
 	// +kubebuilder:validation:Optional
 	IP *IPAddr `json:"ip,omitempty"`
@@ -83,26 +83,4 @@ type IPList struct {
 
 func init() {
 	SchemeBuilder.Register(&IP{}, &IPList{})
-}
-
-// ResourceReference allows to refer a resource of particular type at the same namespace
-type ResourceReference struct {
-	// APIVersion is resource's API group
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Pattern=^[a-z0-9]([-./a-z0-9]*[a-z0-9])?$
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=253
-	APIVersion string `json:"apiVersion,omitempty"`
-	// Kind is CRD Kind for lookup
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Pattern=^[A-Z]([-A-Za-z0-9]*[A-Za-z0-9])?$
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=63
-	Kind string `json:"kind"`
-	// Name is CRD Name for lookup
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=63
-	Name string `json:"name"`
 }

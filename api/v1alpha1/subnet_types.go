@@ -54,6 +54,9 @@ type SubnetSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
 	Regions []Region `json:"regions"`
+	// Consumer refers to resource Subnet has been booked for
+	// +kubebuilder:validation:Optional
+	Consumer *ResourceReference `json:"consumer,omitempty"`
 }
 
 const (
