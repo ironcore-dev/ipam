@@ -154,6 +154,27 @@ var _ = Describe("Subnet webhook", func() {
 						},
 					},
 				},
+				{
+					ObjectMeta: controllerruntime.ObjectMeta{
+						Name:      "with-invalid-consumer-ref",
+						Namespace: SubnetNamespace,
+					},
+					Spec: SubnetSpec{
+						CIDR:             cidrMustParse("127.0.0.0/24"),
+						ParentSubnetName: "parent-subnet",
+						NetworkName:      "parent-net",
+						Regions: []Region{
+							{
+								Name:              "euw",
+								AvailabilityZones: []string{"a"},
+							},
+						},
+						Consumer: &ResourceReference{
+							APIVersion: "",
+							Kind:       "",
+						},
+					},
+				},
 			}
 
 			ctx := context.Background()
@@ -236,6 +257,28 @@ var _ = Describe("Subnet webhook", func() {
 								Name:              "euw",
 								AvailabilityZones: []string{"a"},
 							},
+						},
+					},
+				},
+				{
+					ObjectMeta: controllerruntime.ObjectMeta{
+						Name:      "with-valid-consumer-ref",
+						Namespace: SubnetNamespace,
+					},
+					Spec: SubnetSpec{
+						CIDR:             cidrMustParse("127.0.0.0/24"),
+						ParentSubnetName: "parent-subnet",
+						NetworkName:      "parent-net",
+						Regions: []Region{
+							{
+								Name:              "euw",
+								AvailabilityZones: []string{"a"},
+							},
+						},
+						Consumer: &ResourceReference{
+							APIVersion: "sample.api/v1alpha1",
+							Kind:       "SampleKind",
+							Name:       "sample-name",
 						},
 					},
 				},

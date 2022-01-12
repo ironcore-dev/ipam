@@ -189,6 +189,13 @@ spec:
       availabilityZones:
         - a
         - b
+  # Consumer is a reference to k8s resource IP would be bound to
+  # Optional
+  # Object with string fields
+  consumer:
+     apiVersion: ipam.onmetal.de/v1alpha1
+     kind: SampleReource
+     name: sample-resorce-name
 ```
 
 Apart of the data specified in manifest, Subnet's status also contains its address capacity (count) and capacity left,
@@ -272,10 +279,10 @@ spec:
   # String
   # Should refer to an existing subnet at the same namespace
   subnetName: ipv4-child-cidr-subnet-sample
-  # Resource is a reference to k8s resource IP would be bountd to
+  # Consumer is a reference to k8s resource IP would be bound to
   # Optional
   # Object with string fields
-  resourceReference:
+  consumer:
     apiVersion: ipam.onmetal.de/v1alpha1
     kind: SampleReource
     name: sample-resorce-name
