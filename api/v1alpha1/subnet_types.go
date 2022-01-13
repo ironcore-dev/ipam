@@ -21,6 +21,7 @@ import (
 	"net"
 
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -40,16 +41,10 @@ type SubnetSpec struct {
 	Capacity *resource.Quantity `json:"capacity,omitempty"`
 	// ParentSubnetName contains a reference (name) to the parent subent
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=63
-	ParentSubnetName string `json:"parentSubnetName,omitempty"`
+	ParentSubnet v1.LocalObjectReference `json:"parentSubnet,omitempty"`
 	// NetworkName contains a reference (name) to the network
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=63
-	NetworkName string `json:"networkName"`
+	Network v1.LocalObjectReference `json:"network"`
 	// Regions represents the network service location
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
@@ -116,14 +111,17 @@ type SubnetStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Parent Subnet",type=string,JSONPath=`.spec.parentSubnetName`,description="Parent Subnet"
-// +kubebuilder:printcolumn:name="Parent Network",type=string,JSONPath=`.spec.networkName`,description="Parent Network"
+// +kubebuilder:printcolumn:name="Parent Subnet",type=string,JSONPath=`.spec.parentSubnet.name`,description="Parent Subnet"
+// +kubebuilder:printcolumn:name="Parent Network",type=string,JSONPath=`.spec.network.name`,description="Parent Network"
 // +kubebuilder:printcolumn:name="Reserved",type=string,JSONPath=`.status.reserved`,description="Reserved CIDR"
 // +kubebuilder:printcolumn:name="Address Type",type=string,JSONPath=`.status.type`,description="Address Type"
 // +kubebuilder:printcolumn:name="Locality",type=string,JSONPath=`.status.locality`,description="Locality"
 // +kubebuilder:printcolumn:name="Prefix Bits",type=string,JSONPath=`.status.prefixBits`,description="Amount of ones in netmask"
 // +kubebuilder:printcolumn:name="Capacity",type=string,JSONPath=`.status.capacity`,description="Capacity"
 // +kubebuilder:printcolumn:name="Capacity Left",type=string,JSONPath=`.status.capacityLeft`,description="Capacity Left"
+// +kubebuilder:printcolumn:name="Consumer Group",type=string,JSONPath=`.spec.consumer.apiVersion`,description="Consumer Group"
+// +kubebuilder:printcolumn:name="Consumer Kind",type=string,JSONPath=`.spec.consumer.kind`,description="Consumer Kind"
+// +kubebuilder:printcolumn:name="Consumer Name",type=string,JSONPath=`.spec.consumer.name`,description="Consumer Name"
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`,description="State"
 // +kubebuilder:printcolumn:name="Message",type=string,JSONPath=`.status.message`,description="Message"
 // Subnet is the Schema for the subnets API

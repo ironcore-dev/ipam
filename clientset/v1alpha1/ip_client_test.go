@@ -6,6 +6,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
@@ -49,8 +50,10 @@ var _ = Describe("IP client", func() {
 					Namespace: IPNamespace,
 				},
 				Spec: v1alpha1.IPSpec{
-					SubnetName: "sn",
-					IP:         ipMustParse("192.168.1.1"),
+					Subnet: corev1.LocalObjectReference{
+						Name: "sn",
+					},
+					IP: ipMustParse("192.168.1.1"),
 				},
 			}
 
@@ -122,7 +125,7 @@ var _ = Describe("IP client", func() {
 				Value string `json:"value"`
 			}{{
 				Op:    "replace",
-				Path:  "/spec/subnetName",
+				Path:  "/spec/subnet/name",
 				Value: "test-subnet",
 			}}
 
@@ -133,7 +136,7 @@ var _ = Describe("IP client", func() {
 				defer GinkgoRecover()
 				patchedIP, err := client.Patch(ctx, IPName, types.JSONPatchType, patchData, v1.PatchOptions{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(patchedIP.Spec.SubnetName).Should(Equal(patch[0].Value))
+				Expect(patchedIP.Spec.Subnet.Name).Should(Equal(patch[0].Value))
 				finished <- true
 			}()
 
@@ -141,7 +144,7 @@ var _ = Describe("IP client", func() {
 			Expect(event.Type).To(Equal(watch.Modified))
 			eventIP = event.Object.(*v1alpha1.IP)
 			Expect(eventIP).NotTo(BeNil())
-			Expect(eventIP.Spec.SubnetName).Should(Equal(patch[0].Value))
+			Expect(eventIP.Spec.Subnet.Name).Should(Equal(patch[0].Value))
 
 			<-finished
 
@@ -154,7 +157,9 @@ var _ = Describe("IP client", func() {
 					},
 				},
 				Spec: v1alpha1.IPSpec{
-					SubnetName: "sn",
+					Subnet: corev1.LocalObjectReference{
+						Name: "sn",
+					},
 				},
 			}
 

@@ -116,7 +116,7 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 
 	subnetNamespacedName := types.NamespacedName{
 		Namespace: ip.Namespace,
-		Name:      ip.Spec.SubnetName,
+		Name:      ip.Spec.Subnet.Name,
 	}
 	subnet := v1alpha1.Subnet{}
 	if err = r.Get(ctx, subnetNamespacedName, &subnet); err != nil {
@@ -175,7 +175,7 @@ func (r *IPReconciler) finalizeIP(ctx context.Context, log logr.Logger, ip *v1al
 
 	subnetNamespacedName := types.NamespacedName{
 		Namespace: ip.Namespace,
-		Name:      ip.Spec.SubnetName,
+		Name:      ip.Spec.Subnet.Name,
 	}
 	subnet := v1alpha1.Subnet{}
 	err := r.Get(ctx, subnetNamespacedName, &subnet)
