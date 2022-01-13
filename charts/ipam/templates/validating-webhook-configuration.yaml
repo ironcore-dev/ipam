@@ -25,6 +25,7 @@ webhooks:
         operations:
           - CREATE
           - UPDATE
+          - DELETE
         resources:
           - {{ .Values.crd.ip.plural }}
     sideEffects: None
@@ -46,6 +47,7 @@ webhooks:
         operations:
           - CREATE
           - UPDATE
+          - DELETE
         resources:
           - {{ .Values.crd.subnet.plural }}
     sideEffects: None

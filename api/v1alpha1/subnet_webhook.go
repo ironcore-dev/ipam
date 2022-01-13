@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -24,24 +25,29 @@ import (
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
 // log is for logging in this package.
 var subnetlog = logf.Log.WithName("subnet-resource")
+var subnetWebhookClient client.Client
 
 func (in *Subnet) SetupWebhookWithManager(mgr ctrl.Manager) error {
+	subnetWebhookClient = mgr.GetClient()
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(in).
 		Complete()
 }
 
-// +kubebuilder:webhook:path=/validate-ipam-onmetal-de-v1alpha1-subnet,mutating=false,failurePolicy=fail,sideEffects=None,groups=ipam.onmetal.de,resources=subnets,verbs=create;update,versions=v1alpha1,name=vsubnet.kb.io,admissionReviewVersions={v1,v1beta1}
+// +kubebuilder:webhook:path=/validate-ipam-onmetal-de-v1alpha1-subnet,mutating=false,failurePolicy=fail,sideEffects=None,groups=ipam.onmetal.de,resources=subnets,verbs=create;update;delete,versions=v1alpha1,name=vsubnet.kb.io,admissionReviewVersions={v1,v1beta1}
 
 var _ webhook.Validator = &Subnet{}
 
@@ -62,6 +68,12 @@ func (in *Subnet) ValidateCreate() error {
 		errMsg := fmt.Sprintf("value should be set for the one of the following fields: %s", strings.Join(rulesPaths, ", "))
 		for _, path := range rulesPaths {
 			allErrs = append(allErrs, field.Invalid(field.NewPath(path), in.Spec.CIDR, errMsg))
+		}
+	}
+
+	if in.Spec.Consumer != nil {
+		if _, err := schema.ParseGroupVersion(in.Spec.Consumer.APIVersion); err != nil {
+			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer.apiVersion"), in.Spec.Consumer, err.Error()))
 		}
 	}
 
@@ -155,6 +167,32 @@ func (in *Subnet) ValidateUpdate(old runtime.Object) error {
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
 func (in *Subnet) ValidateDelete() error {
 	subnetlog.Info("validate delete", "name", in.Name)
+
+	if in.Spec.Consumer == nil {
+		return nil
+	}
+
+	unstruct := &unstructured.Unstructured{}
+	gv, err := schema.ParseGroupVersion(in.Spec.Consumer.APIVersion)
+	if err != nil {
+		iplog.Error(err, "unable to parse APIVerson of consumer resource, therefore allowing to delete Subnet", "name", in.Name, "api version", in.Spec.Consumer.APIVersion)
+		return nil
+	}
+
+	gvk := gv.WithKind(in.Spec.Consumer.Kind)
+	unstruct.SetGroupVersionKind(gvk)
+	namespacedName := types.NamespacedName{
+		Namespace: in.Namespace,
+		Name:      in.Spec.Consumer.Name,
+	}
+	ctx := context.Background()
+
+	if err := ipWebhookClient.Get(ctx, namespacedName, unstruct); !apierrors.IsNotFound(err) {
+		var allErrs field.ErrorList
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), in.Spec.Consumer, "Consumer is not deleted"))
+		return apierrors.NewInvalid(gvk.GroupKind(), in.Name, allErrs)
+	}
+
 	return nil
 }
 
