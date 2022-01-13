@@ -65,7 +65,7 @@ func (in *Subnet) ValidateCreate() error {
 		}
 	}
 
-	if in.Spec.ParentSubnetName == "" &&
+	if in.Spec.ParentSubnet.Name == "" &&
 		in.Spec.CIDR == nil {
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.cidr"), in.Spec.CIDR, "cidr should be set explicitly if a top level subnet (without parent subnet) is created"))
 	}
@@ -129,12 +129,12 @@ func (in *Subnet) ValidateUpdate(old runtime.Object) error {
 		}
 	}
 
-	if oldSubnet.Spec.ParentSubnetName != in.Spec.ParentSubnetName {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.parentSubnetName"), in.Spec.CIDR, "Parent Subnet change is disallowed"))
+	if oldSubnet.Spec.ParentSubnet.Name != in.Spec.ParentSubnet.Name {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.parentSubnet.name"), in.Spec.CIDR, "Parent Subnet change is disallowed"))
 	}
 
-	if oldSubnet.Spec.NetworkName != in.Spec.NetworkName {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.networkName"), in.Spec.CIDR, "Network change is disallowed"))
+	if oldSubnet.Spec.Network.Name != in.Spec.Network.Name {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.network.name"), in.Spec.CIDR, "Network change is disallowed"))
 	}
 
 	if !reflect.DeepEqual(oldSubnet.Spec.Regions, in.Spec.Regions) {

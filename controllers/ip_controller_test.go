@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -121,8 +122,10 @@ var _ = Describe("IP controller", func() {
 					Namespace: Namespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:        cidrMustParse("10.0.0.0/30"),
-					NetworkName: NetworkName,
+					CIDR: cidrMustParse("10.0.0.0/30"),
+					Network: corev1.LocalObjectReference{
+						Name: NetworkName,
+					},
 					Regions: []v1alpha1.Region{
 						{
 							Name:              "euw",
@@ -162,8 +165,10 @@ var _ = Describe("IP controller", func() {
 					Namespace: Namespace,
 				},
 				Spec: v1alpha1.IPSpec{
-					SubnetName: SubnetName,
-					IP:         testIP,
+					Subnet: corev1.LocalObjectReference{
+						Name: SubnetName,
+					},
+					IP: testIP,
 				},
 			}
 

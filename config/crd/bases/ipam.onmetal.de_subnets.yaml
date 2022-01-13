@@ -18,11 +18,11 @@ spec:
   versions:
   - additionalPrinterColumns:
     - description: Parent Subnet
-      jsonPath: .spec.parentSubnetName
+      jsonPath: .spec.parentSubnet.name
       name: Parent Subnet
       type: string
     - description: Parent Network
-      jsonPath: .spec.networkName
+      jsonPath: .spec.network.name
       name: Parent Network
       type: string
     - description: Reserved CIDR
@@ -48,6 +48,18 @@ spec:
     - description: Capacity Left
       jsonPath: .status.capacityLeft
       name: Capacity Left
+      type: string
+    - description: Consumer Group
+      jsonPath: .spec.consumer.apiVersion
+      name: Consumer Group
+      type: string
+    - description: Consumer Kind
+      jsonPath: .spec.consumer.kind
+      name: Consumer Kind
+      type: string
+    - description: Consumer Name
+      jsonPath: .spec.consumer.name
+      name: Consumer Name
       type: string
     - description: State
       jsonPath: .status.state
@@ -113,19 +125,23 @@ spec:
                 - kind
                 - name
                 type: object
-              networkName:
+              network:
                 description: NetworkName contains a reference (name) to the network
-                maxLength: 63
-                minLength: 1
-                pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-                type: string
-              parentSubnetName:
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
+              parentSubnet:
                 description: ParentSubnetName contains a reference (name) to the parent
                   subent
-                maxLength: 63
-                minLength: 1
-                pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-                type: string
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
               prefixBits:
                 description: PrefixBits is an amount of ones zero bits at the beginning
                   of the netmask
@@ -153,7 +169,7 @@ spec:
                 minItems: 1
                 type: array
             required:
-            - networkName
+            - network
             - regions
             type: object
           status:

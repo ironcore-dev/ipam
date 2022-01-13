@@ -7,6 +7,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -42,7 +43,9 @@ var _ = Describe("IP webhook", func() {
 						Namespace: IPNamespace,
 					},
 					Spec: IPSpec{
-						SubnetName: "sample-subnet",
+						Subnet: corev1.LocalObjectReference{
+							Name: "sample-subnet",
+						},
 						Consumer: &ResourceReference{
 							Kind: "",
 							Name: "",
@@ -67,7 +70,9 @@ var _ = Describe("IP webhook", func() {
 						Namespace: IPNamespace,
 					},
 					Spec: IPSpec{
-						SubnetName: "sample-subnet",
+						Subnet: corev1.LocalObjectReference{
+							Name: "sample-subnet",
+						},
 					},
 				},
 				{
@@ -76,7 +81,9 @@ var _ = Describe("IP webhook", func() {
 						Namespace: IPNamespace,
 					},
 					Spec: IPSpec{
-						SubnetName: "sample-subnet",
+						Subnet: corev1.LocalObjectReference{
+							Name: "sample-subnet",
+						},
 						Consumer: &ResourceReference{
 							Kind: "SampleKind",
 							Name: "sample-name",
@@ -89,8 +96,10 @@ var _ = Describe("IP webhook", func() {
 						Namespace: IPNamespace,
 					},
 					Spec: IPSpec{
-						SubnetName: "sample-subnet",
-						IP:         ipMustParse("192.168.1.1"),
+						Subnet: corev1.LocalObjectReference{
+							Name: "sample-subnet",
+						},
+						IP: ipMustParse("192.168.1.1"),
 					},
 				},
 				{
@@ -99,7 +108,9 @@ var _ = Describe("IP webhook", func() {
 						Namespace: IPNamespace,
 					},
 					Spec: IPSpec{
-						SubnetName: "sample-subnet",
+						Subnet: corev1.LocalObjectReference{
+							Name: "sample-subnet",
+						},
 						Consumer: &ResourceReference{
 							APIVersion: "sample.api/v1alpha1",
 							Kind:       "SampleKind",
@@ -128,7 +139,9 @@ var _ = Describe("IP webhook", func() {
 						Namespace: IPNamespace,
 					},
 					Spec: IPSpec{
-						SubnetName: "sample-subnet",
+						Subnet: corev1.LocalObjectReference{
+							Name: "sample-subnet",
+						},
 					},
 				},
 				{
@@ -137,7 +150,9 @@ var _ = Describe("IP webhook", func() {
 						Namespace: IPNamespace,
 					},
 					Spec: IPSpec{
-						SubnetName: "sample-subnet",
+						Subnet: corev1.LocalObjectReference{
+							Name: "sample-subnet",
+						},
 						Consumer: &ResourceReference{
 							Kind: "SampleKind",
 							Name: "sample-name",
@@ -150,8 +165,10 @@ var _ = Describe("IP webhook", func() {
 						Namespace: IPNamespace,
 					},
 					Spec: IPSpec{
-						SubnetName: "sample-subnet",
-						IP:         ipMustParse("192.168.1.1"),
+						Subnet: corev1.LocalObjectReference{
+							Name: "sample-subnet",
+						},
+						IP: ipMustParse("192.168.1.1"),
 					},
 				},
 				{
@@ -160,7 +177,9 @@ var _ = Describe("IP webhook", func() {
 						Namespace: IPNamespace,
 					},
 					Spec: IPSpec{
-						SubnetName: "sample-subnet",
+						Subnet: corev1.LocalObjectReference{
+							Name: "sample-subnet",
+						},
 						Consumer: &ResourceReference{
 							APIVersion: "sample.api/v1alpha1",
 							Kind:       "SampleKind",
@@ -195,7 +214,7 @@ var _ = Describe("IP webhook", func() {
 				Expect(k8sClient.Update(ctx, crCopy)).ShouldNot(Succeed())
 
 				crCopy = cr.DeepCopy()
-				crCopy.Spec.SubnetName = "another-sample-subnet"
+				crCopy.Spec.Subnet.Name = "another-sample-subnet"
 				Expect(k8sClient.Update(ctx, crCopy)).ShouldNot(Succeed())
 
 				crCopy = cr.DeepCopy()

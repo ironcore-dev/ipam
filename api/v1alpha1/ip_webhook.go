@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -36,13 +38,28 @@ func (in *IP) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-// +kubebuilder:webhook:path=/validate-ipam-onmetal-de-v1alpha1-ip,mutating=false,failurePolicy=fail,sideEffects=None,groups=ipam.onmetal.de,resources=ips,verbs=update,versions=v1alpha1,name=vip.kb.io,admissionReviewVersions={v1,v1beta1}
+// +kubebuilder:webhook:path=/validate-ipam-onmetal-de-v1alpha1-ip,mutating=false,failurePolicy=fail,sideEffects=None,groups=ipam.onmetal.de,resources=ips,verbs=create;update,versions=v1alpha1,name=vip.kb.io,admissionReviewVersions={v1,v1beta1}
 
 var _ webhook.Validator = &IP{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (in *IP) ValidateCreate() error {
 	iplog.Info("validate create", "name", in.Name)
+
+	fmt.Println("in.Spec.Subnet.Name")
+	fmt.Println(in.Spec.Subnet.Name)
+	fmt.Println(in.Spec.Subnet.Name == "")
+	if in.Spec.Subnet.Name == "" {
+		gvk := in.GroupVersionKind()
+		gk := schema.GroupKind{
+			Group: gvk.Group,
+			Kind:  gvk.Kind,
+		}
+		var allErrs field.ErrorList
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.subnet.name"), in.Spec.IP, "Parent subnet should be defined"))
+		return apierrors.NewInvalid(gk, in.Name, allErrs)
+	}
+
 	return nil
 }
 
@@ -64,8 +81,8 @@ func (in *IP) ValidateUpdate(old runtime.Object) error {
 		}
 	}
 
-	if oldIP.Spec.SubnetName != in.Spec.SubnetName {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.subnetName"), in.Spec.SubnetName, "Subnet change is disallowed"))
+	if oldIP.Spec.Subnet.Name != in.Spec.Subnet.Name {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.subnet.name"), in.Spec.Subnet.Name, "Subnet change is disallowed"))
 	}
 
 	if len(allErrs) > 0 {

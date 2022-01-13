@@ -6,6 +6,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -108,8 +109,10 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:        testCidr,
-					NetworkName: NetworkName,
+					CIDR: testCidr,
+					Network: corev1.LocalObjectReference{
+						Name: NetworkName,
+					},
 					Regions: []v1alpha1.Region{
 						{
 							Name:              "euw",
@@ -214,8 +217,10 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:        parentSubnetCidr,
-					NetworkName: NetworkName,
+					CIDR: parentSubnetCidr,
+					Network: corev1.LocalObjectReference{
+						Name: NetworkName,
+					},
 					Regions: []v1alpha1.Region{
 						{
 							Name:              "euw",
@@ -255,9 +260,13 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:             testCidr,
-					NetworkName:      NetworkName,
-					ParentSubnetName: ParentSubnetName,
+					CIDR: testCidr,
+					Network: corev1.LocalObjectReference{
+						Name: NetworkName,
+					},
+					ParentSubnet: corev1.LocalObjectReference{
+						Name: ParentSubnetName,
+					},
 					Regions: []v1alpha1.Region{
 						{
 							Name:              "euw",
@@ -357,8 +366,10 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:        parentSubnetCidr,
-					NetworkName: NetworkName,
+					CIDR: parentSubnetCidr,
+					Network: corev1.LocalObjectReference{
+						Name: NetworkName,
+					},
 					Regions: []v1alpha1.Region{
 						{
 							Name:              "euw",
@@ -396,9 +407,13 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					Capacity:         resource.NewScaledQuantity(childSubnetCapacity, 0),
-					NetworkName:      NetworkName,
-					ParentSubnetName: ParentSubnetName,
+					Capacity: resource.NewScaledQuantity(childSubnetCapacity, 0),
+					Network: corev1.LocalObjectReference{
+						Name: NetworkName,
+					},
+					ParentSubnet: corev1.LocalObjectReference{
+						Name: ParentSubnetName,
+					},
 					Regions: []v1alpha1.Region{
 						{
 							Name:              "euw",
@@ -485,8 +500,10 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:        parentSubnetCidr,
-					NetworkName: NetworkName,
+					CIDR: parentSubnetCidr,
+					Network: corev1.LocalObjectReference{
+						Name: NetworkName,
+					},
 					Regions: []v1alpha1.Region{
 						{
 							Name:              "euw",
@@ -523,9 +540,13 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					PrefixBits:       &hib,
-					NetworkName:      NetworkName,
-					ParentSubnetName: ParentSubnetName,
+					PrefixBits: &hib,
+					Network: corev1.LocalObjectReference{
+						Name: NetworkName,
+					},
+					ParentSubnet: corev1.LocalObjectReference{
+						Name: ParentSubnetName,
+					},
 					Regions: []v1alpha1.Region{
 						{
 							Name:              "euw",
@@ -615,8 +636,10 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:        parentSubnetCidr,
-					NetworkName: NetworkName,
+					CIDR: parentSubnetCidr,
+					Network: corev1.LocalObjectReference{
+						Name: NetworkName,
+					},
 					Regions: []v1alpha1.Region{
 						{
 							Name:              "euw",
@@ -657,8 +680,10 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:        parentSubnetCidr,
-					NetworkName: NetworkName,
+					CIDR: parentSubnetCidr,
+					Network: corev1.LocalObjectReference{
+						Name: NetworkName,
+					},
 					Regions: []v1alpha1.Region{
 						{
 							Name:              "eun",
@@ -693,9 +718,13 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:             testCidr,
-					NetworkName:      NetworkName,
-					ParentSubnetName: ParentSubnetName,
+					CIDR: testCidr,
+					Network: corev1.LocalObjectReference{
+						Name: NetworkName,
+					},
+					ParentSubnet: corev1.LocalObjectReference{
+						Name: ParentSubnetName,
+					},
 					Regions: []v1alpha1.Region{
 						{
 							Name:              "euw",
@@ -736,9 +765,13 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:             testCidr,
-					NetworkName:      NetworkName,
-					ParentSubnetName: ParentSubnetName,
+					CIDR: testCidr,
+					Network: corev1.LocalObjectReference{
+						Name: NetworkName,
+					},
+					ParentSubnet: corev1.LocalObjectReference{
+						Name: ParentSubnetName,
+					},
 					Regions: []v1alpha1.Region{
 						{
 							Name:              "euw",
@@ -792,8 +825,10 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR:        parentSubnetCidr,
-					NetworkName: NetworkName,
+					CIDR: parentSubnetCidr,
+					Network: corev1.LocalObjectReference{
+						Name: NetworkName,
+					},
 					Regions: []v1alpha1.Region{
 						{
 							Name:              "euw",
@@ -838,9 +873,13 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					Capacity:         resource.NewScaledQuantity(120, 0),
-					NetworkName:      NetworkName,
-					ParentSubnetName: ParentSubnetName,
+					Capacity: resource.NewScaledQuantity(120, 0),
+					Network: corev1.LocalObjectReference{
+						Name: NetworkName,
+					},
+					ParentSubnet: corev1.LocalObjectReference{
+						Name: ParentSubnetName,
+					},
 					Regions: []v1alpha1.Region{
 						{
 							Name:              "us",
@@ -876,9 +915,13 @@ var _ = Describe("Subnet controller", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					Capacity:         resource.NewScaledQuantity(120, 0),
-					NetworkName:      NetworkName,
-					ParentSubnetName: ParentSubnetName,
+					Capacity: resource.NewScaledQuantity(120, 0),
+					Network: corev1.LocalObjectReference{
+						Name: NetworkName,
+					},
+					ParentSubnet: corev1.LocalObjectReference{
+						Name: ParentSubnetName,
+					},
 					Regions: []v1alpha1.Region{
 						{
 							Name:              "euw",
