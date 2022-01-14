@@ -7,6 +7,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
@@ -36,8 +37,12 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						ParentSubnetName: "parent-subnet",
-						NetworkName:      "parent-net",
+						ParentSubnet: corev1.LocalObjectReference{
+							Name: "parent-subnet",
+						},
+						Network: corev1.LocalObjectReference{
+							Name: "parent-net",
+						},
 						Regions: []Region{
 							{
 								Name:              "euw",
@@ -52,10 +57,14 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						CIDR:             cidrMustParse("127.0.0.0/24"),
-						Capacity:         resource.NewScaledQuantity(60, 0),
-						ParentSubnetName: "parent-subnet",
-						NetworkName:      "parent-net",
+						CIDR:     cidrMustParse("127.0.0.0/24"),
+						Capacity: resource.NewScaledQuantity(60, 0),
+						ParentSubnet: corev1.LocalObjectReference{
+							Name: "parent-subnet",
+						},
+						Network: corev1.LocalObjectReference{
+							Name: "parent-net",
+						},
 						Regions: []Region{
 							{
 								Name:              "euw",
@@ -70,8 +79,10 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						Capacity:    resource.NewScaledQuantity(60, 0),
-						NetworkName: "parent-net",
+						Capacity: resource.NewScaledQuantity(60, 0),
+						Network: corev1.LocalObjectReference{
+							Name: "parent-net",
+						},
 						Regions: []Region{
 							{
 								Name:              "euw",
@@ -86,8 +97,10 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						Capacity:    resource.NewScaledQuantity(0, 0),
-						NetworkName: "parent-net",
+						Capacity: resource.NewScaledQuantity(0, 0),
+						Network: corev1.LocalObjectReference{
+							Name: "parent-net",
+						},
 						Regions: []Region{
 							{
 								Name:              "euw",
@@ -102,8 +115,10 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						Capacity:    resource.NewScaledQuantity(math.MaxInt64, resource.Exa),
-						NetworkName: "parent-net",
+						Capacity: resource.NewScaledQuantity(math.MaxInt64, resource.Exa),
+						Network: corev1.LocalObjectReference{
+							Name: "parent-net",
+						},
 						Regions: []Region{
 							{
 								Name:              "euw",
@@ -118,9 +133,13 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						CIDR:             cidrMustParse("127.0.0.0/24"),
-						ParentSubnetName: "parent-subnet",
-						NetworkName:      "parent-net",
+						CIDR: cidrMustParse("127.0.0.0/24"),
+						ParentSubnet: corev1.LocalObjectReference{
+							Name: "parent-subnet",
+						},
+						Network: corev1.LocalObjectReference{
+							Name: "parent-net",
+						},
 						Regions: []Region{
 							{
 								Name:              "euw",
@@ -139,9 +158,13 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						CIDR:             cidrMustParse("127.0.0.0/24"),
-						ParentSubnetName: "parent-subnet",
-						NetworkName:      "parent-net",
+						CIDR: cidrMustParse("127.0.0.0/24"),
+						ParentSubnet: corev1.LocalObjectReference{
+							Name: "parent-subnet",
+						},
+						Network: corev1.LocalObjectReference{
+							Name: "parent-net",
+						},
 						Regions: []Region{
 							{
 								Name:              "euw",
@@ -151,6 +174,31 @@ var _ = Describe("Subnet webhook", func() {
 								Name:              "eun",
 								AvailabilityZones: []string{"a"},
 							},
+						},
+					},
+				},
+				{
+					ObjectMeta: controllerruntime.ObjectMeta{
+						Name:      "with-invalid-consumer-ref",
+						Namespace: SubnetNamespace,
+					},
+					Spec: SubnetSpec{
+						CIDR: cidrMustParse("127.0.0.0/24"),
+						ParentSubnet: corev1.LocalObjectReference{
+							Name: "parent-subnet",
+						},
+						Network: corev1.LocalObjectReference{
+							Name: "parent-net",
+						},
+						Regions: []Region{
+							{
+								Name:              "euw",
+								AvailabilityZones: []string{"a"},
+							},
+						},
+						Consumer: &ResourceReference{
+							APIVersion: "",
+							Kind:       "",
 						},
 					},
 				},
@@ -174,9 +222,13 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						CIDR:             cidrMustParse("127.0.0.0/24"),
-						ParentSubnetName: "parent-subnet",
-						NetworkName:      "parent-net",
+						CIDR: cidrMustParse("127.0.0.0/24"),
+						ParentSubnet: corev1.LocalObjectReference{
+							Name: "parent-subnet",
+						},
+						Network: corev1.LocalObjectReference{
+							Name: "parent-net",
+						},
 						Regions: []Region{
 							{
 								Name:              "euw",
@@ -195,9 +247,13 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						Capacity:         resource.NewScaledQuantity(60, 0),
-						ParentSubnetName: "parent-subnet",
-						NetworkName:      "parent-net",
+						Capacity: resource.NewScaledQuantity(60, 0),
+						ParentSubnet: corev1.LocalObjectReference{
+							Name: "parent-subnet",
+						},
+						Network: corev1.LocalObjectReference{
+							Name: "parent-net",
+						},
 						Regions: []Region{
 							{
 								Name:              "euw",
@@ -212,9 +268,13 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						PrefixBits:       bytePtr(20),
-						ParentSubnetName: "parent-subnet",
-						NetworkName:      "parent-net",
+						PrefixBits: bytePtr(20),
+						ParentSubnet: corev1.LocalObjectReference{
+							Name: "parent-subnet",
+						},
+						Network: corev1.LocalObjectReference{
+							Name: "parent-net",
+						},
 						Regions: []Region{
 							{
 								Name:              "euw",
@@ -229,13 +289,41 @@ var _ = Describe("Subnet webhook", func() {
 						Namespace: SubnetNamespace,
 					},
 					Spec: SubnetSpec{
-						CIDR:        cidrMustParse("127.0.0.0/24"),
-						NetworkName: "parent-net",
+						CIDR: cidrMustParse("127.0.0.0/24"),
+						Network: corev1.LocalObjectReference{
+							Name: "parent-net",
+						},
 						Regions: []Region{
 							{
 								Name:              "euw",
 								AvailabilityZones: []string{"a"},
 							},
+						},
+					},
+				},
+				{
+					ObjectMeta: controllerruntime.ObjectMeta{
+						Name:      "with-valid-consumer-ref",
+						Namespace: SubnetNamespace,
+					},
+					Spec: SubnetSpec{
+						CIDR: cidrMustParse("127.0.0.0/24"),
+						ParentSubnet: corev1.LocalObjectReference{
+							Name: "parent-subnet",
+						},
+						Network: corev1.LocalObjectReference{
+							Name: "parent-net",
+						},
+						Regions: []Region{
+							{
+								Name:              "euw",
+								AvailabilityZones: []string{"a"},
+							},
+						},
+						Consumer: &ResourceReference{
+							APIVersion: "sample.api/v1alpha1",
+							Kind:       "SampleKind",
+							Name:       "sample-name",
 						},
 					},
 				},
@@ -265,9 +353,13 @@ var _ = Describe("Subnet webhook", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: SubnetSpec{
-					CIDR:             testCidr,
-					ParentSubnetName: "ps",
-					NetworkName:      "ng",
+					CIDR: testCidr,
+					ParentSubnet: corev1.LocalObjectReference{
+						Name: "ps",
+					},
+					Network: corev1.LocalObjectReference{
+						Name: "ng",
+					},
 					Regions: []Region{
 						{
 							Name:              "euw",
@@ -291,7 +383,7 @@ var _ = Describe("Subnet webhook", func() {
 			}).Should(BeTrue())
 
 			By("Try to update Subnet CR")
-			cr.Spec.ParentSubnetName = "new"
+			cr.Spec.ParentSubnet.Name = "new"
 			Expect(k8sClient.Update(ctx, &cr)).ShouldNot(Succeed())
 		})
 	})

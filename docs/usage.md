@@ -162,16 +162,18 @@ spec:
   # Capacity will be ceiled to next power of 2, if it is not power of 2 itself
   # First smallest vacant CIDR in parent address range will be picked for range withdrawal
   capacity: "100"
-  # ParentSubnetName refers to the parent network at the same namespace
+  # ParentSubnet refers to the parent network at the same namespace
   # Optional
-  # String
+  # Object
   # Should refer an existing subnet resource
-  parentSubnetName: "ipv4-parent-cidr-subnet-sample"
-  # NetworkName refers to the parent network at the same namespace
+  parentSubnet:
+    name: "ipv4-parent-cidr-subnet-sample"
+  # Network refers to the parent network at the same namespace
   # Required
-  # String
+  # Object
   # Should refer an existing network resource
-  networkName: network-sample
+  network:
+    name: network-sample
   # Regions is a list of regions subnet is attached to
   # Required
   # Set of objects (uniqueness is defined by name)
@@ -189,6 +191,13 @@ spec:
       availabilityZones:
         - a
         - b
+  # Consumer is a reference to k8s resource IP would be bound to
+  # Optional
+  # Object with string fields
+  consumer:
+     apiVersion: ipam.onmetal.de/v1alpha1
+     kind: SampleReource
+     name: sample-resorce-name
 ```
 
 Apart of the data specified in manifest, Subnet's status also contains its address capacity (count) and capacity left,
@@ -267,15 +276,16 @@ kind: Ip
 metadata:
   name: ip-sample
 spec:
-  # SubnetName is a reference to subnet where IP should be reserved
+  # Subnet is a reference to subnet where IP should be reserved
   # Required
-  # String
+  # Object
   # Should refer to an existing subnet at the same namespace
-  subnetName: ipv4-child-cidr-subnet-sample
-  # Resource is a reference to k8s resource IP would be bountd to
+  subnet:
+    name: ipv4-child-cidr-subnet-sample
+  # Consumer is a reference to k8s resource IP would be bound to
   # Optional
   # Object with string fields
-  resourceReference:
+  consumer:
     apiVersion: ipam.onmetal.de/v1alpha1
     kind: SampleReource
     name: sample-resorce-name

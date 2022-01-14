@@ -22,7 +22,9 @@ webhooks:
     apiVersions:
     - v1alpha1
     operations:
+    - CREATE
     - UPDATE
+    - DELETE
     resources:
     - ips
   sideEffects: None
@@ -65,6 +67,7 @@ webhooks:
     operations:
     - CREATE
     - UPDATE
+    - DELETE
     resources:
     - subnets
   sideEffects: None

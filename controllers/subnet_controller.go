@@ -135,10 +135,10 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 
 	// If parent subnet is not set, then CIDR should be reserved in
 	// network resource.
-	if subnet.Spec.ParentSubnetName == "" {
+	if subnet.Spec.ParentSubnet.Name == "" {
 		networkNamespacedName := types.NamespacedName{
 			Namespace: subnet.Namespace,
-			Name:      subnet.Spec.NetworkName,
+			Name:      subnet.Spec.Network.Name,
 		}
 
 		network := &v1alpha1.Network{}
@@ -182,7 +182,7 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	// should be registered in parent subnet.
 	parentSubnetNamespacedName := types.NamespacedName{
 		Namespace: subnet.Namespace,
-		Name:      subnet.Spec.ParentSubnetName,
+		Name:      subnet.Spec.ParentSubnet.Name,
 	}
 
 	parentSubnet := &v1alpha1.Subnet{}
@@ -288,10 +288,10 @@ func (r *SubnetReconciler) finalizeSubnet(ctx context.Context, log logr.Logger, 
 
 	// If subnet has no parent subnet, then it should be released from network.
 	// Otherwise, release from parent subnet
-	if subnet.Spec.ParentSubnetName == "" {
+	if subnet.Spec.ParentSubnet.Name == "" {
 		networkNamespacedName := types.NamespacedName{
 			Namespace: subnet.Namespace,
-			Name:      subnet.Spec.NetworkName,
+			Name:      subnet.Spec.Network.Name,
 		}
 
 		network := &v1alpha1.Network{}
@@ -325,7 +325,7 @@ func (r *SubnetReconciler) finalizeSubnet(ctx context.Context, log logr.Logger, 
 	} else {
 		parentSubnetNamespacedName := types.NamespacedName{
 			Namespace: subnet.Namespace,
-			Name:      subnet.Spec.ParentSubnetName,
+			Name:      subnet.Spec.ParentSubnet.Name,
 		}
 
 		parentSubnet := &v1alpha1.Subnet{}

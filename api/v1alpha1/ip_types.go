@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -33,13 +34,10 @@ type IPState string
 type IPSpec struct {
 	// SubnetName is referring to parent subnet that holds requested IP
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=63
-	SubnetName string `json:"subnetName"`
-	// ResourceReference refers to resource IP has been booked for
+	Subnet v1.LocalObjectReference `json:"subnet"`
+	// Consumer refers to resource IP has been booked for
 	// +kubebuilder:validation:Optional
-	ResourceReference *ResourceReference `json:"resourceReference,omitempty"`
+	Consumer *ResourceReference `json:"consumer,omitempty"`
 	// IP allows to set desired IP address explicitly
 	// +kubebuilder:validation:Optional
 	IP *IPAddr `json:"ip,omitempty"`
@@ -59,10 +57,10 @@ type IPStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="IP",type=string,JSONPath=`.status.reserved`,description="IP Address"
-// +kubebuilder:printcolumn:name="Subnet",type=string,JSONPath=`.spec.subnetName`,description="Subnet"
-// +kubebuilder:printcolumn:name="Resource Group",type=string,JSONPath=`.spec.resourceReference.apiVersion`,description="Resource Group"
-// +kubebuilder:printcolumn:name="Resource Kind",type=string,JSONPath=`.spec.resourceReference.kind`,description="Resource Kind"
-// +kubebuilder:printcolumn:name="Resource Name",type=string,JSONPath=`.spec.resourceReference.name`,description="Resource Name"
+// +kubebuilder:printcolumn:name="Subnet",type=string,JSONPath=`.spec.subnet.name`,description="Subnet"
+// +kubebuilder:printcolumn:name="Consumer Group",type=string,JSONPath=`.spec.consumer.apiVersion`,description="Consumer Group"
+// +kubebuilder:printcolumn:name="Consumer Kind",type=string,JSONPath=`.spec.consumer.kind`,description="Consumer Kind"
+// +kubebuilder:printcolumn:name="Consumer Name",type=string,JSONPath=`.spec.consumer.name`,description="Consumer Name"
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`,description="Processing state"
 // +kubebuilder:printcolumn:name="Message",type=string,JSONPath=`.status.message`,description="Message"
 type IP struct {
@@ -83,26 +81,4 @@ type IPList struct {
 
 func init() {
 	SchemeBuilder.Register(&IP{}, &IPList{})
-}
-
-// ResourceReference allows to refer a resource of particular type at the same namespace
-type ResourceReference struct {
-	// APIVersion is resource's API group
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Pattern=^[a-z0-9]([-./a-z0-9]*[a-z0-9])?$
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=253
-	APIVersion string `json:"apiVersion,omitempty"`
-	// Kind is CRD Kind for lookup
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Pattern=^[A-Z]([-A-Za-z0-9]*[A-Za-z0-9])?$
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=63
-	Kind string `json:"kind"`
-	// Name is CRD Name for lookup
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=63
-	Name string `json:"name"`
 }

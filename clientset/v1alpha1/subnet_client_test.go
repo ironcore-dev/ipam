@@ -6,6 +6,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
@@ -43,9 +44,13 @@ var _ = Describe("Subnet client", func() {
 					Namespace: SubnetNamespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					PrefixBits:       &prefixBits,
-					ParentSubnetName: "test-parent-subnet",
-					NetworkName:      "test-network",
+					PrefixBits: &prefixBits,
+					ParentSubnet: corev1.LocalObjectReference{
+						Name: "test-parent-subnet",
+					},
+					Network: corev1.LocalObjectReference{
+						Name: "test-network",
+					},
 					Regions: []v1alpha1.Region{
 						{
 							Name:              "euw",
@@ -164,8 +169,12 @@ var _ = Describe("Subnet client", func() {
 					},
 				},
 				Spec: v1alpha1.SubnetSpec{
-					ParentSubnetName: "test-parent-subnet",
-					NetworkName:      "test-network",
+					ParentSubnet: corev1.LocalObjectReference{
+						Name: "test-parent-subnet",
+					},
+					Network: corev1.LocalObjectReference{
+						Name: "test-network",
+					},
 					Regions: []v1alpha1.Region{
 						{
 							Name:              "euw",

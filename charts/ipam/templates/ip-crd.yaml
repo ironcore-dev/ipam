@@ -20,20 +20,20 @@ spec:
           name: IP
           type: string
         - description: Subnet
-          jsonPath: .spec.subnetName
+          jsonPath: .spec.subnet.name
           name: Subnet
           type: string
-        - description: Resource Group
-          jsonPath: .spec.resourceReference.apiVersion
-          name: Resource Group
+        - description: Consumer Group
+          jsonPath: .spec.consumer.apiVersion
+          name: Consumer Group
           type: string
-        - description: Resource Kind
-          jsonPath: .spec.resourceReference.kind
-          name: Resource Kind
+        - description: Consumer Kind
+          jsonPath: .spec.consumer.kind
+          name: Consumer Kind
           type: string
-        - description: Resource Name
-          jsonPath: .spec.resourceReference.name
-          name: Resource Name
+        - description: Consumer Name
+          jsonPath: .spec.consumer.name
+          name: Consumer Name
           type: string
         - description: Processing state
           jsonPath: .status.state
@@ -63,12 +63,8 @@ spec:
             spec:
               description: IPSpec defines the desired state of IP
               properties:
-                ip:
-                  description: IP allows to set desired IP address explicitly
-                  type: string
-                resourceReference:
-                  description: ResourceReference refers to resource IP has been booked
-                    for
+                consumer:
+                  description: Consumer refers to resource IP has been booked for
                   properties:
                     apiVersion:
                       description: APIVersion is resource's API group
@@ -92,15 +88,20 @@ spec:
                     - kind
                     - name
                   type: object
-                subnetName:
+                ip:
+                  description: IP allows to set desired IP address explicitly
+                  type: string
+                subnet:
                   description: SubnetName is referring to parent subnet that holds requested
                     IP
-                  maxLength: 63
-                  minLength: 1
-                  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-                  type: string
+                  properties:
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                  type: object
               required:
-                - subnetName
+                - subnet
               type: object
             status:
               description: IPStatus defines the observed state of IP
