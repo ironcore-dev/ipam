@@ -18,9 +18,9 @@ package v1alpha1
 
 import (
 	"math/big"
-	"net"
 
 	"github.com/pkg/errors"
+	"inet.af/netaddr"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -238,10 +238,7 @@ func (in *Subnet) ProposeForBits(prefixBits byte) (*CIDR, error) {
 	firstIP, _ := candidateCidr.ToAddressRange()
 	cidrBits := candidateCidr.MaskBits()
 
-	ipNet := &net.IPNet{
-		IP:   firstIP,
-		Mask: net.CIDRMask(int(prefixBits), int(cidrBits)),
-	}
+	ipNet := netaddr.IPPrefixFrom(firstIP, uint8(cidrBits))
 
 	return CIDRFromNet(ipNet), nil
 }
