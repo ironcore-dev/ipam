@@ -1,9 +1,11 @@
 package v1alpha1
 
 import (
-	"math/big"
-
+	"encoding/json"
+	"fmt"
 	"inet.af/netaddr"
+	"math/big"
+	"strings"
 )
 
 // +kubebuilder:validation:Type=string
@@ -26,25 +28,40 @@ func CIDRFromNet(n netaddr.IPPrefix) *CIDR {
 }
 
 func (in CIDR) MarshalJSON() ([]byte, error) {
-	return in.Net.MarshalText()
+	return json.Marshal(in.String())
 }
 
 func (in *CIDR) UnmarshalJSON(b []byte) error {
-	return in.Net.UnmarshalText(b)
+	stringVal := string(b)
+	if stringVal == "null" {
+		return nil
+	}
+	if err := json.Unmarshal(b, &stringVal); err != nil {
+		return err
+	}
+	pIP, err := netaddr.ParseIPPrefix(stringVal)
+	if err != nil {
+		if strings.Contains(err.Error(), `no '/'`) {
+			fmt.Println(stringVal)
+		}
+		return err
+	}
+	in.Net = pIP
+	return nil
 }
 
 func (in *CIDR) MaskBits() byte {
-	return byte(in.Net.IP().BitLen())
+	return in.Net.IP().BitLen()
 }
 
 func (in *CIDR) MaskOnes() byte {
-	return byte(in.Net.Bits())
+	return in.Net.Bits()
 }
 
 func (in *CIDR) MaskZeroes() byte {
 	ones := in.Net.Bits()
 	bits := in.Net.IP().BitLen()
-	return byte(bits - ones)
+	return bits - ones
 }
 
 func (in *CIDR) AddressCapacity() *big.Int {
@@ -72,8 +89,8 @@ func (in *CIDR) Equal(cidr *CIDR) bool {
 	ourOnes := in.Net.Bits()
 	ourBits := in.Net.IP().BitLen()
 
-	theirOnes := in.Net.Bits()
-	theirBits := in.Net.IP().BitLen()
+	theirOnes := cidr.Net.Bits()
+	theirBits := cidr.Net.IP().BitLen()
 
 	return in.Net.IP().Compare(cidr.Net.IP()) == 0 &&
 		ourBits == theirBits &&
@@ -108,13 +125,13 @@ func (in *CIDR) IsRight() bool {
 }
 
 func (in *CIDR) Before(cidr *CIDR) bool {
-	firstIP, _ := in.ToAddressRange()
-	return firstIP.Compare(cidr.Net.IP()) > 0
+	_, lastIP := in.ToAddressRange()
+	return lastIP.Compare(cidr.Net.IP()) < 0
 }
 
 func (in *CIDR) After(cidr *CIDR) bool {
-	_, lastIP := in.ToAddressRange()
-	return lastIP.Compare(cidr.Net.IP()) < 0
+	_, lastIP := cidr.ToAddressRange()
+	return in.Net.IP().Compare(lastIP) > 0
 }
 
 func (in *CIDR) Join(cidr *CIDR) {
@@ -136,11 +153,23 @@ func (in *CIDR) Join(cidr *CIDR) {
 		joinIPBitLocalIdx = 8
 	}
 	joinIPIdx := uint8(ipLen) - joinIPBitGlobalIdx/8 - 1
-	ipBytes[joinIPIdx] = ipBytes[joinIPIdx] & (0xff << joinIPBitLocalIdx)
+	ipBytes[joinIPIdx] &= 0xff << joinIPBitLocalIdx
 
-	if err := in.Net.UnmarshalText(ipBytes); err != nil {
-		return
+	switch {
+	case in.Net.IP().Is4():
+		ip := netaddr.IPPrefixFrom(netaddr.IPv4(ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3]), ourOnes)
+		in.Net = ip
+		//if err := in.Net.UnmarshalText(ipBytes); err != nil {
+		//	return
+		//}
+	case in.Net.IP().Is6():
+		ip := netaddr.IPPrefixFrom(netaddr.IPFrom16([16]byte{ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3],
+			ipBytes[4],ipBytes[5],ipBytes[6],ipBytes[7], ipBytes[8],ipBytes[9],ipBytes[10],
+			ipBytes[11],ipBytes[12],ipBytes[13],ipBytes[14],ipBytes[15]}),
+			ourOnes)
+		in.Net = ip
 	}
+
 }
 
 func (in *CIDR) CanJoin(cidr *CIDR) bool {
@@ -164,10 +193,11 @@ func (in *CIDR) CanJoin(cidr *CIDR) bool {
 		otherIPBit := otherBitsDiff % 8
 		otherIP[otherIPIdx] = otherIP[otherIPIdx] ^ (1 << otherIPBit)
 
-		theirOnes := in.Net.Bits()
-		theirBits := in.Net.IP().BitLen()
+		theirOnes := cidr.Net.Bits()
+		theirBits := cidr.Net.IP().BitLen()
 
-		if cidr.Net.IP().Compare(netaddr.IPFrom4(otherIP)) == 0 &&
+		o := netaddr.IPPrefixFrom(netaddr.IPFrom4(otherIP), theirBits)
+		if cidr.Net.IP().Compare(o.IP()) == 0 &&
 			theirOnes == ourOnes &&
 			theirBits == ourBits {
 			return true
@@ -183,10 +213,11 @@ func (in *CIDR) CanJoin(cidr *CIDR) bool {
 		otherIPBit := otherBitsDiff % 8
 		otherIP[otherIPIdx] = otherIP[otherIPIdx] ^ (1 << otherIPBit)
 
-		theirOnes := in.Net.Bits()
-		theirBits := in.Net.IP().BitLen()
+		theirOnes := cidr.Net.Bits()
+		theirBits := cidr.Net.IP().BitLen()
 
-		if cidr.Net.IP().Compare(netaddr.IPFrom16(otherIP)) == 0 &&
+		o := netaddr.IPPrefixFrom(netaddr.IPFrom16(otherIP), theirBits)
+		if cidr.Net.IP().Compare(o.IP()) == 0 &&
 			theirOnes == ourOnes &&
 			theirBits == ourBits {
 			return true
@@ -333,7 +364,8 @@ func (in *CIDR) IPBytes() []byte {
 
 // DeepCopyInto is an deepcopy function, copying the receiver, writing into out. in must be non-nil.
 func (in *CIDR) DeepCopyInto(out *CIDR) {
-	if !in.Net.IP().IsZero() {
-		out.Net = in.Net
+	*out = *in
+	if in.Net.IP().String() != "" {
+		out.Net = *&in.Net
 	}
 }

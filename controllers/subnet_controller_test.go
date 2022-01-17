@@ -491,7 +491,7 @@ var _ = Describe("Subnet controller", func() {
 
 			By("Parent subnet is installed")
 			parentSubnetCidr, err := v1alpha1.CIDRFromString("10.0.0.0/8")
-			Expect(err).NotTo(HaveOccurred())
+			Expect(err).ShouldNot(HaveOccurred())
 			Expect(parentSubnetCidr).NotTo(BeNil())
 
 			testParentSubnet := v1alpha1.Subnet{
@@ -817,7 +817,7 @@ var _ = Describe("Subnet controller", func() {
 			By("Parent subnet is installed")
 			parentSubnetCidr, err := v1alpha1.CIDRFromString("10.0.0.0/8")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(parentSubnetCidr).NotTo(BeNil())
+			Expect(parentSubnetCidr.String()).NotTo(BeEmpty())
 
 			testParentSubnet := v1alpha1.Subnet{
 				ObjectMeta: v1.ObjectMeta{
@@ -841,7 +841,6 @@ var _ = Describe("Subnet controller", func() {
 					},
 				},
 			}
-
 			Expect(k8sClient.Create(ctx, &testParentSubnet)).To(Succeed())
 
 			createdParentSubnet := v1alpha1.Subnet{}

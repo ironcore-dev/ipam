@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/pkg/errors"
@@ -124,6 +125,7 @@ type SubnetStatus struct {
 // +kubebuilder:printcolumn:name="Consumer Name",type=string,JSONPath=`.spec.consumer.name`,description="Consumer Name"
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`,description="State"
 // +kubebuilder:printcolumn:name="Message",type=string,JSONPath=`.status.message`,description="Message"
+
 // Subnet is the Schema for the subnets API
 type Subnet struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -327,6 +329,7 @@ func (in *Subnet) Release(cidr *CIDR) error {
 				copy(in.Status.Vacant[idx+1:], in.Status.Vacant[idx:])
 				in.Status.Vacant[idx] = *cidr.DeepCopy()
 				insertIdx = idx
+				fmt.Println(in.Status.Vacant)
 				break
 			}
 		}

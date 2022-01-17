@@ -11,7 +11,7 @@ import (
 var _ = Describe("Subnet operations", func() {
 	cidrMustParse := func(s string) *CIDR {
 		cidr, err := CIDRFromString(s)
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).Should(BeNil())
 		return cidr
 	}
 

@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"encoding/json"
 	"inet.af/netaddr"
 )
 
@@ -18,11 +19,24 @@ type IPAddr struct {
 }
 
 func (in IPAddr) MarshalJSON() ([]byte, error) {
-	return in.Net.MarshalBinary()
+	return json.Marshal(in.String())
+	//return in.Net.MarshalBinary()
 }
 
 func (in *IPAddr) UnmarshalJSON(b []byte) error {
-	return in.Net.UnmarshalText(b)
+	stringVal := string(b)
+	if stringVal == "null" {
+		return nil
+	}
+	if err := json.Unmarshal(b, &stringVal); err != nil {
+		return err
+	}
+	pIP, err := netaddr.ParseIP(stringVal)
+	if err != nil {
+		return err
+	}
+	in.Net = pIP
+	return nil
 }
 
 func (in *IPAddr) String() string {
