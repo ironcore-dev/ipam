@@ -187,7 +187,7 @@ func (in *Subnet) ValidateDelete() error {
 	}
 	ctx := context.Background()
 
-	if err := ipWebhookClient.Get(ctx, namespacedName, unstruct); !apierrors.IsNotFound(err) {
+	if err := subnetWebhookClient.Get(ctx, namespacedName, unstruct); !apierrors.IsNotFound(err) {
 		var allErrs field.ErrorList
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), in.Spec.Consumer, "Consumer is not deleted"))
 		return apierrors.NewInvalid(gvk.GroupKind(), in.Name, allErrs)
