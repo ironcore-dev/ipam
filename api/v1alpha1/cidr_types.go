@@ -2,10 +2,8 @@ package v1alpha1
 
 import (
 	"encoding/json"
-	"fmt"
 	"inet.af/netaddr"
 	"math/big"
-	"strings"
 )
 
 // +kubebuilder:validation:Type=string
@@ -41,9 +39,6 @@ func (in *CIDR) UnmarshalJSON(b []byte) error {
 	}
 	pIP, err := netaddr.ParseIPPrefix(stringVal)
 	if err != nil {
-		if strings.Contains(err.Error(), `no '/'`) {
-			fmt.Println(stringVal)
-		}
 		return err
 	}
 	in.Net = pIP
@@ -91,19 +86,12 @@ func (in *CIDR) Equal(cidr *CIDR) bool {
 
 	theirOnes := cidr.Net.Bits()
 	theirBits := cidr.Net.IP().BitLen()
-
-	return in.Net.IP().Compare(cidr.Net.IP()) == 0 &&
+	firstOurIP, _ := in.ToAddressRange()
+	firstTheirIP, _ := cidr.ToAddressRange()
+	//return in.Net.IP().Compare(cidr.Net.IP()) == 0 &&
+	return firstOurIP.Compare(firstTheirIP) == 0 &&
 		ourBits == theirBits &&
 		ourOnes == theirOnes
-}
-
-func (in *CIDR) isLeft(ones, bits uint8) bool {
-	ipBytes := in.IPBytes()
-	ipLen := len(ipBytes)
-	bitsDiff := bits - ones
-	ipIdx := uint8(ipLen) - bitsDiff/8 - 1
-	ipBit := bitsDiff % 8
-	return ipBytes[ipIdx]&(1<<ipBit) == 0
 }
 
 func (in *CIDR) IsLeft() bool {
@@ -113,6 +101,26 @@ func (in *CIDR) IsLeft() bool {
 		return false
 	}
 	return in.isLeft(ones, bits)
+}
+
+func (in *CIDR) isLeft(ones, bits uint8) bool {
+	switch {
+	case in.Net.IP().Is4():
+		ipBytes := in.Net.IP().As4()
+		ipLen := len(ipBytes)
+		bitsDiff := bits - ones
+		ipIdx := uint8(ipLen) - bitsDiff/8 - 1
+		ipBit := bitsDiff % 8
+		return ipBytes[ipIdx]&(1<<ipBit) == 0
+	case in.Net.IP().Is6():
+		ipBytes := in.Net.IP().As16()
+		ipLen := len(ipBytes)
+		bitsDiff := bits - ones
+		ipIdx := uint8(ipLen) - bitsDiff/8 - 1
+		ipBit := bitsDiff % 8
+		return ipBytes[ipIdx]&(1<<ipBit) == 0
+	}
+	return false
 }
 
 func (in *CIDR) IsRight() bool {
@@ -138,10 +146,6 @@ func (in *CIDR) Join(cidr *CIDR) {
 	if !in.CanJoin(cidr) {
 		return
 	}
-
-	ipBytes := in.IPBytes()
-	ipLen := len(ipBytes)
-
 	ourOnes := in.Net.Bits()
 	ourBits := in.Net.IP().BitLen()
 
@@ -152,69 +156,73 @@ func (in *CIDR) Join(cidr *CIDR) {
 	if joinIPBitLocalIdx == 0 {
 		joinIPBitLocalIdx = 8
 	}
-	joinIPIdx := uint8(ipLen) - joinIPBitGlobalIdx/8 - 1
-	ipBytes[joinIPIdx] &= 0xff << joinIPBitLocalIdx
 
 	switch {
 	case in.Net.IP().Is4():
-		ip := netaddr.IPPrefixFrom(netaddr.IPv4(ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3]), ourOnes)
+		firstIP, _ := in.ToAddressRange()
+		ipBytes := firstIP.As4()
+		ipLen := len(ipBytes)
+
+		joinIPIdx := uint8(ipLen) - joinIPBitGlobalIdx/8 - 1
+		ipBytes[joinIPIdx] &= 0xff << joinIPBitLocalIdx
+
+		ip := netaddr.IPPrefixFrom(netaddr.IPv4(ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3]), joinOnes)
 		in.Net = ip
-		//if err := in.Net.UnmarshalText(ipBytes); err != nil {
-		//	return
-		//}
 	case in.Net.IP().Is6():
+		firstIP, _ := in.ToAddressRange()
+		ipBytes := firstIP.As16()
+		ipLen := len(ipBytes)
+
+		joinIPIdx := uint8(ipLen) - joinIPBitGlobalIdx/8 - 1
+		ipBytes[joinIPIdx] &= 0xff << joinIPBitLocalIdx
 		ip := netaddr.IPPrefixFrom(netaddr.IPFrom16([16]byte{ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3],
-			ipBytes[4],ipBytes[5],ipBytes[6],ipBytes[7], ipBytes[8],ipBytes[9],ipBytes[10],
-			ipBytes[11],ipBytes[12],ipBytes[13],ipBytes[14],ipBytes[15]}),
-			ourOnes)
+			ipBytes[4], ipBytes[5], ipBytes[6], ipBytes[7], ipBytes[8], ipBytes[9], ipBytes[10],
+			ipBytes[11], ipBytes[12], ipBytes[13], ipBytes[14], ipBytes[15]}),
+			joinOnes)
 		in.Net = ip
 	}
-
 }
 
 func (in *CIDR) CanJoin(cidr *CIDR) bool {
 	ourOnes := in.Net.Bits()
 	ourBits := in.Net.IP().BitLen()
 
+	theirOnes := cidr.Net.Bits()
+	theirBits := cidr.Net.IP().BitLen()
+
 	ourBitsDiff := ourBits - ourOnes
 	if ourBitsDiff == ourBits {
 		return false
 	}
+	otherBitsDiff := ourBitsDiff
 
 	switch {
 	case in.Net.IP().Is4():
-		ourIp := in.Net.IP().As4()
-		ipLen := uint8(len(ourIp))
-		var otherIP [4]byte
-		otherIP = ourIp
+		firstOtherIP, _ := in.ToAddressRange()
+		otherIP := firstOtherIP.As4()
 
-		otherBitsDiff := ourBitsDiff
+		firstTheirIP, _ := cidr.ToAddressRange()
+
+		ipLen := uint8(len(otherIP))
+
 		otherIPIdx := ipLen - otherBitsDiff/8 - 1
 		otherIPBit := otherBitsDiff % 8
 		otherIP[otherIPIdx] = otherIP[otherIPIdx] ^ (1 << otherIPBit)
 
-		theirOnes := cidr.Net.Bits()
-		theirBits := cidr.Net.IP().BitLen()
-
-		o := netaddr.IPPrefixFrom(netaddr.IPFrom4(otherIP), theirBits)
-		if cidr.Net.IP().Compare(o.IP()) == 0 &&
+		//if cidr.Net.IP().Compare(o.IP()) == 0 &&
+		if firstTheirIP.Compare(netaddr.IPFrom4(otherIP)) == 0 &&
 			theirOnes == ourOnes &&
 			theirBits == ourBits {
 			return true
 		}
 	case in.Net.IP().Is6():
-		ourIp := in.Net.IP().As16()
-		ipLen := uint8(len(ourIp))
-		var otherIP [16]byte
-		otherIP = ourIp
+		firstOtherIP, _ := in.ToAddressRange()
+		otherIP := firstOtherIP.As16()
+		ipLen := uint8(len(otherIP))
 
-		otherBitsDiff := ourBitsDiff
 		otherIPIdx := ipLen - otherBitsDiff/8 - 1
 		otherIPBit := otherBitsDiff % 8
 		otherIP[otherIPIdx] = otherIP[otherIPIdx] ^ (1 << otherIPBit)
-
-		theirOnes := cidr.Net.Bits()
-		theirBits := cidr.Net.IP().BitLen()
 
 		o := netaddr.IPPrefixFrom(netaddr.IPFrom16(otherIP), theirBits)
 		if cidr.Net.IP().Compare(o.IP()) == 0 &&
@@ -358,14 +366,10 @@ func (in *CIDR) AsIPAddr() *IPAddr {
 	}
 }
 
-func (in *CIDR) IPBytes() []byte {
-	return []byte(in.Net.IP().String())
-}
-
 // DeepCopyInto is an deepcopy function, copying the receiver, writing into out. in must be non-nil.
 func (in *CIDR) DeepCopyInto(out *CIDR) {
 	*out = *in
 	if in.Net.IP().String() != "" {
-		out.Net = *&in.Net
+		out.Net = in.Net
 	}
 }

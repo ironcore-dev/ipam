@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/pkg/errors"
@@ -214,7 +213,7 @@ func (in *Subnet) ProposeForCapacity(capacity *resource.Quantity) (*CIDR, error)
 
 func (in *Subnet) ProposeForBits(prefixBits byte) (*CIDR, error) {
 	if prefixBits > in.Status.Reserved.MaskBits() {
-		return nil, errors.New("prefix bit count is bigger than bit coint in IP")
+		return nil, errors.New("prefix bit count is bigger than bit count in IP")
 	}
 
 	var candidateOnes byte
@@ -239,10 +238,8 @@ func (in *Subnet) ProposeForBits(prefixBits byte) (*CIDR, error) {
 	}
 
 	firstIP, _ := candidateCidr.ToAddressRange()
-	cidrBits := candidateCidr.MaskBits()
 
-	ipNet := netaddr.IPPrefixFrom(firstIP, uint8(cidrBits))
-
+	ipNet := netaddr.IPPrefixFrom(firstIP, prefixBits)
 	return CIDRFromNet(ipNet), nil
 }
 
@@ -329,7 +326,6 @@ func (in *Subnet) Release(cidr *CIDR) error {
 				copy(in.Status.Vacant[idx+1:], in.Status.Vacant[idx:])
 				in.Status.Vacant[idx] = *cidr.DeepCopy()
 				insertIdx = idx
-				fmt.Println(in.Status.Vacant)
 				break
 			}
 		}
@@ -356,7 +352,6 @@ func (in *Subnet) Release(cidr *CIDR) error {
 			in.Status.Vacant[insertIdx].CanJoin(&in.Status.Vacant[potentialJoinIdx]) {
 			in.Status.Vacant[insertIdx].Join(&in.Status.Vacant[potentialJoinIdx])
 			in.Status.Vacant = append(in.Status.Vacant[:potentialJoinIdx], in.Status.Vacant[potentialJoinIdx+1:]...)
-
 			if insertIdx > potentialJoinIdx {
 				insertIdx = insertIdx - 1
 			}

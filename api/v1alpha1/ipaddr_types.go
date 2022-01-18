@@ -20,7 +20,6 @@ type IPAddr struct {
 
 func (in IPAddr) MarshalJSON() ([]byte, error) {
 	return json.Marshal(in.String())
-	//return in.Net.MarshalBinary()
 }
 
 func (in *IPAddr) UnmarshalJSON(b []byte) error {

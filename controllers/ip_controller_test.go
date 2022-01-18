@@ -205,7 +205,7 @@ var _ = Describe("IP controller", func() {
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, ipNamespacedName, createdIP)
-				if !apierrors.IsNotFound(err)  {
+				if !apierrors.IsNotFound(err) {
 					return false
 				}
 				return true

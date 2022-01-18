@@ -38,7 +38,7 @@ import (
 
 // log is for logging in this package.
 var subnetlog = logf.Log.WithName("subnet-resource")
-var subnetWebhookClient client.Client
+var subnetWebhookClient client.Client //nolint:unused //reason: false-positive
 
 func (in *Subnet) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	subnetWebhookClient = mgr.GetClient()

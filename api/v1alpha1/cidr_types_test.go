@@ -2,7 +2,6 @@ package v1alpha1
 
 import (
 	"fmt"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"inet.af/netaddr"
@@ -91,35 +90,23 @@ var _ = Describe("CIDR operations", func() {
 				expectedJSON string
 			}{
 				{
-					cidr: CIDRFromNet(netaddr.IPPrefixFrom(
-						netaddr.IPv4(192, 168, 1, 0), 24)),
-					// cidr: CIDRFromNet(netaddr.IPPrefix{
-					// IP: []byte{192, 168, 1, 0},
-					// Mask: []byte{255, 255, 255, 0},
-					// }),
+					cidr: CIDRFromNet(netaddr.IPPrefixFrom(netaddr.IPv4(192, 168, 1, 0), 24)),
 					expectedJSON: `"192.168.1.0/24"`,
 				},
-				// {
-				// 	cidr: CIDRFromNet(&net.IPNet{
-				// 		IP:   []byte{0, 0, 0, 0},
-				// 		Mask: []byte{0, 0, 0, 0},
-				// 	}),
-				// 	expectedJSON: `"0.0.0.0/0"`,
-				// },
-				// {
-				// 	cidr: CIDRFromNet(&net.IPNet{
-				// 		IP:   []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-				// 		Mask: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-				// 	}),
-				// 	expectedJSON: `"::/0"`,
-				// },
-				// {
-				// 	cidr: CIDRFromNet(&net.IPNet{
-				// 		IP:   []byte{0x20, 0x1, 0xd, 0xb8, 0x12, 0x34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-				// 		Mask: []byte{255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-				// 	}),
-				// 	expectedJSON: `"2001:db8:1234::/48"`,
-				// },
+				{
+					cidr: CIDRFromNet(netaddr.IPPrefixFrom(netaddr.IPv4(0, 0, 0, 0), 0)),
+					expectedJSON: `"0.0.0.0/0"`,
+				},
+				{
+					cidr: CIDRFromNet(netaddr.IPPrefixFrom(
+						netaddr.IPFrom16([16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), 0)),
+					expectedJSON: `"::/0"`,
+				},
+				{
+					cidr: CIDRFromNet(netaddr.IPPrefixFrom(
+						netaddr.IPFrom16([16]byte{0x20, 0x1, 0xd, 0xb8, 0x12, 0x34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), 48)),
+					expectedJSON: `"2001:db8:1234::/48"`,
+				},
 			}
 
 			for i, testCase := range testCases {
