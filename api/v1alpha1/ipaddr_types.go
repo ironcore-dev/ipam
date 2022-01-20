@@ -58,7 +58,6 @@ func (in *IPAddr) AsCidr() *CIDR {
 
 // DeepCopyInto is a deepcopy function, copying the receiver, writing into out. in must be non-nil.
 func (in *IPAddr) DeepCopyInto(out *IPAddr) {
-	*out = *in
 	if in != nil {
 		out.Net = in.Net
 	}
