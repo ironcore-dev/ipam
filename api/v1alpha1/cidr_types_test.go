@@ -23,42 +23,42 @@ var _ = Describe("CIDR operations", func() {
 				lastIP   string
 			}{
 				{
-					cidrJSON: "192.168.1.1/24",
+					cidrJSON: `"192.168.1.1/24"`,
 					firstIP:  "192.168.1.0",
 					lastIP:   "192.168.1.255",
 				},
 				{
-					cidrJSON: "192.168.1.7/30",
+					cidrJSON: `"192.168.1.7/30"`,
 					firstIP:  "192.168.1.4",
 					lastIP:   "192.168.1.7",
 				},
 				{
-					cidrJSON: "8.8.8.8/32",
+					cidrJSON: `"8.8.8.8/32"`,
 					firstIP:  "8.8.8.8",
 					lastIP:   "8.8.8.8",
 				},
 				{
-					cidrJSON: "0.0.0.0/0",
+					cidrJSON: `"0.0.0.0/0"`,
 					firstIP:  "0.0.0.0",
 					lastIP:   "255.255.255.255",
 				},
 				{
-					cidrJSON: "0.0.0.0/1",
+					cidrJSON: `"0.0.0.0/1"`,
 					firstIP:  "0.0.0.0",
 					lastIP:   "127.255.255.255",
 				},
 				{
-					cidrJSON: "::/0",
+					cidrJSON: `"::/0"`,
 					firstIP:  "::",
 					lastIP:   "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
 				},
 				{
-					cidrJSON: "2001:db8:1234::/48",
+					cidrJSON: `"2001:db8:1234::/48"`,
 					firstIP:  "2001:db8:1234:0000:0000:0000:0000:0000",
 					lastIP:   "2001:db8:1234:ffff:ffff:ffff:ffff:ffff",
 				},
 				{
-					cidrJSON: "2001:db8:1234::1/128",
+					cidrJSON: `"2001:db8:1234::1/128"`,
 					firstIP:  "2001:db8:1234:0000:0000:0000:0000:0001",
 					lastIP:   "2001:db8:1234:0000:0000:0000:0000:0001",
 				},
@@ -66,9 +66,8 @@ var _ = Describe("CIDR operations", func() {
 
 			for i, testCase := range testCases {
 				By(fmt.Sprintf("Deserializing CIDR string %d", i))
-				cidr, err := CIDRFromString(testCase.cidrJSON)
-				Expect(err).Should(BeNil())
-				//Expect(json.Unmarshal([]byte(testCase.cidrJSON), &cidr)).To(Succeed())
+				cidr := CIDR{}
+				Expect(json.Unmarshal([]byte(testCase.cidrJSON), &cidr)).To(Succeed())
 
 				By(fmt.Sprintf("Comparing to expected address range %d", i))
 				first, last := cidr.ToAddressRange()
@@ -90,11 +89,11 @@ var _ = Describe("CIDR operations", func() {
 				expectedJSON string
 			}{
 				{
-					cidr: CIDRFromNet(netaddr.IPPrefixFrom(netaddr.IPv4(192, 168, 1, 0), 24)),
+					cidr:         CIDRFromNet(netaddr.IPPrefixFrom(netaddr.IPv4(192, 168, 1, 0), 24)),
 					expectedJSON: `"192.168.1.0/24"`,
 				},
 				{
-					cidr: CIDRFromNet(netaddr.IPPrefixFrom(netaddr.IPv4(0, 0, 0, 0), 0)),
+					cidr:         CIDRFromNet(netaddr.IPPrefixFrom(netaddr.IPv4(0, 0, 0, 0), 0)),
 					expectedJSON: `"0.0.0.0/0"`,
 				},
 				{

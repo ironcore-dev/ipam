@@ -817,7 +817,7 @@ var _ = Describe("Subnet controller", func() {
 			By("Parent subnet is installed")
 			parentSubnetCidr, err := v1alpha1.CIDRFromString("10.0.0.0/8")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(parentSubnetCidr.String()).NotTo(BeEmpty())
+			Expect(parentSubnetCidr).NotTo(BeNil())
 
 			testParentSubnet := v1alpha1.Subnet{
 				ObjectMeta: v1.ObjectMeta{

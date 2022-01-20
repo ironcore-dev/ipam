@@ -88,7 +88,7 @@ func (in *CIDR) Equal(cidr *CIDR) bool {
 	theirBits := cidr.Net.IP().BitLen()
 	firstOurIP, _ := in.ToAddressRange()
 	firstTheirIP, _ := cidr.ToAddressRange()
-	//return in.Net.IP().Compare(cidr.Net.IP()) == 0 &&
+
 	return firstOurIP.Compare(firstTheirIP) == 0 &&
 		ourBits == theirBits &&
 		ourOnes == theirOnes
@@ -104,23 +104,19 @@ func (in *CIDR) IsLeft() bool {
 }
 
 func (in *CIDR) isLeft(ones, bits uint8) bool {
-	switch {
-	case in.Net.IP().Is4():
-		ipBytes := in.Net.IP().As4()
-		ipLen := len(ipBytes)
-		bitsDiff := bits - ones
-		ipIdx := uint8(ipLen) - bitsDiff/8 - 1
-		ipBit := bitsDiff % 8
-		return ipBytes[ipIdx]&(1<<ipBit) == 0
-	case in.Net.IP().Is6():
-		ipBytes := in.Net.IP().As16()
-		ipLen := len(ipBytes)
-		bitsDiff := bits - ones
-		ipIdx := uint8(ipLen) - bitsDiff/8 - 1
-		ipBit := bitsDiff % 8
-		return ipBytes[ipIdx]&(1<<ipBit) == 0
+	var ipBytes []byte
+	if in.Net.IP().Is4() {
+		ipv4 := in.Net.IP().As4()
+		ipBytes = ipv4[:]
+	} else {
+		ipv6 := in.Net.IP().As16()
+		ipBytes = ipv6[:]
 	}
-	return false
+	ipLen := len(ipBytes)
+	bitsDiff := bits - ones
+	ipIdx := uint8(ipLen) - bitsDiff/8 - 1
+	ipBit := bitsDiff % 8
+	return ipBytes[ipIdx]&(1<<ipBit) == 0
 }
 
 func (in *CIDR) IsRight() bool {
@@ -134,12 +130,14 @@ func (in *CIDR) IsRight() bool {
 
 func (in *CIDR) Before(cidr *CIDR) bool {
 	_, lastIP := in.ToAddressRange()
-	return lastIP.Compare(cidr.Net.IP()) < 0
+	firstOtherIP, _ := cidr.ToAddressRange()
+	return lastIP.Compare(firstOtherIP) < 0
 }
 
 func (in *CIDR) After(cidr *CIDR) bool {
+	ourFirstIP, _ := in.ToAddressRange()
 	_, lastIP := cidr.ToAddressRange()
-	return in.Net.IP().Compare(lastIP) > 0
+	return ourFirstIP.Compare(lastIP) > 0
 }
 
 func (in *CIDR) Join(cidr *CIDR) {
@@ -157,30 +155,30 @@ func (in *CIDR) Join(cidr *CIDR) {
 		joinIPBitLocalIdx = 8
 	}
 
-	switch {
-	case in.Net.IP().Is4():
-		firstIP, _ := in.ToAddressRange()
-		ipBytes := firstIP.As4()
-		ipLen := len(ipBytes)
+	var ipBytes []byte
+	firstOtherIP, _ := in.ToAddressRange()
 
-		joinIPIdx := uint8(ipLen) - joinIPBitGlobalIdx/8 - 1
-		ipBytes[joinIPIdx] &= 0xff << joinIPBitLocalIdx
-
-		ip := netaddr.IPPrefixFrom(netaddr.IPv4(ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3]), joinOnes)
-		in.Net = ip
-	case in.Net.IP().Is6():
-		firstIP, _ := in.ToAddressRange()
-		ipBytes := firstIP.As16()
-		ipLen := len(ipBytes)
-
-		joinIPIdx := uint8(ipLen) - joinIPBitGlobalIdx/8 - 1
-		ipBytes[joinIPIdx] &= 0xff << joinIPBitLocalIdx
-		ip := netaddr.IPPrefixFrom(netaddr.IPFrom16([16]byte{ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3],
-			ipBytes[4], ipBytes[5], ipBytes[6], ipBytes[7], ipBytes[8], ipBytes[9], ipBytes[10],
-			ipBytes[11], ipBytes[12], ipBytes[13], ipBytes[14], ipBytes[15]}),
-			joinOnes)
-		in.Net = ip
+	if in.IsIPv4() {
+		ipv4 := firstOtherIP.As4()
+		ipBytes = ipv4[:]
+	} else {
+		ipv6 := firstOtherIP.As16()
+		ipBytes = ipv6[:]
 	}
+	ipLen := len(ipBytes)
+
+	joinIPIdx := uint8(ipLen) - joinIPBitGlobalIdx/8 - 1
+	ipBytes[joinIPIdx] &= 0xff << joinIPBitLocalIdx
+
+	if in.IsIPv6() {
+		ipv6 := (*[16]byte)(ipBytes)
+		ip := netaddr.IPPrefixFrom(netaddr.IPFrom16(*ipv6), joinOnes)
+		in.Net = ip
+		return
+	}
+	ipv4 := (*[4]byte)(ipBytes)
+	ip := netaddr.IPPrefixFrom(netaddr.IPFrom4(*ipv4), joinOnes)
+	in.Net = ip
 }
 
 func (in *CIDR) CanJoin(cidr *CIDR) bool {
@@ -196,40 +194,38 @@ func (in *CIDR) CanJoin(cidr *CIDR) bool {
 	}
 	otherBitsDiff := ourBitsDiff
 
-	switch {
-	case in.Net.IP().Is4():
-		firstOtherIP, _ := in.ToAddressRange()
-		otherIP := firstOtherIP.As4()
+	var otherIPAddr netaddr.IP
+	var otherIP []byte
+	firstOtherIP, _ := in.ToAddressRange()
+	firstTheirIP, _ := cidr.ToAddressRange()
 
-		firstTheirIP, _ := cidr.ToAddressRange()
+	isIPv6 := in.IsIPv6()
 
-		ipLen := uint8(len(otherIP))
+	if isIPv6 {
+		ipv6 := firstOtherIP.As16()
+		otherIP = ipv6[:]
+	} else {
+		ipv4 := firstOtherIP.As4()
+		otherIP = ipv4[:]
+	}
 
-		otherIPIdx := ipLen - otherBitsDiff/8 - 1
-		otherIPBit := otherBitsDiff % 8
-		otherIP[otherIPIdx] = otherIP[otherIPIdx] ^ (1 << otherIPBit)
+	ipLen := uint8(len(otherIP))
+	otherIPIdx := ipLen - otherBitsDiff/8 - 1
+	otherIPBit := otherBitsDiff % 8
+	otherIP[otherIPIdx] = otherIP[otherIPIdx] ^ (1 << otherIPBit)
 
-		//if cidr.Net.IP().Compare(o.IP()) == 0 &&
-		if firstTheirIP.Compare(netaddr.IPFrom4(otherIP)) == 0 &&
-			theirOnes == ourOnes &&
-			theirBits == ourBits {
-			return true
-		}
-	case in.Net.IP().Is6():
-		firstOtherIP, _ := in.ToAddressRange()
-		otherIP := firstOtherIP.As16()
-		ipLen := uint8(len(otherIP))
+	if isIPv6 {
+		ipv6 := (*[16]byte)(otherIP)
+		otherIPAddr = netaddr.IPFrom16(*ipv6)
+	} else {
+		ipv4 := (*[4]byte)(otherIP)
+		otherIPAddr = netaddr.IPFrom4(*ipv4)
+	}
 
-		otherIPIdx := ipLen - otherBitsDiff/8 - 1
-		otherIPBit := otherBitsDiff % 8
-		otherIP[otherIPIdx] = otherIP[otherIPIdx] ^ (1 << otherIPBit)
-
-		o := netaddr.IPPrefixFrom(netaddr.IPFrom16(otherIP), theirBits)
-		if cidr.Net.IP().Compare(o.IP()) == 0 &&
-			theirOnes == ourOnes &&
-			theirBits == ourBits {
-			return true
-		}
+	if firstTheirIP.Compare(otherIPAddr) == 0 &&
+		theirOnes == ourOnes &&
+		theirBits == ourBits {
+		return true
 	}
 	return false
 }
@@ -261,62 +257,57 @@ func (in *CIDR) Reserve(cidr *CIDR) []CIDR {
 	leftInsertIdx := 0
 	rightInsertIdx := int(onesDiff) - 1
 	splitOnes := ourOnes + 1
-	switch {
-	case in.IsIPv4():
-		currentIP := in.Net.Masked().IP().As4()
-		ipLen := uint8(len(currentIP))
-		for leftInsertIdx <= rightInsertIdx {
-			leftIP := currentIP
-			rightIP := currentIP
 
-			prevBitsDiff := ourBits - splitOnes
-			rightIPIdx := ipLen - prevBitsDiff/8 - 1
-			rightIPBit := prevBitsDiff % 8
-			rightIP[rightIPIdx] = rightIP[rightIPIdx] | (1 << rightIPBit)
-
-			leftNet := netaddr.IPPrefixFrom(netaddr.IPFrom4(leftIP), splitOnes)
-			rightNet := netaddr.IPPrefixFrom(netaddr.IPFrom4(rightIP), splitOnes)
-
-			if leftNet.Contains(cidr.Net.IP()) {
-				nets[rightInsertIdx] = *CIDRFromNet(rightNet)
-				rightInsertIdx = rightInsertIdx - 1
-				currentIP = leftIP
-			} else {
-				nets[leftInsertIdx] = *CIDRFromNet(leftNet)
-				leftInsertIdx = leftInsertIdx + 1
-				currentIP = rightIP
-			}
-
-			splitOnes = splitOnes + 1
-		}
-	case in.IsIPv6():
-		currentIP := in.Net.Masked().IP().As16()
-		ipLen := uint8(len(currentIP))
-		for leftInsertIdx <= rightInsertIdx {
-			leftIP := currentIP
-			rightIP := currentIP
-
-			prevBitsDiff := ourBits - splitOnes
-			rightIPIdx := ipLen - prevBitsDiff/8 - 1
-			rightIPBit := prevBitsDiff % 8
-			rightIP[rightIPIdx] = rightIP[rightIPIdx] | (1 << rightIPBit)
-
-			leftNet := netaddr.IPPrefixFrom(netaddr.IPFrom16(leftIP), splitOnes)
-			rightNet := netaddr.IPPrefixFrom(netaddr.IPFrom16(rightIP), splitOnes)
-
-			if leftNet.Contains(cidr.Net.IP()) {
-				nets[rightInsertIdx] = *CIDRFromNet(rightNet)
-				rightInsertIdx = rightInsertIdx - 1
-				currentIP = leftIP
-			} else {
-				nets[leftInsertIdx] = *CIDRFromNet(leftNet)
-				leftInsertIdx = leftInsertIdx + 1
-				currentIP = rightIP
-			}
-
-			splitOnes = splitOnes + 1
-		}
+	isIPv6 := in.IsIPv6()
+	var currentIP []byte
+	theirFirstIP, _ := cidr.ToAddressRange()
+	if isIPv6 {
+		ipv6 := in.Net.IP().As16()
+		currentIP = ipv6[:]
+	} else {
+		firstIP, _ := in.ToAddressRange()
+		ipv4 := firstIP.As4()
+		currentIP = ipv4[:]
 	}
+	ipLen := uint8(len(currentIP))
+
+	for leftInsertIdx <= rightInsertIdx {
+		leftIP := make([]byte, ipLen)
+		copy(leftIP, currentIP)
+		rightIP := make([]byte, ipLen)
+		copy(rightIP, currentIP)
+
+		prevBitsDiff := ourBits - splitOnes
+		rightIPIdx := ipLen - prevBitsDiff/8 - 1
+		rightIPBit := prevBitsDiff % 8
+		rightIP[rightIPIdx] = rightIP[rightIPIdx] | (1 << rightIPBit)
+
+		var leftNet, rightNet netaddr.IPPrefix
+		if isIPv6 {
+			leftIpv6Bytes := (*[16]byte)(leftIP)
+			rightIpv6Bytes := (*[16]byte)(rightIP)
+			leftNet = netaddr.IPPrefixFrom(netaddr.IPFrom16(*leftIpv6Bytes), splitOnes)
+			rightNet = netaddr.IPPrefixFrom(netaddr.IPFrom16(*rightIpv6Bytes), splitOnes)
+		} else {
+			leftIpv4Bytes := (*[4]byte)(leftIP)
+			rightIpv4Bytes := (*[4]byte)(rightIP)
+			leftNet = netaddr.IPPrefixFrom(netaddr.IPFrom4(*leftIpv4Bytes), splitOnes)
+			rightNet = netaddr.IPPrefixFrom(netaddr.IPFrom4(*rightIpv4Bytes), splitOnes)
+		}
+
+		if leftNet.Contains(theirFirstIP) {
+			nets[rightInsertIdx] = *CIDRFromNet(rightNet)
+			rightInsertIdx = rightInsertIdx - 1
+			currentIP = leftIP
+		} else {
+			nets[leftInsertIdx] = *CIDRFromNet(leftNet)
+			leftInsertIdx = leftInsertIdx + 1
+			currentIP = rightIP
+		}
+
+		splitOnes = splitOnes + 1
+	}
+
 	return nets
 }
 
