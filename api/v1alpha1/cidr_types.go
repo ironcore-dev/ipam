@@ -2,8 +2,9 @@ package v1alpha1
 
 import (
 	"encoding/json"
-	"inet.af/netaddr"
 	"math/big"
+
+	"inet.af/netaddr"
 )
 
 // +kubebuilder:validation:Type=string
@@ -327,12 +328,15 @@ func (in *CIDR) CanReserve(cidr *CIDR) bool {
 		return false
 	}
 
-	if ourOnes == theirOnes {
-		return in.Net.Contains(cidr.Net.IP())
-	}
+	ourFirstIP, _ := in.ToAddressRange()
+	theirFirstIP, _ := cidr.ToAddressRange()
 
 	// If capacities are equal, then net IPs should be also equal
 	// Otherwise networks are not the same
+	if ourOnes == theirOnes {
+		return ourFirstIP == theirFirstIP
+	}
+
 	if !in.Net.Contains(cidr.Net.IP()) {
 		return false
 	}
