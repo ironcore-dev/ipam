@@ -18,9 +18,9 @@ package v1alpha1
 
 import (
 	"math/big"
-	"net"
 
 	"github.com/pkg/errors"
+	"inet.af/netaddr"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -124,6 +124,7 @@ type SubnetStatus struct {
 // +kubebuilder:printcolumn:name="Consumer Name",type=string,JSONPath=`.spec.consumer.name`,description="Consumer Name"
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`,description="State"
 // +kubebuilder:printcolumn:name="Message",type=string,JSONPath=`.status.message`,description="Message"
+
 // Subnet is the Schema for the subnets API
 type Subnet struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -212,7 +213,7 @@ func (in *Subnet) ProposeForCapacity(capacity *resource.Quantity) (*CIDR, error)
 
 func (in *Subnet) ProposeForBits(prefixBits byte) (*CIDR, error) {
 	if prefixBits > in.Status.Reserved.MaskBits() {
-		return nil, errors.New("prefix bit count is bigger than bit coint in IP")
+		return nil, errors.New("prefix bit count is bigger than bit count in IP")
 	}
 
 	var candidateOnes byte
@@ -237,13 +238,8 @@ func (in *Subnet) ProposeForBits(prefixBits byte) (*CIDR, error) {
 	}
 
 	firstIP, _ := candidateCidr.ToAddressRange()
-	cidrBits := candidateCidr.MaskBits()
 
-	ipNet := &net.IPNet{
-		IP:   firstIP,
-		Mask: net.CIDRMask(int(prefixBits), int(cidrBits)),
-	}
-
+	ipNet := netaddr.IPPrefixFrom(firstIP, prefixBits)
 	return CIDRFromNet(ipNet), nil
 }
 
@@ -284,12 +280,33 @@ func (in *Subnet) Reserve(cidr *CIDR) error {
 
 // CanReserve checks if it is possible to reserve CIDR
 func (in *Subnet) CanReserve(cidr *CIDR) bool {
-	for _, vacantCidr := range in.Status.Vacant {
-		if vacantCidr.CanReserve(cidr) {
+	//for _, vacantCidr := range in.Status.Vacant {
+	//	if vacantCidr.CanReserve(cidr) {
+	//		return true
+	//	}
+	//}
+	l := len(in.Status.Vacant)
+	if l == 0 {
+		return false
+	}
+	start := 0
+	mid := l / 2
+	end := l - 1
+	for start <= end {
+		value := in.Status.Vacant[mid]
+
+		if value.CanReserve(cidr) {
 			return true
 		}
-	}
 
+		if cidr.IsLeft() {
+			end = mid - 1
+			mid = (start + end) / 2
+			continue
+		}
+		start = mid + 1
+		mid = (start + end) / 2
+	}
 	return false
 }
 
@@ -356,7 +373,6 @@ func (in *Subnet) Release(cidr *CIDR) error {
 			in.Status.Vacant[insertIdx].CanJoin(&in.Status.Vacant[potentialJoinIdx]) {
 			in.Status.Vacant[insertIdx].Join(&in.Status.Vacant[potentialJoinIdx])
 			in.Status.Vacant = append(in.Status.Vacant[:potentialJoinIdx], in.Status.Vacant[potentialJoinIdx+1:]...)
-
 			if insertIdx > potentialJoinIdx {
 				insertIdx = insertIdx - 1
 			}

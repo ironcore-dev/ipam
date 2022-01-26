@@ -841,7 +841,6 @@ var _ = Describe("Subnet controller", func() {
 					},
 				},
 			}
-
 			Expect(k8sClient.Create(ctx, &testParentSubnet)).To(Succeed())
 
 			createdParentSubnet := v1alpha1.Subnet{}

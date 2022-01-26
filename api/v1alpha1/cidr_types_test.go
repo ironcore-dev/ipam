@@ -2,10 +2,9 @@ package v1alpha1
 
 import (
 	"fmt"
-	"net"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"inet.af/netaddr"
 	"k8s.io/apimachinery/pkg/util/json"
 )
 
@@ -72,8 +71,13 @@ var _ = Describe("CIDR operations", func() {
 
 				By(fmt.Sprintf("Comparing to expected address range %d", i))
 				first, last := cidr.ToAddressRange()
-				Expect(net.ParseIP(testCase.firstIP).Equal(first)).To(BeTrue())
-				Expect(net.ParseIP(testCase.lastIP).Equal(last)).To(BeTrue())
+
+				firstIP := netaddr.MustParseIP(testCase.firstIP)
+				Expect(firstIP.Compare(first)).To(Equal(0))
+
+				lastIP := netaddr.MustParseIP(testCase.lastIP)
+				Expect(lastIP.Compare(last)).To(Equal(0))
+
 			}
 		})
 	})
@@ -85,31 +89,21 @@ var _ = Describe("CIDR operations", func() {
 				expectedJSON string
 			}{
 				{
-					cidr: CIDRFromNet(&net.IPNet{
-						IP:   []byte{192, 168, 1, 0},
-						Mask: []byte{255, 255, 255, 0},
-					}),
+					cidr:         CIDRFromNet(netaddr.IPPrefixFrom(netaddr.IPv4(192, 168, 1, 0), 24)),
 					expectedJSON: `"192.168.1.0/24"`,
 				},
 				{
-					cidr: CIDRFromNet(&net.IPNet{
-						IP:   []byte{0, 0, 0, 0},
-						Mask: []byte{0, 0, 0, 0},
-					}),
+					cidr:         CIDRFromNet(netaddr.IPPrefixFrom(netaddr.IPv4(0, 0, 0, 0), 0)),
 					expectedJSON: `"0.0.0.0/0"`,
 				},
 				{
-					cidr: CIDRFromNet(&net.IPNet{
-						IP:   []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-						Mask: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-					}),
+					cidr: CIDRFromNet(netaddr.IPPrefixFrom(
+						netaddr.IPFrom16([16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), 0)),
 					expectedJSON: `"::/0"`,
 				},
 				{
-					cidr: CIDRFromNet(&net.IPNet{
-						IP:   []byte{0x20, 0x1, 0xd, 0xb8, 0x12, 0x34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-						Mask: []byte{255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-					}),
+					cidr: CIDRFromNet(netaddr.IPPrefixFrom(
+						netaddr.IPFrom16([16]byte{0x20, 0x1, 0xd, 0xb8, 0x12, 0x34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), 48)),
 					expectedJSON: `"2001:db8:1234::/48"`,
 				},
 			}
