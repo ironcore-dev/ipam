@@ -334,7 +334,7 @@ func (in *CIDR) CanReserve(cidr *CIDR) bool {
 	// If capacities are equal, then net IPs should be also equal
 	// Otherwise networks are not the same
 	if ourOnes == theirOnes {
-		return ourFirstIP == theirFirstIP
+		return ourFirstIP.Compare(theirFirstIP) == 0
 	}
 
 	if !in.Net.Contains(cidr.Net.IP()) {
