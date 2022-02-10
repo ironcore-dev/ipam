@@ -247,11 +247,38 @@ func (in *Subnet) ProposeForBits(prefixBits byte) (*CIDR, error) {
 func (in *Subnet) Reserve(cidr *CIDR) error {
 	var remainingCidrs []CIDR
 	reservationIdx := -1
-	for i, vacantCidr := range in.Status.Vacant {
-		if vacantCidr.CanReserve(cidr) {
-			remainingCidrs = vacantCidr.Reserve(cidr)
-			reservationIdx = i
+	l := len(in.Status.Vacant)
+	left, right := 0, l-1
+	theirFirstIP, _ := cidr.ToAddressRange()
+	for left < right {
+		mid := (left + right) / 2
+
+		if in.Status.Vacant[mid].CanReserve(cidr) {
+			remainingCidrs = in.Status.Vacant[mid].Reserve(cidr)
+			reservationIdx = mid
 			break
+		}
+		if in.Status.Vacant[left].CanReserve(cidr) {
+			remainingCidrs = in.Status.Vacant[left].Reserve(cidr)
+			reservationIdx = left
+			break
+		}
+		if in.Status.Vacant[right].CanReserve(cidr) {
+			remainingCidrs = in.Status.Vacant[right].Reserve(cidr)
+			reservationIdx = right
+			break
+		}
+		outFirstIP := in.Status.Vacant[mid].Net.Range().From()
+		if outFirstIP.Compare(theirFirstIP) < 0 {
+			left = mid + 1
+			continue
+		}
+		right = mid
+	}
+	if l == 1 {
+		if in.Status.Vacant[0].CanReserve(cidr) {
+			remainingCidrs = in.Status.Vacant[0].Reserve(cidr)
+			reservationIdx = 0
 		}
 	}
 
@@ -280,32 +307,35 @@ func (in *Subnet) Reserve(cidr *CIDR) error {
 
 // CanReserve checks if it is possible to reserve CIDR
 func (in *Subnet) CanReserve(cidr *CIDR) bool {
-	//for _, vacantCidr := range in.Status.Vacant {
-	//	if vacantCidr.CanReserve(cidr) {
-	//		return true
-	//	}
-	//}
 	l := len(in.Status.Vacant)
 	if l == 0 {
 		return false
 	}
-	start := 0
-	mid := l / 2
-	end := l - 1
-	for start <= end {
-		value := in.Status.Vacant[mid]
+	if l == 1 {
+		return in.Status.Vacant[0].CanReserve(cidr)
+	}
+	left, right := 0, l-1
+	theirFirstIP, _ := cidr.ToAddressRange()
 
-		if value.CanReserve(cidr) {
+	for left < right {
+		mid := (left + right) / 2
+
+		if in.Status.Vacant[mid].CanReserve(cidr) {
 			return true
 		}
-
-		if cidr.IsLeft() {
-			end = mid - 1
-			mid = (start + end) / 2
+		if in.Status.Vacant[left].CanReserve(cidr) || in.Status.Vacant[right].CanReserve(cidr) {
+			return true
+		}
+		outFirstIP := in.Status.Vacant[mid].Net.Range().From()
+		if outFirstIP.Compare(theirFirstIP) < 0 {
+			left = mid + 1
 			continue
 		}
-		start = mid + 1
-		mid = (start + end) / 2
+		right = mid
+	}
+
+	if left != l && in.Status.Vacant[left].CanReserve(cidr) {
+		return true
 	}
 	return false
 }
@@ -408,12 +438,21 @@ func (in *Subnet) CanRelease(cidr *CIDR) bool {
 		return true
 	}
 
-	for idx := 1; idx < vacantLen; idx++ {
-		prevIdx := idx - 1
-		if in.Status.Vacant[prevIdx].Before(cidr) && in.Status.Vacant[idx].After(cidr) {
+	l := len(in.Status.Vacant)
+	left, right := 1, l
+	theirFirstIP, _ := cidr.ToAddressRange()
+	for left < right {
+		mid := (left + right) / 2
+		prevIdx := mid - 1
+		if in.Status.Vacant[prevIdx].Before(cidr) && in.Status.Vacant[mid].After(cidr) {
 			return true
 		}
+		outFirstIP := in.Status.Vacant[mid].Net.Range().From()
+		if outFirstIP.Compare(theirFirstIP) < 0 {
+			left = mid + 1
+			continue
+		}
+		right = mid
 	}
-
 	return false
 }
