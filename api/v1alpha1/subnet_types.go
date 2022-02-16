@@ -280,32 +280,10 @@ func (in *Subnet) Reserve(cidr *CIDR) error {
 
 // CanReserve checks if it is possible to reserve CIDR
 func (in *Subnet) CanReserve(cidr *CIDR) bool {
-	//for _, vacantCidr := range in.Status.Vacant {
-	//	if vacantCidr.CanReserve(cidr) {
-	//		return true
-	//	}
-	//}
-	l := len(in.Status.Vacant)
-	if l == 0 {
-		return false
-	}
-	start := 0
-	mid := l / 2
-	end := l - 1
-	for start <= end {
-		value := in.Status.Vacant[mid]
-
-		if value.CanReserve(cidr) {
+	for _, vacantCidr := range in.Status.Vacant {
+		if vacantCidr.CanReserve(cidr) {
 			return true
 		}
-
-		if cidr.IsLeft() {
-			end = mid - 1
-			mid = (start + end) / 2
-			continue
-		}
-		start = mid + 1
-		mid = (start + end) / 2
 	}
 	return false
 }
