@@ -1,0 +1,39 @@
+name: Pull Request Code test
+
+on:
+  pull_request_target:
+    types: [ assigned, opened, synchronize, reopened ]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+
+jobs:
+  go-test:
+    name: go tests
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.17.0'
+      - uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.BOT_PRIVATE_KEY }}
+      - run: ./hack/setup-git-redirect.sh
+      - run: make test
+
+  kustomize-test:
+    name: kustomize test
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Complie manifests
+        uses: azure/k8s-bake@v1
+        with:
+          renderEngine: 'kustomize'
+          kustomizationPath: './config/default/'
+          kubectl-version: 'latest'
+          silent: 'false'
