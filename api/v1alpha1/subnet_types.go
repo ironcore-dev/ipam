@@ -247,12 +247,12 @@ func (in *Subnet) ProposeForBits(prefixBits byte) (*CIDR, error) {
 func (in *Subnet) Reserve(cidr *CIDR) error {
 	var remainingCidrs []CIDR
 
-	reservationIdx := in.searchForReservationNetwork(cidr)
-	if reservationIdx < 0 {
-		return errors.Errorf("unable to find CIDR that includes CIDR %s", cidr.String())
-	} else if in.Status.Vacant[reservationIdx].CanReserve(cidr) {
-		remainingCidrs = in.Status.Vacant[reservationIdx].Reserve(cidr)
+	reservationIdx, err := in.findParentCidrIdx(cidr)
+	if err != nil {
+		return errors.Wrap(err, "unable to find parent CIDR")
 	}
+
+	remainingCidrs = in.Status.Vacant[reservationIdx].Reserve(cidr)
 
 	remainingCidrsCount := len(remainingCidrs)
 	switch remainingCidrsCount {
@@ -273,40 +273,38 @@ func (in *Subnet) Reserve(cidr *CIDR) error {
 	return nil
 }
 
-func (in *Subnet) searchForReservationNetwork(cidr *CIDR) int {
-	l := len(in.Status.Vacant)
-	if l == 0 {
-		return -1
+func (in *Subnet) findParentCidrIdx(cidr *CIDR) (int, error) {
+	vacantSubnetsCount := len(in.Status.Vacant)
+	if vacantSubnetsCount == 0 {
+		return 0, errors.New("No subnets left")
 	}
+
 	left := 0
-	right := l - 1
+	right := vacantSubnetsCount - 1
 	theirFirstIP, _ := cidr.ToAddressRange()
 	for left < right {
 		mid := left + (right-left)/2
-
-		if in.Status.Vacant[mid].Net.Contains(theirFirstIP) {
-			return mid
-		}
-		ourFirstIP := in.Status.Vacant[mid].Net.Range().From()
-		if ourFirstIP.Compare(theirFirstIP) < 0 {
+		ourFirstIP, ourLastIP := in.Status.Vacant[mid].ToAddressRange()
+		if ourFirstIP.Compare(theirFirstIP) < 0 && ourLastIP.Compare(theirFirstIP) < 0 {
 			left = mid + 1
 		} else {
 			right = mid
 		}
 	}
-	if in.Status.Vacant[left].Net.Contains(theirFirstIP) {
-		return left
+
+	if in.Status.Vacant[left].CanReserve(cidr) {
+		return left, nil
 	}
-	return -1
+
+	return 0, errors.Errorf("No CIDR found that includes CIDR %s", cidr.String())
 }
 
 // CanReserve checks if it is possible to reserve CIDR
 func (in *Subnet) CanReserve(cidr *CIDR) bool {
-	reservationIdx := in.searchForReservationNetwork(cidr)
-	if reservationIdx < 0 {
+	if _, err := in.findParentCidrIdx(cidr); err != nil {
 		return false
 	}
-	return in.Status.Vacant[reservationIdx].CanReserve(cidr)
+	return true
 }
 
 // Release puts CIDR to vacant range if there are no intersections
