@@ -336,27 +336,26 @@ func (in *Subnet) Release(cidr *CIDR) error {
 		insertIdx = vacantLen
 	}
 
+	left := 1
+	right := vacantLen
 	if insertIdx < 0 {
-		left := 1
-		right := vacantLen
 		theirFirstIP, _ := cidr.ToAddressRange()
 		for left < right {
 			mid := left + (right-left)/2
 
-			if in.Status.Vacant[mid-1].Before(cidr) && in.Status.Vacant[mid].After(cidr) {
-				in.Status.Vacant = append(in.Status.Vacant, CIDR{})
-				copy(in.Status.Vacant[mid+1:], in.Status.Vacant[mid:])
-				in.Status.Vacant[mid] = *cidr.DeepCopy()
-				insertIdx = mid
-				break
-			}
-			ourFirstIP := in.Status.Vacant[mid].Net.Range().From()
-			if ourFirstIP.Compare(theirFirstIP) < 0 {
+			ourFirstIP, ourLastIP := in.Status.Vacant[mid].ToAddressRange()
+			if ourFirstIP.Compare(theirFirstIP) < 0 && ourLastIP.Compare(theirFirstIP) < 0 {
 				left = mid + 1
 			} else {
 				right = mid
 			}
 		}
+	}
+	if in.Status.Vacant[left-1].Before(cidr) && in.Status.Vacant[left].After(cidr) {
+		in.Status.Vacant = append(in.Status.Vacant, CIDR{})
+		copy(in.Status.Vacant[left+1:], in.Status.Vacant[left:])
+		in.Status.Vacant[left] = *cidr.DeepCopy()
+		insertIdx = left
 	}
 
 	if insertIdx < 0 {
@@ -422,15 +421,15 @@ func (in *Subnet) CanRelease(cidr *CIDR) bool {
 	for left < right {
 		mid := left + (right-left)/2
 
-		if in.Status.Vacant[mid-1].Before(cidr) && in.Status.Vacant[mid].After(cidr) {
-			return true
-		}
-		outFirstIP := in.Status.Vacant[mid].Net.Range().From()
-		if outFirstIP.Compare(theirFirstIP) < 0 {
+		outFirstIP, ourLastIP := in.Status.Vacant[mid].ToAddressRange()
+		if outFirstIP.Compare(theirFirstIP) < 0 && ourLastIP.Compare(theirFirstIP) < 0 {
 			left = mid + 1
 		} else {
 			right = mid
 		}
+	}
+	if in.Status.Vacant[left-1].Before(cidr) && in.Status.Vacant[left].After(cidr) {
+		return true
 	}
 	return false
 }
