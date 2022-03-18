@@ -103,7 +103,7 @@ func (in *Network) Release(cidr *CIDR) error {
 
 	leftSearchBorder := 0
 	rightSearchBorder := len(ranges) - 1
-	networkIdx, err := in.findParentNetworkIdx(ranges, cidr, leftSearchBorder, rightSearchBorder)
+	networkIdx, err := FindParentNetworkIdx(ranges, cidr, leftSearchBorder, rightSearchBorder)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (in *Network) CanRelease(cidr *CIDR) bool {
 	ranges := in.getRangesForCidr(cidr)
 	leftSearchBorder := 0
 	rightSearchBorder := len(ranges) - 1
-	networkIdx, err := in.findParentNetworkIdx(ranges, cidr, leftSearchBorder, rightSearchBorder)
+	networkIdx, err := FindParentNetworkIdx(ranges, cidr, leftSearchBorder, rightSearchBorder)
 	if err != nil {
 		return false
 	}
@@ -137,7 +137,7 @@ func (in *Network) CanRelease(cidr *CIDR) bool {
 	return false
 }
 
-func (in *Network) findParentNetworkIdx(ranges []CIDR, cidr *CIDR, left, right int) (int, error) {
+func FindParentNetworkIdx(ranges []CIDR, cidr *CIDR, left, right int) (int, error) {
 	if len(ranges) == 0 {
 		return 0, errors.New("No subnets left")
 	}
@@ -182,7 +182,7 @@ func (in *Network) Reserve(cidr *CIDR) error {
 
 	leftSearchBorder := 1
 	rightSearchBorder := vacantLen
-	networkIdx, err := in.findParentNetworkIdx(ranges, cidr, leftSearchBorder, rightSearchBorder)
+	networkIdx, err := FindParentNetworkIdx(ranges, cidr, leftSearchBorder, rightSearchBorder)
 	if err != nil {
 		return err
 	}

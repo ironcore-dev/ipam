@@ -249,7 +249,7 @@ func (in *Subnet) Reserve(cidr *CIDR) error {
 
 	leftSearchBorder := 0
 	rightSearchBorder := len(in.Status.Vacant) - 1
-	networkIdx, err := in.findParentNetworkIdx(cidr, leftSearchBorder, rightSearchBorder)
+	networkIdx, err := FindParentNetworkIdx(in.Status.Vacant, cidr, leftSearchBorder, rightSearchBorder)
 	if err != nil {
 		return errors.Wrap(err, "unable to find parent CIDR")
 	}
@@ -277,28 +277,12 @@ func (in *Subnet) Reserve(cidr *CIDR) error {
 	return nil
 }
 
-func (in *Subnet) findParentNetworkIdx(cidr *CIDR, left, right int) (int, error) {
-	if len(in.Status.Vacant) == 0 {
-		return 0, errors.New("No subnets left")
-	}
-	theirFirstIP, _ := cidr.ToAddressRange()
-	for left < right {
-		mid := left + (right-left)/2
-		outFirstIP, ourLastIP := in.Status.Vacant[mid].ToAddressRange()
-		if outFirstIP.Compare(theirFirstIP) < 0 && ourLastIP.Compare(theirFirstIP) < 0 {
-			left = mid + 1
-		} else {
-			right = mid
-		}
-	}
-	return left, nil
-}
-
 // CanReserve checks if it is possible to reserve CIDR
 func (in *Subnet) CanReserve(cidr *CIDR) bool {
 	leftSearchBorder := 0
 	rightSearchBorder := len(in.Status.Vacant) - 1
-	networkIdx, err := in.findParentNetworkIdx(cidr, leftSearchBorder, rightSearchBorder)
+	//networkIdx, err := in.findParentNetworkIdx(cidr, leftSearchBorder, rightSearchBorder)
+	networkIdx, err := FindParentNetworkIdx(in.Status.Vacant, cidr, leftSearchBorder, rightSearchBorder)
 	if err != nil || !in.Status.Vacant[networkIdx].CanReserve(cidr) {
 		return false
 	}
@@ -337,7 +321,7 @@ func (in *Subnet) Release(cidr *CIDR) error {
 	leftSearchBorder := 1
 	rightSearchBorder := vacantLen
 	if insertIdx < 0 {
-		networkIdx, err := in.findParentNetworkIdx(cidr, leftSearchBorder, rightSearchBorder)
+		networkIdx, err := FindParentNetworkIdx(in.Status.Vacant, cidr, leftSearchBorder, rightSearchBorder)
 		if err != nil {
 			return err
 		}
@@ -407,7 +391,7 @@ func (in *Subnet) CanRelease(cidr *CIDR) bool {
 
 	leftSearchBorder := 1
 	rightSearchBorder := vacantLen
-	networkIdx, err := in.findParentNetworkIdx(cidr, leftSearchBorder, rightSearchBorder)
+	networkIdx, err := FindParentNetworkIdx(in.Status.Vacant, cidr, leftSearchBorder, rightSearchBorder)
 	if err != nil {
 		return false
 	}
