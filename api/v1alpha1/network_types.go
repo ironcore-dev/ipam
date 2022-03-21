@@ -100,10 +100,15 @@ func init() {
 func (in *Network) Release(cidr *CIDR) error {
 	ranges := in.getRangesForCidr(cidr)
 	reservationIdx := -1
-	for i, reservedCidrs := range ranges {
-		if reservedCidrs.Equal(cidr) {
-			reservationIdx = i
-		}
+
+	leftSearchBorder := 0
+	rightSearchBorder := len(ranges) - 1
+	networkIdx, err := FindParentNetworkIdx(ranges, cidr, leftSearchBorder, rightSearchBorder)
+	if err != nil {
+		return err
+	}
+	if ranges[networkIdx].Equal(cidr) {
+		reservationIdx = networkIdx
 	}
 
 	if reservationIdx == -1 {
@@ -120,13 +125,33 @@ func (in *Network) Release(cidr *CIDR) error {
 
 func (in *Network) CanRelease(cidr *CIDR) bool {
 	ranges := in.getRangesForCidr(cidr)
-	for _, vacantCidr := range ranges {
-		if vacantCidr.Equal(cidr) {
-			return true
+	leftSearchBorder := 0
+	rightSearchBorder := len(ranges) - 1
+	networkIdx, err := FindParentNetworkIdx(ranges, cidr, leftSearchBorder, rightSearchBorder)
+	if err != nil {
+		return false
+	}
+	if ranges[networkIdx].Equal(cidr) {
+		return true
+	}
+	return false
+}
+
+func FindParentNetworkIdx(ranges []CIDR, cidr *CIDR, left int, right int) (int, error) {
+	if len(ranges) == 0 {
+		return 0, errors.New("No subnets left")
+	}
+	theirFirstIP, _ := cidr.ToAddressRange()
+	for left < right {
+		mid := left + (right-left)/2
+		outFirstIP, ourLastIP := ranges[mid].ToAddressRange()
+		if outFirstIP.Compare(theirFirstIP) < 0 && ourLastIP.Compare(theirFirstIP) < 0 {
+			left = mid + 1
+		} else {
+			right = mid
 		}
 	}
-
-	return false
+	return left, nil
 }
 
 func (in *Network) Reserve(cidr *CIDR) error {
@@ -155,17 +180,17 @@ func (in *Network) Reserve(cidr *CIDR) error {
 		insertIdx = vacantLen
 	}
 
-	if insertIdx < 0 {
-		for idx := 1; idx < vacantLen; idx++ {
-			prevIdx := idx - 1
-			if ranges[prevIdx].Before(cidr) && ranges[idx].After(cidr) {
-				ranges = append(ranges, CIDR{})
-				copy(ranges[idx+1:], ranges[idx:])
-				ranges[idx] = *cidr
-				insertIdx = idx
-				break
-			}
-		}
+	leftSearchBorder := 1
+	rightSearchBorder := vacantLen
+	networkIdx, err := FindParentNetworkIdx(ranges, cidr, leftSearchBorder, rightSearchBorder)
+	if err != nil {
+		return err
+	}
+	if ranges[networkIdx-1].Before(cidr) && ranges[networkIdx].After(cidr) {
+		ranges = append(ranges, CIDR{})
+		copy(ranges[networkIdx+1:], ranges[networkIdx:])
+		ranges[networkIdx] = *cidr
+		insertIdx = networkIdx
 	}
 
 	if insertIdx < 0 {

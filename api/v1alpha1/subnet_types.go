@@ -246,30 +246,29 @@ func (in *Subnet) ProposeForBits(prefixBits byte) (*CIDR, error) {
 // Reserve books CIDR from the range of vacant CIDRs, if possible
 func (in *Subnet) Reserve(cidr *CIDR) error {
 	var remainingCidrs []CIDR
-	reservationIdx := -1
-	for i, vacantCidr := range in.Status.Vacant {
-		if vacantCidr.CanReserve(cidr) {
-			remainingCidrs = vacantCidr.Reserve(cidr)
-			reservationIdx = i
-			break
-		}
-	}
 
-	if reservationIdx == -1 {
-		return errors.Errorf("unable to find CIDR that includes CIDR %s", cidr.String())
+	leftSearchBorder := 0
+	rightSearchBorder := len(in.Status.Vacant) - 1
+	networkIdx, err := FindParentNetworkIdx(in.Status.Vacant, cidr, leftSearchBorder, rightSearchBorder)
+	if err != nil {
+		return errors.Wrap(err, "unable to find parent CIDR")
 	}
+	if !in.Status.Vacant[networkIdx].CanReserve(cidr) {
+		return errors.Errorf("No CIDR found that includes CIDR %s", cidr.String())
+	}
+	remainingCidrs = in.Status.Vacant[networkIdx].Reserve(cidr)
 
 	remainingCidrsCount := len(remainingCidrs)
 	switch remainingCidrsCount {
 	case 0:
-		in.Status.Vacant = append(in.Status.Vacant[:reservationIdx], in.Status.Vacant[reservationIdx+1:]...)
+		in.Status.Vacant = append(in.Status.Vacant[:networkIdx], in.Status.Vacant[networkIdx+1:]...)
 	case 1:
-		in.Status.Vacant[reservationIdx] = remainingCidrs[0] // nolint // Ignore linting warning as slice length is checked before (by) switch statement
+		in.Status.Vacant[networkIdx] = remainingCidrs[0] // nolint // Ignore linting warning as slice length is checked before (by) switch statement
 	default:
 		released := make([]CIDR, len(in.Status.Vacant)+remainingCidrsCount-1)
-		copy(released[:reservationIdx], in.Status.Vacant[:reservationIdx])
-		copy(released[reservationIdx:reservationIdx+remainingCidrsCount], remainingCidrs)
-		copy(released[reservationIdx+remainingCidrsCount:], in.Status.Vacant[reservationIdx+1:])
+		copy(released[:networkIdx], in.Status.Vacant[:networkIdx])
+		copy(released[networkIdx:networkIdx+remainingCidrsCount], remainingCidrs)
+		copy(released[networkIdx+remainingCidrsCount:], in.Status.Vacant[networkIdx+1:])
 		in.Status.Vacant = released
 	}
 
@@ -280,12 +279,13 @@ func (in *Subnet) Reserve(cidr *CIDR) error {
 
 // CanReserve checks if it is possible to reserve CIDR
 func (in *Subnet) CanReserve(cidr *CIDR) bool {
-	for _, vacantCidr := range in.Status.Vacant {
-		if vacantCidr.CanReserve(cidr) {
-			return true
-		}
+	leftSearchBorder := 0
+	rightSearchBorder := len(in.Status.Vacant) - 1
+	networkIdx, err := FindParentNetworkIdx(in.Status.Vacant, cidr, leftSearchBorder, rightSearchBorder)
+	if err != nil || !in.Status.Vacant[networkIdx].CanReserve(cidr) {
+		return false
 	}
-	return false
+	return true
 }
 
 // Release puts CIDR to vacant range if there are no intersections
@@ -317,16 +317,18 @@ func (in *Subnet) Release(cidr *CIDR) error {
 		insertIdx = vacantLen
 	}
 
+	leftSearchBorder := 1
+	rightSearchBorder := vacantLen
 	if insertIdx < 0 {
-		for idx := 1; idx < vacantLen; idx++ {
-			prevIdx := idx - 1
-			if in.Status.Vacant[prevIdx].Before(cidr) && in.Status.Vacant[idx].After(cidr) {
-				in.Status.Vacant = append(in.Status.Vacant, CIDR{})
-				copy(in.Status.Vacant[idx+1:], in.Status.Vacant[idx:])
-				in.Status.Vacant[idx] = *cidr.DeepCopy()
-				insertIdx = idx
-				break
-			}
+		networkIdx, err := FindParentNetworkIdx(in.Status.Vacant, cidr, leftSearchBorder, rightSearchBorder)
+		if err != nil {
+			return err
+		}
+		if in.Status.Vacant[networkIdx-1].Before(cidr) && in.Status.Vacant[networkIdx].After(cidr) {
+			in.Status.Vacant = append(in.Status.Vacant, CIDR{})
+			copy(in.Status.Vacant[networkIdx+1:], in.Status.Vacant[networkIdx:])
+			in.Status.Vacant[networkIdx] = *cidr.DeepCopy()
+			insertIdx = networkIdx
 		}
 	}
 
@@ -386,12 +388,11 @@ func (in *Subnet) CanRelease(cidr *CIDR) bool {
 		return true
 	}
 
-	for idx := 1; idx < vacantLen; idx++ {
-		prevIdx := idx - 1
-		if in.Status.Vacant[prevIdx].Before(cidr) && in.Status.Vacant[idx].After(cidr) {
-			return true
-		}
+	leftSearchBorder := 1
+	rightSearchBorder := vacantLen
+	networkIdx, err := FindParentNetworkIdx(in.Status.Vacant, cidr, leftSearchBorder, rightSearchBorder)
+	if err != nil {
+		return false
 	}
-
-	return false
+	return in.Status.Vacant[networkIdx-1].Before(cidr) && in.Status.Vacant[networkIdx].After(cidr)
 }
