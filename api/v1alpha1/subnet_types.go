@@ -281,7 +281,6 @@ func (in *Subnet) Reserve(cidr *CIDR) error {
 func (in *Subnet) CanReserve(cidr *CIDR) bool {
 	leftSearchBorder := 0
 	rightSearchBorder := len(in.Status.Vacant) - 1
-	//networkIdx, err := in.findParentNetworkIdx(cidr, leftSearchBorder, rightSearchBorder)
 	networkIdx, err := FindParentNetworkIdx(in.Status.Vacant, cidr, leftSearchBorder, rightSearchBorder)
 	if err != nil || !in.Status.Vacant[networkIdx].CanReserve(cidr) {
 		return false

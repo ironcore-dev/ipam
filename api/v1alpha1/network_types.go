@@ -137,7 +137,7 @@ func (in *Network) CanRelease(cidr *CIDR) bool {
 	return false
 }
 
-func FindParentNetworkIdx(ranges []CIDR, cidr *CIDR, left, right int) (int, error) {
+func FindParentNetworkIdx(ranges []CIDR, cidr *CIDR, left int, right int) (int, error) {
 	if len(ranges) == 0 {
 		return 0, errors.New("No subnets left")
 	}
