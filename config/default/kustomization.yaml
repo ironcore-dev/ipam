@@ -59,6 +59,7 @@ replacements:
         options:
           delimiter: '/'
           index: 0
+          create: true
       - select:
           kind: MutatingWebhookConfiguration
         fieldPaths:
@@ -66,6 +67,7 @@ replacements:
         options:
           delimiter: '/'
           index: 0
+          create: true
       - select:
           kind: CustomResourceDefinition
         fieldPaths:
@@ -73,6 +75,7 @@ replacements:
         options:
           delimiter: '/'
           index: 0
+          create: true
   - source:
       kind: Certificate
       group: cert-manager.io
@@ -87,6 +90,7 @@ replacements:
         options:
           delimiter: '/'
           index: 1
+          create: true
       - select:
           kind: MutatingWebhookConfiguration
         fieldPaths:
@@ -94,6 +98,7 @@ replacements:
         options:
           delimiter: '/'
           index: 1
+          create: true
       - select:
           kind: CustomResourceDefinition
         fieldPaths:
@@ -101,6 +106,7 @@ replacements:
         options:
           delimiter: '/'
           index: 1
+          create: true
   - source:
       kind: Service
       version: v1
@@ -117,6 +123,7 @@ replacements:
         options:
           delimiter: '.'
           index: 0
+          create: true
   - source:
       kind: Service
       version: v1
@@ -133,3 +140,4 @@ replacements:
         options:
           delimiter: '.'
           index: 1
+          create: true
