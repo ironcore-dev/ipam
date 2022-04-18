@@ -36,14 +36,12 @@ import (
 const (
 	CNetworkFinalizer = "network.ipam.onmetal.de/finalizer"
 
-	CVXLANCounterName  = "k8s-vxlan-network-counter"
-	CGENEVECounterName = "k8s-geneve-network-counter"
-	CMPLSCounterName   = "k8s-mpls-network-counter"
-
 	CNetworkIDProposalFailureReason    = "NetworkIDProposalFailure"
 	CNetworkIDReservationFailureReason = "NetworkIDReservationFailure"
 	CNetworkIDReservationSuccessReason = "NetworkIDReservationSuccess"
 	CNetworkIDReleaseSuccessReason     = "NetworkIDReleaseSuccess"
+
+	CFailedTopLevelSubnetIndexKey = "failedTopLevelSubnet"
 )
 
 // NetworkReconciler reconciles a Network object
@@ -64,13 +62,6 @@ type NetworkReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the Network object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.0/pkg/reconcile
 func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("network", req.NamespacedName)
 
@@ -125,6 +116,10 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	if network.Status.State == machinev1alpha1.CFinishedNetworkState ||
 		network.Status.State == machinev1alpha1.CFailedNetworkState {
+		if err := r.requeueFailedSubnets(ctx, log, network); err != nil {
+			log.Error(err, "unable to requeue top level subnets", "name", req.NamespacedName)
+			return ctrl.Result{}, err
+		}
 		return ctrl.Result{}, nil
 	}
 
@@ -217,6 +212,28 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	return ctrl.Result{}, nil
 }
 
+func (r *NetworkReconciler) requeueFailedSubnets(ctx context.Context, log logr.Logger, network *machinev1alpha1.Network) error {
+	matchingFields := client.MatchingFields{
+		CFailedTopLevelSubnetIndexKey: network.Name,
+	}
+
+	subnets := &machinev1alpha1.SubnetList{}
+	if err := r.List(context.Background(), subnets, client.InNamespace(network.Namespace), matchingFields); err != nil {
+		log.Error(err, "unable to get connected top level subnets", "name", types.NamespacedName{Namespace: network.Namespace, Name: network.Name})
+		return err
+	}
+
+	for _, subnet := range subnets.Items {
+		subnet.Status.State = machinev1alpha1.CProcessingSubnetState
+		if err := r.Status().Update(ctx, &subnet); err != nil {
+			log.Error(err, "unable to update top level subnet", "name", types.NamespacedName{Namespace: network.Namespace, Name: network.Name}, "subnet", subnet.Name)
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (r *NetworkReconciler) finalizeNetwork(ctx context.Context, log logr.Logger, network *machinev1alpha1.Network) error {
 	if network.Spec.Type == "" {
 		return nil
@@ -286,6 +303,28 @@ func (r *NetworkReconciler) typeToCounterName(networkType machinev1alpha1.Networ
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *NetworkReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	createFailedSubnetIndexValue := func(object client.Object) []string {
+		subnet, ok := object.(*machinev1alpha1.Subnet)
+		if !ok {
+			return nil
+		}
+		state := subnet.Status.State
+		parentNet := subnet.Spec.Network.Name
+		parentSubnet := subnet.Spec.ParentSubnet.Name
+		if parentSubnet != "" {
+			return nil
+		}
+		if state != machinev1alpha1.CFailedSubnetState {
+			return nil
+		}
+		return []string{parentNet}
+	}
+
+	if err := mgr.GetFieldIndexer().IndexField(
+		context.Background(), &machinev1alpha1.Subnet{}, CFailedTopLevelSubnetIndexKey, createFailedSubnetIndexValue); err != nil {
+		return err
+	}
+
 	r.EventRecorder = mgr.GetEventRecorderFor("network-controller")
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&machinev1alpha1.Network{}).
