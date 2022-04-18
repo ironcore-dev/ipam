@@ -218,6 +218,21 @@ var _ = Describe("Subnet webhook", func() {
 			crs := []Subnet{
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
+						Name:      "without-regions",
+						Namespace: SubnetNamespace,
+					},
+					Spec: SubnetSpec{
+						CIDR: cidrMustParse("127.0.0.0/24"),
+						ParentSubnet: corev1.LocalObjectReference{
+							Name: "parent-subnet",
+						},
+						Network: corev1.LocalObjectReference{
+							Name: "parent-net",
+						},
+					},
+				},
+				{
+					ObjectMeta: controllerruntime.ObjectMeta{
 						Name:      "with-cidr-rule",
 						Namespace: SubnetNamespace,
 					},
