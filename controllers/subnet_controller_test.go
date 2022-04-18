@@ -36,6 +36,14 @@ var _ = Describe("Subnet controller", func() {
 			count func(client.ObjectList) int
 		}{
 			{
+				res:  &v1alpha1.IP{},
+				list: &v1alpha1.IPList{},
+				count: func(objList client.ObjectList) int {
+					list := objList.(*v1alpha1.IPList)
+					return len(list.Items)
+				},
+			},
+			{
 				res:  &v1alpha1.Subnet{},
 				list: &v1alpha1.SubnetList{},
 				count: func(objList client.ObjectList) int {
@@ -48,6 +56,14 @@ var _ = Describe("Subnet controller", func() {
 				list: &v1alpha1.NetworkList{},
 				count: func(objList client.ObjectList) int {
 					list := objList.(*v1alpha1.NetworkList)
+					return len(list.Items)
+				},
+			},
+			{
+				res:  &v1alpha1.NetworkCounter{},
+				list: &v1alpha1.NetworkCounterList{},
+				count: func(objList client.ObjectList) int {
+					list := objList.(*v1alpha1.NetworkCounterList)
 					return len(list.Items)
 				},
 			},
