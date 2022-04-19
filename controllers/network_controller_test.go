@@ -38,10 +38,34 @@ var _ = Describe("Network controller", func() {
 			count func(client.ObjectList) int
 		}{
 			{
+				res:  &v1alpha1.IP{},
+				list: &v1alpha1.IPList{},
+				count: func(objList client.ObjectList) int {
+					list := objList.(*v1alpha1.IPList)
+					return len(list.Items)
+				},
+			},
+			{
+				res:  &v1alpha1.Subnet{},
+				list: &v1alpha1.SubnetList{},
+				count: func(objList client.ObjectList) int {
+					list := objList.(*v1alpha1.SubnetList)
+					return len(list.Items)
+				},
+			},
+			{
 				res:  &v1alpha1.Network{},
 				list: &v1alpha1.NetworkList{},
 				count: func(objList client.ObjectList) int {
 					list := objList.(*v1alpha1.NetworkList)
+					return len(list.Items)
+				},
+			},
+			{
+				res:  &v1alpha1.NetworkCounter{},
+				list: &v1alpha1.NetworkCounterList{},
+				count: func(objList client.ObjectList) int {
+					list := objList.(*v1alpha1.NetworkCounterList)
 					return len(list.Items)
 				},
 			},
@@ -184,6 +208,9 @@ var _ = Describe("Network controller", func() {
 					}
 					return true
 				}, timeout, interval).Should(BeTrue())
+
+				By(fmt.Sprintf("%s network ID with the same ID deleted", testNetworkCase.network.Spec.Type))
+				Expect(k8sClient.Delete(ctx, &testNetworkCopy)).Should(Succeed())
 
 				By(fmt.Sprintf("%s network ID CR deleted", testNetworkCase.network.Spec.Type))
 				oldNetworkID := testNetwork.Status.Reserved.DeepCopy()

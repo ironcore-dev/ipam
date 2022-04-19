@@ -48,6 +48,9 @@ const (
 	CChildSubnetReservationFailureReason  = "ChildSubnetReservationFailure"
 	CChildSubnetReservationSuccessReason  = "ChildSubnetReservationSuccess"
 	CChildSubnetReleaseSuccessReason      = "ChildSubnetReleaseSuccess"
+
+	CFailedChildSubnetIndexKey = "failedChildSubnet"
+	CFailedIPIndexKey          = "failedIP"
 )
 
 // SubnetReconciler reconciles a Subnet object
@@ -130,6 +133,14 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	// resource processing has been completed.
 	if subnet.Status.State == v1alpha1.CFailedSubnetState ||
 		subnet.Status.State == v1alpha1.CFinishedSubnetState {
+		if err := r.requeueFailedSubnets(ctx, log, subnet); err != nil {
+			log.Error(err, "unable to requeue child subnets", "name", req.NamespacedName)
+			return ctrl.Result{}, err
+		}
+		if err := r.requeueFailedIPs(ctx, log, subnet); err != nil {
+			log.Error(err, "unable to requeue child ips", "name", req.NamespacedName)
+			return ctrl.Result{}, err
+		}
 		return ctrl.Result{}, nil
 	}
 
@@ -270,6 +281,48 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *SubnetReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	createFailedSubnetIndexValue := func(object client.Object) []string {
+		subnet, ok := object.(*v1alpha1.Subnet)
+		if !ok {
+			return nil
+		}
+		state := subnet.Status.State
+		parentSubnet := subnet.Spec.ParentSubnet.Name
+		if parentSubnet == "" {
+			return nil
+		}
+		if state != v1alpha1.CFailedSubnetState {
+			return nil
+		}
+		return []string{parentSubnet}
+	}
+
+	createFailedIPIndexValue := func(object client.Object) []string {
+		ip, ok := object.(*v1alpha1.IP)
+		if !ok {
+			return nil
+		}
+		state := ip.Status.State
+		parentSubnet := ip.Spec.Subnet.Name
+		if parentSubnet == "" {
+			return nil
+		}
+		if state != v1alpha1.CFailedIPState {
+			return nil
+		}
+		return []string{parentSubnet}
+	}
+
+	if err := mgr.GetFieldIndexer().IndexField(
+		context.Background(), &v1alpha1.Subnet{}, CFailedChildSubnetIndexKey, createFailedSubnetIndexValue); err != nil {
+		return err
+	}
+
+	if err := mgr.GetFieldIndexer().IndexField(
+		context.Background(), &v1alpha1.IP{}, CFailedIPIndexKey, createFailedIPIndexValue); err != nil {
+		return err
+	}
+
 	r.EventRecorder = mgr.GetEventRecorderFor("subnet-controller")
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Subnet{}).
@@ -353,6 +406,50 @@ func (r *SubnetReconciler) finalizeSubnet(ctx context.Context, log logr.Logger, 
 			return err
 		}
 		r.EventRecorder.Eventf(subnet, v1.EventTypeNormal, CChildSubnetReleaseSuccessReason, "CIDR %s in subnet %s released successfully", subnet.Status.Reserved.String(), parentSubnet.Name)
+	}
+
+	return nil
+}
+
+func (r *SubnetReconciler) requeueFailedSubnets(ctx context.Context, log logr.Logger, subnet *v1alpha1.Subnet) error {
+	matchingFields := client.MatchingFields{
+		CFailedChildSubnetIndexKey: subnet.Name,
+	}
+
+	subnets := &v1alpha1.SubnetList{}
+	if err := r.List(context.Background(), subnets, client.InNamespace(subnet.Namespace), matchingFields); err != nil {
+		log.Error(err, "unable to get connected child subnets", "name", types.NamespacedName{Namespace: subnet.Namespace, Name: subnet.Name})
+		return err
+	}
+
+	for _, subnet := range subnets.Items {
+		subnet.Status.State = v1alpha1.CProcessingSubnetState
+		if err := r.Status().Update(ctx, &subnet); err != nil {
+			log.Error(err, "unable to update child subnet", "name", types.NamespacedName{Namespace: subnet.Namespace, Name: subnet.Name}, "subnet", subnet.Name)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (r *SubnetReconciler) requeueFailedIPs(ctx context.Context, log logr.Logger, subnet *v1alpha1.Subnet) error {
+	matchingFields := client.MatchingFields{
+		CFailedIPIndexKey: subnet.Name,
+	}
+
+	ips := &v1alpha1.IPList{}
+	if err := r.List(context.Background(), ips, client.InNamespace(subnet.Namespace), matchingFields); err != nil {
+		log.Error(err, "unable to get connected ips", "name", types.NamespacedName{Namespace: subnet.Namespace, Name: subnet.Name})
+		return err
+	}
+
+	for _, ip := range ips.Items {
+		ip.Status.State = v1alpha1.CProcessingIPState
+		if err := r.Status().Update(ctx, &ip); err != nil {
+			log.Error(err, "unable to update child ips", "name", types.NamespacedName{Namespace: subnet.Namespace, Name: subnet.Name}, "subnet", subnet.Name)
+			return err
+		}
 	}
 
 	return nil

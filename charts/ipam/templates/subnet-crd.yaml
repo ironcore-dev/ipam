@@ -164,11 +164,9 @@ spec:
                       - availabilityZones
                       - name
                     type: object
-                  minItems: 1
                   type: array
               required:
                 - network
-                - regions
               type: object
             status:
               description: SubnetStatus defines the observed state of Subnet

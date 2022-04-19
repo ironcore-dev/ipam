@@ -46,9 +46,8 @@ type SubnetSpec struct {
 	// +kubebuilder:validation:Required
 	Network v1.LocalObjectReference `json:"network"`
 	// Regions represents the network service location
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	Regions []Region `json:"regions"`
+	// +kubebuilder:validation:Optional
+	Regions []Region `json:"regions,omitempty"`
 	// Consumer refers to resource Subnet has been booked for
 	// +kubebuilder:validation:Optional
 	Consumer *ResourceReference `json:"consumer,omitempty"`
@@ -151,13 +150,16 @@ func init() {
 func (in *Subnet) PopulateStatus() {
 	in.Status.State = CProcessingSubnetState
 
-	// Validator checks that slice has at least one element,
-	// so it is safe to assume that there is an element on zero index.
-	// It is also okay to check AZ count only for first region,
-	// since if there is more than one region, it gets classified as
-	// multiregion subnet.
-	azCount := len(in.Spec.Regions[0].AvailabilityZones)
 	regionCount := len(in.Spec.Regions)
+	if regionCount == 0 {
+		return
+	}
+
+	// It is okay to check AZ count only for first region,
+	// since if there is more than one region, it gets classified as
+	// multiregional subnet.
+	azCount := len(in.Spec.Regions[0].AvailabilityZones)
+
 	if azCount == 1 && regionCount == 1 {
 		in.Status.Locality = CLocalSubnetLocalityType
 	} else if azCount > 1 && regionCount == 1 {

@@ -43,6 +43,14 @@ var _ = Describe("IP controller", func() {
 			count func(client.ObjectList) int
 		}{
 			{
+				res:  &v1alpha1.IP{},
+				list: &v1alpha1.IPList{},
+				count: func(objList client.ObjectList) int {
+					list := objList.(*v1alpha1.IPList)
+					return len(list.Items)
+				},
+			},
+			{
 				res:  &v1alpha1.Subnet{},
 				list: &v1alpha1.SubnetList{},
 				count: func(objList client.ObjectList) int {
@@ -59,10 +67,10 @@ var _ = Describe("IP controller", func() {
 				},
 			},
 			{
-				res:  &v1alpha1.IP{},
-				list: &v1alpha1.IPList{},
+				res:  &v1alpha1.NetworkCounter{},
+				list: &v1alpha1.NetworkCounterList{},
 				count: func(objList client.ObjectList) int {
-					list := objList.(*v1alpha1.IPList)
+					list := objList.(*v1alpha1.NetworkCounterList)
 					return len(list.Items)
 				},
 			},
@@ -200,11 +208,64 @@ var _ = Describe("IP controller", func() {
 				return len(createdSubnet.Status.Vacant) == 2
 			}, timeout, interval).Should(BeTrue())
 
+			By("IP copy is created")
+			ipCopyName := IPName + "-copy"
+			ipCopyNamespacedName := types.NamespacedName{
+				Namespace: Namespace,
+				Name:      ipCopyName,
+			}
+			ipCopy := &v1alpha1.IP{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: Namespace,
+					Name:      ipCopyName,
+				},
+				Spec: *ip.Spec.DeepCopy(),
+			}
+
+			Expect(k8sClient.Create(ctx, ipCopy)).Should(Succeed())
+
+			By("IP copy is failed to get reserved")
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, ipCopyNamespacedName, ipCopy)
+				if err != nil {
+					return false
+				}
+				if ipCopy.Status.State != v1alpha1.CFailedIPState {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+
 			By("IP is deleted")
 			Expect(k8sClient.Delete(ctx, ip)).Should(Succeed())
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, ipNamespacedName, createdIP)
+				if !apierrors.IsNotFound(err) {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+
+			By("IP copy gets reserved")
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, ipCopyNamespacedName, ipCopy)
+				if err != nil {
+					return false
+				}
+				if ipCopy.Status.State != v1alpha1.CFinishedIPState {
+					return false
+				}
+				if !ipCopy.Status.Reserved.Equal(testIP) {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+
+			By("IP copy is deleted")
+			Expect(k8sClient.Delete(ctx, ipCopy)).To(Succeed())
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, ipCopyNamespacedName, ipCopy)
 				if !apierrors.IsNotFound(err) {
 					return false
 				}

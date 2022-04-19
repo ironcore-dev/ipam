@@ -149,6 +149,7 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 			return ctrl.Result{}, err
 		}
 		r.EventRecorder.Eventf(ip, v1.EventTypeWarning, CIPReservationFailureReason, ip.Status.Message)
+		return ctrl.Result{}, err
 	}
 
 	if err := r.Status().Update(ctx, &subnet); err != nil {
