@@ -69,7 +69,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Complie manifests
-        uses: azure/k8s-bake@v1
+        uses: azure/k8s-bake@v2.2
         with:
           renderEngine: 'kustomize'
           kustomizationPath: './config/default/'
