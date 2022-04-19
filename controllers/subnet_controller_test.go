@@ -189,6 +189,36 @@ var _ = Describe("Subnet controller", func() {
 				return false
 			}()).To(BeTrue())
 
+			By("Subnet copy is created")
+			subnetCopyName := createdSubnet.Name + "-copy"
+			subnetCopy := v1alpha1.Subnet{
+				ObjectMeta: v1.ObjectMeta{
+					Name:      subnetCopyName,
+					Namespace: SubnetNamespace,
+				},
+				Spec: *createdSubnet.Spec.DeepCopy(),
+			}
+			subnetCopy.Spec.CIDR = testCidr
+
+			Expect(k8sClient.Create(ctx, &subnetCopy)).To(Succeed())
+
+			By("Subnet copy is failed to get CIDR reserved")
+			subnetCopyNamespacedName := types.NamespacedName{
+				Namespace: SubnetNamespace,
+				Name:      subnetCopyName,
+			}
+
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, subnetCopyNamespacedName, &subnetCopy)
+				if err != nil {
+					return false
+				}
+				if subnetCopy.Status.State != v1alpha1.CFailedSubnetState {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+
 			By("Subnet is deleted")
 			Expect(k8sClient.Delete(ctx, &createdSubnet)).To(Succeed())
 			Eventually(func() bool {
@@ -199,9 +229,42 @@ var _ = Describe("Subnet controller", func() {
 				return true
 			}, timeout, interval).Should(BeTrue())
 
+			By("Subnet copy gets CIDR reserved")
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, subnetCopyNamespacedName, &subnetCopy)
+				if err != nil {
+					return false
+				}
+				if subnetCopy.Status.State != v1alpha1.CFinishedSubnetState {
+					return false
+				}
+				if !subnetCopy.Status.Reserved.Equal(testCidr) {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+
+			By("Subnet copy is deleted")
+			Expect(k8sClient.Delete(ctx, &subnetCopy)).To(Succeed())
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, testSubnetNamespacedName, &subnetCopy)
+				if !apierrors.IsNotFound(err) {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+
 			By("Subnet CIDR is released in Network")
-			Expect(k8sClient.Get(ctx, testNetworkNamespacedName, &createdNetwork)).To(Succeed())
-			Expect(createdNetwork.Status.IPv4Ranges).To(HaveLen(0))
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, testNetworkNamespacedName, &createdNetwork)
+				if err != nil {
+					return false
+				}
+				if len(createdNetwork.Status.IPv4Ranges) != 0 {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
 		})
 	})
 
@@ -337,6 +400,36 @@ var _ = Describe("Subnet controller", func() {
 			Expect(createdParentSubnet.CanReserve(testCidr)).To(BeFalse())
 			Expect(createdParentSubnet.CanRelease(testCidr)).To(BeTrue())
 
+			By("Subnet copy is created")
+			subnetCopyName := createdSubnet.Name + "-copy"
+			subnetCopy := v1alpha1.Subnet{
+				ObjectMeta: v1.ObjectMeta{
+					Name:      subnetCopyName,
+					Namespace: SubnetNamespace,
+				},
+				Spec: *createdSubnet.Spec.DeepCopy(),
+			}
+			subnetCopy.Spec.CIDR = testCidr
+
+			Expect(k8sClient.Create(ctx, &subnetCopy)).To(Succeed())
+
+			By("Subnet copy is failed to get CIDR reserved")
+			subnetCopyNamespacedName := types.NamespacedName{
+				Namespace: SubnetNamespace,
+				Name:      subnetCopyName,
+			}
+
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, subnetCopyNamespacedName, &subnetCopy)
+				if err != nil {
+					return false
+				}
+				if subnetCopy.Status.State != v1alpha1.CFailedSubnetState {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+
 			By("Subnet is deleted")
 			Expect(k8sClient.Delete(ctx, &createdSubnet)).To(Succeed())
 			Eventually(func() bool {
@@ -347,10 +440,45 @@ var _ = Describe("Subnet controller", func() {
 				return true
 			}, timeout, interval).Should(BeTrue())
 
+			By("Subnet copy gets CIDR reserved")
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, subnetCopyNamespacedName, &subnetCopy)
+				if err != nil {
+					return false
+				}
+				if subnetCopy.Status.State != v1alpha1.CFinishedSubnetState {
+					return false
+				}
+				if !subnetCopy.Status.Reserved.Equal(testCidr) {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+
+			By("Subnet copy is deleted")
+			Expect(k8sClient.Delete(ctx, &subnetCopy)).To(Succeed())
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, testSubnetNamespacedName, &subnetCopy)
+				if !apierrors.IsNotFound(err) {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+
 			By("Subnet CIDR is released in parent Subnet")
-			Expect(k8sClient.Get(ctx, testParentSubnetNamespacedName, &createdParentSubnet)).To(Succeed())
-			Expect(createdParentSubnet.CanReserve(testCidr)).To(BeTrue())
-			Expect(createdParentSubnet.CanRelease(testCidr)).To(BeFalse())
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, testParentSubnetNamespacedName, &createdParentSubnet)
+				if err != nil {
+					return false
+				}
+				if !createdParentSubnet.CanReserve(testCidr) {
+					return false
+				}
+				if createdParentSubnet.CanRelease(testCidr) {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
 		})
 	})
 
