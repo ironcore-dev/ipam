@@ -149,6 +149,7 @@ func init() {
 // PopulateStatus fills status subresource with default values
 func (in *Subnet) PopulateStatus() {
 	in.Status.State = CProcessingSubnetState
+	in.Status.Message = ""
 
 	regionCount := len(in.Spec.Regions)
 	if regionCount == 0 {
@@ -176,6 +177,7 @@ func (in *Subnet) FillStatusFromCidr(cidr *CIDR) {
 		in.Status.Type = CIPv6SubnetType
 	}
 
+	in.Status.Message = ""
 	in.Status.Reserved = cidr.DeepCopy()
 	in.Status.Vacant = []CIDR{*cidr.DeepCopy()}
 	in.Status.PrefixBits = cidr.MaskOnes()

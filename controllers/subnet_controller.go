@@ -424,6 +424,7 @@ func (r *SubnetReconciler) requeueFailedSubnets(ctx context.Context, log logr.Lo
 
 	for _, subnet := range subnets.Items {
 		subnet.Status.State = v1alpha1.CProcessingSubnetState
+		subnet.Status.Message = ""
 		if err := r.Status().Update(ctx, &subnet); err != nil {
 			log.Error(err, "unable to update child subnet", "name", types.NamespacedName{Namespace: subnet.Namespace, Name: subnet.Name}, "subnet", subnet.Name)
 			return err
@@ -446,6 +447,7 @@ func (r *SubnetReconciler) requeueFailedIPs(ctx context.Context, log logr.Logger
 
 	for _, ip := range ips.Items {
 		ip.Status.State = v1alpha1.CProcessingIPState
+		ip.Status.Message = ""
 		if err := r.Status().Update(ctx, &ip); err != nil {
 			log.Error(err, "unable to update child ips", "name", types.NamespacedName{Namespace: subnet.Namespace, Name: subnet.Name}, "subnet", subnet.Name)
 			return err

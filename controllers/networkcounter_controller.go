@@ -65,6 +65,7 @@ func (r *NetworkCounterReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 	for _, network := range networks.Items {
 		network.Status.State = machinev1alpha1.CProcessingNetworkState
+		network.Status.Message = ""
 		if err := r.Status().Update(ctx, &network); err != nil {
 			log.Error(err, "unable to update network", "name", req.NamespacedName, "network", network.Name)
 			return ctrl.Result{}, err
