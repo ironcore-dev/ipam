@@ -333,9 +333,8 @@ func (r *SubnetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *SubnetReconciler) finalizeSubnet(ctx context.Context, log logr.Logger, namespacedName types.NamespacedName, subnet *v1alpha1.Subnet) error {
 	// If subnet has failed to reserve the CIDR
 	// it may be released
-	if subnet.Status.Reserved == nil &&
-		subnet.Status.State == v1alpha1.CFailedSubnetState {
-		log.Info("releasing failed subnet", "name", namespacedName)
+	if subnet.Status.Reserved == nil {
+		log.Info("subnet hasn't been booked, releasing", "name", namespacedName)
 		return nil
 	}
 
