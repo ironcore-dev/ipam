@@ -281,6 +281,22 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *SubnetReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	createChildSubnetIndexValue := func(object client.Object) []string {
+		subnet, ok := object.(*v1alpha1.Subnet)
+		if !ok {
+			return nil
+		}
+		state := subnet.Status.State
+		parentSubnet := subnet.Spec.ParentSubnet.Name
+		if parentSubnet == "" {
+			return nil
+		}
+		if state != v1alpha1.CFinishedSubnetState {
+			return nil
+		}
+		return []string{parentSubnet}
+	}
+
 	createFailedSubnetIndexValue := func(object client.Object) []string {
 		subnet, ok := object.(*v1alpha1.Subnet)
 		if !ok {
@@ -311,6 +327,11 @@ func (r *SubnetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			return nil
 		}
 		return []string{parentSubnet}
+	}
+
+	if err := mgr.GetFieldIndexer().IndexField(
+		context.Background(), &v1alpha1.Subnet{}, v1alpha1.CFinishedChildSubnetToSubnetIndexKey, createChildSubnetIndexValue); err != nil {
+		return err
 	}
 
 	if err := mgr.GetFieldIndexer().IndexField(

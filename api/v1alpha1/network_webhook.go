@@ -92,6 +92,25 @@ func (in *Network) ValidateUpdate(old runtime.Object) error {
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
 func (in *Network) ValidateDelete() error {
 	networklog.Info("validate delete", "name", in.Name)
+
+	var allErrs field.ErrorList
+
+	if len(in.Status.IPv4Ranges) > 0 {
+		allErrs = append(allErrs, field.InternalError(field.NewPath("metadata.name"), errors.New("Network has active IPv4 subnets")))
+	}
+
+	if len(in.Status.IPv6Ranges) > 0 {
+		allErrs = append(allErrs, field.InternalError(field.NewPath("metadata.name"), errors.New("Network has active IPv6 subnets")))
+	}
+
+	if len(allErrs) > 0 {
+		return apierrors.NewInvalid(
+			schema.GroupKind{
+				Group: GroupVersion.Group,
+				Kind:  "Network",
+			}, in.Name, allErrs)
+	}
+
 	return nil
 }
 
