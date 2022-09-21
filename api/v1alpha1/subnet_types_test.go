@@ -142,10 +142,6 @@ var _ = Describe("Subnet operations", func() {
 				Expect(testCase.subnet.CanReserve(testCase.cidrToReserve)).To(BeTrue())
 				Expect(testCase.subnet.CanRelease(testCase.cidrToReserve)).To(BeFalse())
 				Expect(testCase.subnet.Reserve(testCase.cidrToReserve)).To(Succeed())
-				for _, d := range testCase.subnet.Status.Vacant {
-					fmt.Printf(`*cidrMustParse("%s"), `, d.String())
-				}
-				fmt.Println()
 				Expect(testCase.subnet.Status.Vacant).To(Equal(testCase.resultingVacant))
 			}
 		})

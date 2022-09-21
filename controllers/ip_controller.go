@@ -215,24 +215,6 @@ func (r *IPReconciler) finalizeIP(ctx context.Context, log logr.Logger, ip *v1al
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *IPReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	createChildIPIndexValue := func(object client.Object) []string {
-		ip, ok := object.(*v1alpha1.IP)
-		if !ok {
-			return nil
-		}
-		state := ip.Status.State
-		parentSubnet := ip.Spec.Subnet.Name
-		if state != v1alpha1.CFinishedIPState {
-			return nil
-		}
-		return []string{parentSubnet}
-	}
-
-	if err := mgr.GetFieldIndexer().IndexField(
-		context.Background(), &v1alpha1.IP{}, v1alpha1.CFinishedChildIPToSubnetIndexKey, createChildIPIndexValue); err != nil {
-		return err
-	}
-
 	r.EventRecorder = mgr.GetEventRecorderFor("ip-controller")
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.IP{}).

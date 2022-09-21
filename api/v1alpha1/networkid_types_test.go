@@ -96,6 +96,48 @@ var _ = Describe("NetworkID marshalling and unmarshalling", func() {
 			Expect(id.Cmp(big.NewInt(110))).To(BeZero())
 			Expect(copyId.Cmp(big.NewInt(100))).To(BeZero())
 		})
+	})
 
+	Context("When NetworkIDs are compared", func() {
+		It("Should match when both are nil", func() {
+			var left *NetworkID
+			var right *NetworkID
+
+			Expect(left.Eq(right)).To(BeTrue())
+		})
+
+		It("Should match when comparing to itself", func() {
+			one := NetworkIDFromInt64(1)
+
+			Expect(one.Eq(one)).To(BeTrue())
+		})
+
+		It("Should match when IDs are same", func() {
+			left := NetworkIDFromInt64(100)
+			right := NetworkIDFromInt64(100)
+
+			Expect(left.Eq(right)).To(BeTrue())
+		})
+
+		It("Shouldn't match when left is nil", func() {
+			var left *NetworkID
+			right := NetworkIDFromInt64(100)
+
+			Expect(left.Eq(right)).To(BeFalse())
+		})
+
+		It("Shouldn't match when right is nil", func() {
+			left := NetworkIDFromInt64(100)
+			var right *NetworkID
+
+			Expect(left.Eq(right)).To(BeFalse())
+		})
+
+		It("Shouldn't match when IDs are different", func() {
+			left := NetworkIDFromInt64(100)
+			right := NetworkIDFromInt64(1001)
+
+			Expect(left.Eq(right)).To(BeFalse())
+		})
 	})
 })

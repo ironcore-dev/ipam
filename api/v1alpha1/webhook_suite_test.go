@@ -86,10 +86,6 @@ var _ = BeforeSuite(func() {
 
 	// +kubebuilder:scaffold:scheme
 
-	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
-	Expect(err).NotTo(HaveOccurred())
-	Expect(k8sClient).NotTo(BeNil())
-
 	// start webhook server using Manager
 	webhookInstallOptions := &testEnv.WebhookInstallOptions
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
@@ -100,6 +96,9 @@ var _ = BeforeSuite(func() {
 		LeaderElection:     false,
 		MetricsBindAddress: "0",
 	})
+	Expect(err).NotTo(HaveOccurred())
+
+	err = (&NetworkCounter{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = (&Network{}).SetupWebhookWithManager(mgr)
@@ -132,6 +131,8 @@ var _ = BeforeSuite(func() {
 		return nil
 	}).Should(Succeed())
 
+	k8sClient = mgr.GetClient()
+	Expect(k8sClient).NotTo(BeNil())
 }, 60)
 
 var _ = AfterSuite(func() {

@@ -46,6 +46,45 @@ var subnetlog = logf.Log.WithName("subnet-resource")
 var subnetWebhookClient client.Client
 
 func (in *Subnet) SetupWebhookWithManager(mgr ctrl.Manager) error {
+	createChildSubnetIndexValue := func(object client.Object) []string {
+		subnet, ok := object.(*Subnet)
+		if !ok {
+			return nil
+		}
+		state := subnet.Status.State
+		parentSubnet := subnet.Spec.ParentSubnet.Name
+		if parentSubnet == "" {
+			return nil
+		}
+		if state != CFinishedSubnetState {
+			return nil
+		}
+		return []string{parentSubnet}
+	}
+
+	createChildIPIndexValue := func(object client.Object) []string {
+		ip, ok := object.(*IP)
+		if !ok {
+			return nil
+		}
+		state := ip.Status.State
+		parentSubnet := ip.Spec.Subnet.Name
+		if state != CFinishedIPState {
+			return nil
+		}
+		return []string{parentSubnet}
+	}
+
+	if err := mgr.GetFieldIndexer().IndexField(
+		context.Background(), &Subnet{}, CFinishedChildSubnetToSubnetIndexKey, createChildSubnetIndexValue); err != nil {
+		return err
+	}
+
+	if err := mgr.GetFieldIndexer().IndexField(
+		context.Background(), &IP{}, CFinishedChildIPToSubnetIndexKey, createChildIPIndexValue); err != nil {
+		return err
+	}
+
 	subnetWebhookClient = mgr.GetClient()
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(in).
