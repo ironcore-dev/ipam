@@ -75,9 +75,8 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
-.PHONY: imports
-imports:
-	goimports -local "github.com/onmetal/ipam" -w .
+imports: goimports
+	$(GOIMPORTS) -local "github.com/onmetal/ipam" -w .
 
 fmt: imports ## Run go fmt against code.
 	go fmt ./...
@@ -128,6 +127,10 @@ controller-gen: ## Download controller-gen locally if necessary.
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.
 	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v4@v4.5.4)
+
+GOIMPORTS = $(shell pwd)/bin/goimports
+goimports: ## Download goimports locally if necessary.
+	$(call go-get-tool,$(GOIMPORTS),golang.org/x/tools/cmd/goimports@latest)
 
 # go-get-tool will 'go get' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
