@@ -26,19 +26,19 @@ var _ webhook.Validator = &NetworkCounter{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (in *NetworkCounter) ValidateCreate() error {
-	subnetlog.Info("validate create", "name", in.Name)
+	networkcounterlog.Info("validate create", "name", in.Name)
 	return nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (in *NetworkCounter) ValidateUpdate(_ runtime.Object) error {
-	subnetlog.Info("validate update", "name", in.Name)
+	networkcounterlog.Info("validate update", "name", in.Name)
 	return nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
 func (in *NetworkCounter) ValidateDelete() error {
-	subnetlog.Info("validate delete", "name", in.Name)
+	networkcounterlog.Info("validate delete", "name", in.Name)
 
 	var allErrs field.ErrorList
 
