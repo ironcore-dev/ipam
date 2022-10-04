@@ -87,8 +87,7 @@ vet: ## Run go vet against code.
 ENVTEST=$(shell pwd)/bin/setup-envtest
 test: manifests generate fmt vet ## Run tests.
 	$(call go-get-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)"
-	ASSUME_NO_MOVING_GC_UNSAFE_RISK_IT_WITH=go1.19 go test ./... -coverprofile cover.out
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)"	ASSUME_NO_MOVING_GC_UNSAFE_RISK_IT_WITH=go1.19 go test ./... -coverprofile cover.out
 
 ##@ Build
 
