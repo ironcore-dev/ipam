@@ -212,28 +212,27 @@ func (in *Subnet) ValidateUpdate(old runtime.Object) error {
 func (in *Subnet) ValidateDelete() error {
 	subnetlog.Info("validate delete", "name", in.Name)
 
-	if in.Spec.Consumer == nil {
-		return nil
-	}
-
-	unstruct := &unstructured.Unstructured{}
-	gv, err := schema.ParseGroupVersion(in.Spec.Consumer.APIVersion)
-	if err != nil {
-		subnetlog.Error(err, "unable to parse APIVerson of consumer resource, therefore allowing to delete Subnet", "name", in.Name, "api version", in.Spec.Consumer.APIVersion)
-		return nil
-	}
-
-	gvk := gv.WithKind(in.Spec.Consumer.Kind)
-	unstruct.SetGroupVersionKind(gvk)
-	namespacedName := types.NamespacedName{
-		Namespace: in.Namespace,
-		Name:      in.Spec.Consumer.Name,
-	}
-	ctx := context.Background()
-
 	var allErrs field.ErrorList
-	if err := subnetWebhookClient.Get(ctx, namespacedName, unstruct); !apierrors.IsNotFound(err) {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), in.Spec.Consumer, "Consumer is not deleted"))
+
+	if in.Spec.Consumer != nil {
+		unstruct := &unstructured.Unstructured{}
+		gv, err := schema.ParseGroupVersion(in.Spec.Consumer.APIVersion)
+		if err != nil {
+			subnetlog.Error(err, "unable to parse APIVerson of consumer resource, therefore allowing to delete Subnet", "name", in.Name, "api version", in.Spec.Consumer.APIVersion)
+			return nil
+		}
+
+		gvk := gv.WithKind(in.Spec.Consumer.Kind)
+		unstruct.SetGroupVersionKind(gvk)
+		namespacedName := types.NamespacedName{
+			Namespace: in.Namespace,
+			Name:      in.Spec.Consumer.Name,
+		}
+		ctx := context.Background()
+
+		if err := subnetWebhookClient.Get(ctx, namespacedName, unstruct); !apierrors.IsNotFound(err) {
+			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), in.Spec.Consumer, "Consumer is not deleted"))
+		}
 	}
 
 	childSubnetsMatchingFields := client.MatchingFields{
@@ -252,7 +251,7 @@ func (in *Subnet) ValidateDelete() error {
 	}
 
 	childIPsMatchingFields := client.MatchingFields{
-		CFinishedChildSubnetToSubnetIndexKey: in.Name,
+		CFinishedChildIPToSubnetIndexKey: in.Name,
 	}
 
 	ips := &IPList{}

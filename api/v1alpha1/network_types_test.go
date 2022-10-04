@@ -9,34 +9,6 @@ import (
 )
 
 var _ = Describe("Network operations", func() {
-	cidrMustParse := func(s string) *CIDR {
-		cidr, err := CIDRFromString(s)
-		Expect(err).Should(BeNil())
-		return cidr
-	}
-
-	networkFromCidrs := func(cidrStrings ...string) *Network {
-		v4Cidrs := make([]CIDR, 0)
-		v6Cidrs := make([]CIDR, 0)
-		for _, cidrString := range cidrStrings {
-			cidr := *cidrMustParse(cidrString)
-			if cidr.IsIPv4() {
-				v4Cidrs = append(v4Cidrs, cidr)
-			} else {
-				v6Cidrs = append(v6Cidrs, cidr)
-			}
-		}
-
-		nw := &Network{
-			Status: NetworkStatus{
-				IPv4Ranges: v4Cidrs,
-				IPv6Ranges: v6Cidrs,
-			},
-		}
-
-		return nw
-	}
-
 	Context("When Subnet is reserved on Network", func() {
 		It("Should update list of reserved Subnets", func() {
 			testCases := []struct {

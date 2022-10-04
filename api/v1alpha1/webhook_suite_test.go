@@ -28,9 +28,12 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes/scheme"
 
 	// +kubebuilder:scaffold:imports
-	"k8s.io/apimachinery/pkg/runtime"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
@@ -41,6 +44,12 @@ import (
 
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
+
+const (
+	CTestNamespacePrefix = "test-ns-"
+	CTimeout             = time.Second * 30
+	CInterval            = time.Millisecond * 250
+)
 
 var k8sClient client.Client
 var testEnv *envtest.Environment
@@ -74,14 +83,13 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	scheme := runtime.NewScheme()
-	err = AddToScheme(scheme)
+	err = AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = admissionv1beta1.AddToScheme(scheme)
+	err = admissionv1beta1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = admissionv1beta1.AddToScheme(scheme)
+	err = admissionv1beta1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme
@@ -89,7 +97,7 @@ var _ = BeforeSuite(func() {
 	// start webhook server using Manager
 	webhookInstallOptions := &testEnv.WebhookInstallOptions
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
-		Scheme:             scheme,
+		Scheme:             scheme.Scheme,
 		Host:               webhookInstallOptions.LocalServingHost,
 		Port:               webhookInstallOptions.LocalServingPort,
 		CertDir:            webhookInstallOptions.LocalServingCertDir,
@@ -141,3 +149,98 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
+
+func createTestNamespace() string {
+	testNamespace := &v1.Namespace{
+		ObjectMeta: ctrl.ObjectMeta{
+			GenerateName: CTestNamespacePrefix,
+		},
+	}
+	Expect(k8sClient.Create(ctx, testNamespace)).To(Succeed())
+	testNamespaceNamespacedName := types.NamespacedName{
+		Name: testNamespace.Name,
+	}
+	Eventually(func() bool {
+		if err := k8sClient.Get(ctx, testNamespaceNamespacedName, testNamespace); err != nil {
+			return false
+		}
+		return true
+	}, CTimeout, CInterval).Should(BeTrue())
+
+	return testNamespace.Name
+}
+
+func ipMustParse(ipString string) *IPAddr {
+	ip, err := IPAddrFromString(ipString)
+	if err != nil {
+		panic(err)
+	}
+	return ip
+}
+
+func cidrMustParse(s string) *CIDR {
+	cidr, err := CIDRFromString(s)
+	Expect(err).NotTo(HaveOccurred())
+	return cidr
+}
+
+func bytePtr(b byte) *byte {
+	return &b
+}
+
+func emptySubnetFromCidr(mainCidr string) *Subnet {
+	cidr := cidrMustParse(mainCidr)
+	return &Subnet{
+		Spec: SubnetSpec{
+			CIDR: cidr,
+		},
+		Status: SubnetStatus{
+			Vacant:   []CIDR{},
+			Reserved: cidr,
+		},
+	}
+}
+
+func subnetFromCidrs(mainCidr string, cidrStrings ...string) *Subnet {
+	cidrs := make([]CIDR, len(cidrStrings))
+	if len(cidrStrings) == 0 {
+		cidrs = append(cidrs, *cidrMustParse(mainCidr))
+	} else {
+		for i, cidrString := range cidrStrings {
+			cidrs[i] = *cidrMustParse(cidrString)
+		}
+	}
+
+	cidr := cidrMustParse(mainCidr)
+	return &Subnet{
+		Spec: SubnetSpec{
+			CIDR: cidr,
+		},
+		Status: SubnetStatus{
+			Vacant:   cidrs,
+			Reserved: cidr,
+		},
+	}
+}
+
+func networkFromCidrs(cidrStrings ...string) *Network {
+	v4Cidrs := make([]CIDR, 0)
+	v6Cidrs := make([]CIDR, 0)
+	for _, cidrString := range cidrStrings {
+		cidr := *cidrMustParse(cidrString)
+		if cidr.IsIPv4() {
+			v4Cidrs = append(v4Cidrs, cidr)
+		} else {
+			v6Cidrs = append(v6Cidrs, cidr)
+		}
+	}
+
+	nw := &Network{
+		Status: NetworkStatus{
+			IPv4Ranges: v4Cidrs,
+			IPv6Ranges: v6Cidrs,
+		},
+	}
+
+	return nw
+}

@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"fmt"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"inet.af/netaddr"
@@ -9,12 +10,6 @@ import (
 )
 
 var _ = Describe("CIDR operations", func() {
-	cidrMustParse := func(s string) *CIDR {
-		cidr, err := CIDRFromString(s)
-		Expect(err).NotTo(HaveOccurred())
-		return cidr
-	}
-
 	Context("When JSON is deserialized to CIDR", func() {
 		It("Should accept CIDR string", func() {
 			testCases := []struct {

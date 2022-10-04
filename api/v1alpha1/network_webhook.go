@@ -23,7 +23,7 @@ func (in *Network) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-// +kubebuilder:webhook:path=/validate-ipam-onmetal-de-v1alpha1-network,mutating=false,failurePolicy=fail,sideEffects=None,groups=ipam.onmetal.de,resources=networks,verbs=create;update,versions=v1alpha1,name=vnetwork.kb.io,admissionReviewVersions={v1,v1beta1}
+// +kubebuilder:webhook:path=/validate-ipam-onmetal-de-v1alpha1-network,mutating=false,failurePolicy=fail,sideEffects=None,groups=ipam.onmetal.de,resources=networks,verbs=create;update;delete,versions=v1alpha1,name=vnetwork.kb.io,admissionReviewVersions={v1,v1beta1}
 
 var _ webhook.Validator = &Network{}
 

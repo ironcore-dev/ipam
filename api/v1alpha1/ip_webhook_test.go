@@ -3,7 +3,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -13,34 +12,22 @@ import (
 )
 
 var _ = Describe("IP webhook", func() {
-	const (
-		IPNamespace = "default"
-		timeout     = time.Second * 10
-		interval    = time.Millisecond * 100
-	)
-
-	ipMustParse := func(ipString string) *IPAddr {
-		ip, err := IPAddrFromString(ipString)
-		if err != nil {
-			panic(err)
-		}
-		return ip
-	}
-
 	Context("When IP is not created", func() {
 		It("Should check that invalid CR will be rejected", func() {
+			testNamespaceName := createTestNamespace()
+
 			crs := []IP{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "without-subnet-name",
-						Namespace: IPNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: IPSpec{},
 				},
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "with-invalid-resource-ref",
-						Namespace: IPNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: IPSpec{
 						Subnet: corev1.LocalObjectReference{
@@ -63,11 +50,13 @@ var _ = Describe("IP webhook", func() {
 		})
 
 		It("Should check that valid CR will be accepted", func() {
+			testNamespaceName := createTestNamespace()
+
 			crs := []IP{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "with-subnet",
-						Namespace: IPNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: IPSpec{
 						Subnet: corev1.LocalObjectReference{
@@ -78,7 +67,7 @@ var _ = Describe("IP webhook", func() {
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "with-subnet-and-resource",
-						Namespace: IPNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: IPSpec{
 						Subnet: corev1.LocalObjectReference{
@@ -93,7 +82,7 @@ var _ = Describe("IP webhook", func() {
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "with-subnet-and-ip",
-						Namespace: IPNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: IPSpec{
 						Subnet: corev1.LocalObjectReference{
@@ -105,7 +94,7 @@ var _ = Describe("IP webhook", func() {
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "with-subnet-ip-and-resource",
-						Namespace: IPNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: IPSpec{
 						Subnet: corev1.LocalObjectReference{
@@ -132,11 +121,13 @@ var _ = Describe("IP webhook", func() {
 
 	Context("When IP is created", func() {
 		It("Should not allow to change IP or subnet", func() {
+			testNamespaceName := createTestNamespace()
+
 			crs := []IP{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "test-ip-with-subnet",
-						Namespace: IPNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: IPSpec{
 						Subnet: corev1.LocalObjectReference{
@@ -147,7 +138,7 @@ var _ = Describe("IP webhook", func() {
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "test-ip-with-subnet-and-resource",
-						Namespace: IPNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: IPSpec{
 						Subnet: corev1.LocalObjectReference{
@@ -162,7 +153,7 @@ var _ = Describe("IP webhook", func() {
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "test-ip-with-subnet-and-ip",
-						Namespace: IPNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: IPSpec{
 						Subnet: corev1.LocalObjectReference{
@@ -174,7 +165,7 @@ var _ = Describe("IP webhook", func() {
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "test-ip-with-subnet-ip-and-resource",
-						Namespace: IPNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: IPSpec{
 						Subnet: corev1.LocalObjectReference{
@@ -206,7 +197,7 @@ var _ = Describe("IP webhook", func() {
 						return false
 					}
 					return true
-				}, timeout, interval).Should(BeTrue())
+				}, CTimeout, CInterval).Should(BeTrue())
 
 				By(fmt.Sprintf("Attempting to update IP with name %s", cr.Name))
 				crCopy := cr.DeepCopy()
