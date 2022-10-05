@@ -1,8 +1,6 @@
 package v1alpha1
 
 import (
-	"time"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -20,9 +18,6 @@ var _ = Describe("Subnet client", func() {
 		SubnetToDeleteName = "test-subnet-to-delete"
 		DeleteLabel        = "delete-label"
 		SubnetNamespace    = "default"
-
-		timeout  = time.Second * 10
-		interval = time.Millisecond * 250
 	)
 
 	Context("When Subnet CR is installed", func() {
