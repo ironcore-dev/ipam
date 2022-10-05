@@ -111,6 +111,10 @@ func main() {
 		os.Exit(1)
 	}
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+		if err = (&ipamv1alpha1.NetworkCounter{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "NetworkCounter")
+			os.Exit(1)
+		}
 		if err = (&ipamv1alpha1.Network{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Network")
 			os.Exit(1)

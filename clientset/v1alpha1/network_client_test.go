@@ -1,9 +1,6 @@
 package v1alpha1
 
 import (
-	"context"
-	"time"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,16 +17,12 @@ var _ = Describe("Network client", func() {
 		NetworkToDeleteName = "test-network-to-delete"
 		DeleteLabel         = "delete-label"
 		NetworkNamespace    = "default"
-
-		timeout  = time.Second * 10
-		interval = time.Millisecond * 250
 	)
 
 	Context("When Network CR is installed", func() {
 		It("Should check that Network CR is operational with client", func() {
 			By("Creating client")
 			finished := make(chan bool)
-			ctx := context.Background()
 
 			clientset, err := NewForConfig(cfg)
 			Expect(err).NotTo(HaveOccurred())
@@ -62,7 +55,7 @@ var _ = Describe("Network client", func() {
 			}()
 
 			event := &watch.Event{}
-			Eventually(events).Should(Receive(event))
+			Eventually(events, CTimeout, CInterval).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Added))
 			eventNetwork := event.Object.(*v1alpha1.Network)
 			Expect(eventNetwork).NotTo(BeNil())
@@ -81,7 +74,7 @@ var _ = Describe("Network client", func() {
 				finished <- true
 			}()
 
-			Eventually(events).Should(Receive(event))
+			Eventually(events, CTimeout, CInterval).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Modified))
 			eventNetwork = event.Object.(*v1alpha1.Network)
 			Expect(eventNetwork).NotTo(BeNil())
@@ -99,7 +92,7 @@ var _ = Describe("Network client", func() {
 				finished <- true
 			}()
 
-			Eventually(events).Should(Receive(event))
+			Eventually(events, CTimeout, CInterval).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Modified))
 			eventNetwork = event.Object.(*v1alpha1.Network)
 			Expect(eventNetwork).NotTo(BeNil())
@@ -129,7 +122,7 @@ var _ = Describe("Network client", func() {
 				finished <- true
 			}()
 
-			Eventually(events).Should(Receive(event))
+			Eventually(events, CTimeout, CInterval).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Modified))
 			eventNetwork = event.Object.(*v1alpha1.Network)
 			Expect(eventNetwork).NotTo(BeNil())
@@ -153,7 +146,7 @@ var _ = Describe("Network client", func() {
 			By("Creating Network collection")
 			_, err = client.Create(ctx, networkToDelete, v1.CreateOptions{})
 			Expect(err).NotTo(HaveOccurred())
-			Eventually(events).Should(Receive())
+			Eventually(events, CTimeout, CInterval).Should(Receive())
 
 			By("Listing Networks")
 			networkList, err := client.List(ctx, v1.ListOptions{})
@@ -170,16 +163,16 @@ var _ = Describe("Network client", func() {
 					return false
 				}
 				return true
-			}, timeout, interval).Should(BeTrue())
+			}, CTimeout, CInterval).Should(BeTrue())
 			Eventually(func() bool {
 				_, err = client.Get(ctx, NetworkToDeleteName, v1.GetOptions{})
 				if err != nil {
 					return false
 				}
 				return true
-			}, timeout, interval).Should(BeFalse())
+			}, CTimeout, CInterval).Should(BeFalse())
 
-			Eventually(events).Should(Receive(event))
+			Eventually(events, CTimeout, CInterval).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Deleted))
 			eventNetwork = event.Object.(*v1alpha1.Network)
 			Expect(eventNetwork).NotTo(BeNil())
@@ -193,7 +186,7 @@ var _ = Describe("Network client", func() {
 				finished <- true
 			}()
 
-			Eventually(events).Should(Receive(event))
+			Eventually(events, CTimeout, CInterval).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Deleted))
 			eventNetwork = event.Object.(*v1alpha1.Network)
 			Expect(eventNetwork).NotTo(BeNil())
@@ -202,7 +195,7 @@ var _ = Describe("Network client", func() {
 			<-finished
 
 			watcher.Stop()
-			Eventually(events).Should(BeClosed())
+			Eventually(events, CTimeout, CInterval).Should(BeClosed())
 		})
 	})
 })

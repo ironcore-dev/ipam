@@ -1,8 +1,10 @@
 package v1alpha1
 
 import (
+	"context"
 	"path"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -16,8 +18,15 @@ import (
 	machinev1alpha1 "github.com/onmetal/ipam/api/v1alpha1"
 )
 
+const (
+	CTimeout  = time.Second * 30
+	CInterval = time.Millisecond * 250
+)
+
 var cfg *rest.Config
 var testEnv *envtest.Environment
+var ctx context.Context
+var cancel context.CancelFunc
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -31,6 +40,8 @@ var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
 	By("bootstrapping test environment")
+
+	ctx, cancel = context.WithCancel(context.Background())
 
 	testEnv = &envtest.Environment{
 		CRDDirectoryPaths: []string{path.Join("..", "..", "config", "crd", "bases")},
@@ -47,6 +58,6 @@ var _ = BeforeSuite(func() {
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
-	err := testEnv.Stop()
-	Expect(err).NotTo(HaveOccurred())
+	cancel()
+	Expect(testEnv.Stop()).To(Succeed())
 })

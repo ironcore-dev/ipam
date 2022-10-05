@@ -9,47 +9,6 @@ import (
 )
 
 var _ = Describe("Subnet operations", func() {
-	cidrMustParse := func(s string) *CIDR {
-		cidr, err := CIDRFromString(s)
-		Expect(err).NotTo(HaveOccurred())
-		return cidr
-	}
-
-	emptySubnetFromCidr := func(mainCidr string) *Subnet {
-		cidr := cidrMustParse(mainCidr)
-		return &Subnet{
-			Spec: SubnetSpec{
-				CIDR: cidr,
-			},
-			Status: SubnetStatus{
-				Vacant:   []CIDR{},
-				Reserved: cidr,
-			},
-		}
-	}
-
-	subnetFromCidrs := func(mainCidr string, cidrStrings ...string) *Subnet {
-		cidrs := make([]CIDR, len(cidrStrings))
-		if len(cidrStrings) == 0 {
-			cidrs = append(cidrs, *cidrMustParse(mainCidr))
-		} else {
-			for i, cidrString := range cidrStrings {
-				cidrs[i] = *cidrMustParse(cidrString)
-			}
-		}
-
-		cidr := cidrMustParse(mainCidr)
-		return &Subnet{
-			Spec: SubnetSpec{
-				CIDR: cidr,
-			},
-			Status: SubnetStatus{
-				Vacant:   cidrs,
-				Reserved: cidr,
-			},
-		}
-	}
-
 	Context("When subnet is reserved on subnet", func() {
 		It("Should update list of vacant subnets", func() {
 			testCases := []struct {
@@ -142,10 +101,6 @@ var _ = Describe("Subnet operations", func() {
 				Expect(testCase.subnet.CanReserve(testCase.cidrToReserve)).To(BeTrue())
 				Expect(testCase.subnet.CanRelease(testCase.cidrToReserve)).To(BeFalse())
 				Expect(testCase.subnet.Reserve(testCase.cidrToReserve)).To(Succeed())
-				for _, d := range testCase.subnet.Status.Vacant {
-					fmt.Printf(`*cidrMustParse("%s"), `, d.String())
-				}
-				fmt.Println()
 				Expect(testCase.subnet.Status.Vacant).To(Equal(testCase.resultingVacant))
 			}
 		})

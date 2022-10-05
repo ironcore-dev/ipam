@@ -36,11 +36,55 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
+const (
+	CFinishedChildSubnetToSubnetIndexKey = "finishedChildSubnetToSubnet"
+	CFinishedChildIPToSubnetIndexKey     = "finishedChildIPToSubnet"
+)
+
 // log is for logging in this package.
 var subnetlog = logf.Log.WithName("subnet-resource")
 var subnetWebhookClient client.Client
 
 func (in *Subnet) SetupWebhookWithManager(mgr ctrl.Manager) error {
+	createChildSubnetIndexValue := func(object client.Object) []string {
+		subnet, ok := object.(*Subnet)
+		if !ok {
+			return nil
+		}
+		state := subnet.Status.State
+		parentSubnet := subnet.Spec.ParentSubnet.Name
+		if parentSubnet == "" {
+			return nil
+		}
+		if state != CFinishedSubnetState {
+			return nil
+		}
+		return []string{parentSubnet}
+	}
+
+	createChildIPIndexValue := func(object client.Object) []string {
+		ip, ok := object.(*IP)
+		if !ok {
+			return nil
+		}
+		state := ip.Status.State
+		parentSubnet := ip.Spec.Subnet.Name
+		if state != CFinishedIPState {
+			return nil
+		}
+		return []string{parentSubnet}
+	}
+
+	if err := mgr.GetFieldIndexer().IndexField(
+		context.Background(), &Subnet{}, CFinishedChildSubnetToSubnetIndexKey, createChildSubnetIndexValue); err != nil {
+		return err
+	}
+
+	if err := mgr.GetFieldIndexer().IndexField(
+		context.Background(), &IP{}, CFinishedChildIPToSubnetIndexKey, createChildIPIndexValue); err != nil {
+		return err
+	}
+
 	subnetWebhookClient = mgr.GetClient()
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(in).
@@ -168,29 +212,65 @@ func (in *Subnet) ValidateUpdate(old runtime.Object) error {
 func (in *Subnet) ValidateDelete() error {
 	subnetlog.Info("validate delete", "name", in.Name)
 
-	if in.Spec.Consumer == nil {
-		return nil
+	var allErrs field.ErrorList
+
+	if in.Spec.Consumer != nil {
+		unstruct := &unstructured.Unstructured{}
+		gv, err := schema.ParseGroupVersion(in.Spec.Consumer.APIVersion)
+		if err != nil {
+			subnetlog.Error(err, "unable to parse APIVerson of consumer resource, therefore allowing to delete Subnet", "name", in.Name, "api version", in.Spec.Consumer.APIVersion)
+			return nil
+		}
+
+		gvk := gv.WithKind(in.Spec.Consumer.Kind)
+		unstruct.SetGroupVersionKind(gvk)
+		namespacedName := types.NamespacedName{
+			Namespace: in.Namespace,
+			Name:      in.Spec.Consumer.Name,
+		}
+		ctx := context.Background()
+
+		if err := subnetWebhookClient.Get(ctx, namespacedName, unstruct); !apierrors.IsNotFound(err) {
+			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), in.Spec.Consumer, "Consumer is not deleted"))
+		}
 	}
 
-	unstruct := &unstructured.Unstructured{}
-	gv, err := schema.ParseGroupVersion(in.Spec.Consumer.APIVersion)
-	if err != nil {
-		iplog.Error(err, "unable to parse APIVerson of consumer resource, therefore allowing to delete Subnet", "name", in.Name, "api version", in.Spec.Consumer.APIVersion)
-		return nil
+	childSubnetsMatchingFields := client.MatchingFields{
+		CFinishedChildSubnetToSubnetIndexKey: in.Name,
 	}
 
-	gvk := gv.WithKind(in.Spec.Consumer.Kind)
-	unstruct.SetGroupVersionKind(gvk)
-	namespacedName := types.NamespacedName{
-		Namespace: in.Namespace,
-		Name:      in.Spec.Consumer.Name,
+	subnets := &SubnetList{}
+	if err := subnetWebhookClient.List(context.Background(), subnets, client.InNamespace(in.Namespace), childSubnetsMatchingFields, client.Limit(1)); err != nil {
+		wrappedErr := errors.Wrap(err, "unable to get connected child subnets")
+		subnetlog.Error(wrappedErr, "", "name", types.NamespacedName{Namespace: in.Namespace, Name: in.Name})
+		return wrappedErr
 	}
-	ctx := context.Background()
 
-	if err := subnetWebhookClient.Get(ctx, namespacedName, unstruct); !apierrors.IsNotFound(err) {
-		var allErrs field.ErrorList
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), in.Spec.Consumer, "Consumer is not deleted"))
-		return apierrors.NewInvalid(gvk.GroupKind(), in.Name, allErrs)
+	if len(subnets.Items) > 0 {
+		allErrs = append(allErrs, field.InternalError(field.NewPath("metadata.name"), errors.New("Subnet is still in use by another subnets")))
+	}
+
+	childIPsMatchingFields := client.MatchingFields{
+		CFinishedChildIPToSubnetIndexKey: in.Name,
+	}
+
+	ips := &IPList{}
+	if err := subnetWebhookClient.List(context.Background(), ips, client.InNamespace(in.Namespace), childIPsMatchingFields, client.Limit(1)); err != nil {
+		wrappedErr := errors.Wrap(err, "unable to get connected child ips")
+		subnetlog.Error(wrappedErr, "", "name", types.NamespacedName{Namespace: in.Namespace, Name: in.Name})
+		return wrappedErr
+	}
+
+	if len(ips.Items) > 0 {
+		allErrs = append(allErrs, field.InternalError(field.NewPath("metadata.name"), errors.New("Subnet is still in use by IPs")))
+	}
+
+	if len(allErrs) > 0 {
+		return apierrors.NewInvalid(
+			schema.GroupKind{
+				Group: GroupVersion.Group,
+				Kind:  "Subnet",
+			}, in.Name, allErrs)
 	}
 
 	return nil

@@ -1,9 +1,6 @@
 package v1alpha1
 
 import (
-	"context"
-	"time"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -21,10 +18,8 @@ var _ = Describe("IP client", func() {
 		IPToDeleteName = "test-ip-to-delete"
 		DeleteLabel    = "delete-label"
 		IPNamespace    = "default"
-
-		timeout  = time.Second * 10
-		interval = time.Millisecond * 250
 	)
+
 	ipMustParse := func(ipString string) *v1alpha1.IPAddr {
 		ip, err := v1alpha1.IPAddrFromString(ipString)
 		if err != nil {
@@ -37,7 +32,6 @@ var _ = Describe("IP client", func() {
 		It("Should check that IP CR is operational with client", func() {
 			By("Creating client")
 			finished := make(chan bool)
-			ctx := context.Background()
 
 			clientset, err := NewForConfig(cfg)
 			Expect(err).NotTo(HaveOccurred())
@@ -73,7 +67,7 @@ var _ = Describe("IP client", func() {
 			}()
 
 			event := &watch.Event{}
-			Eventually(events).Should(Receive(event))
+			Eventually(events, CTimeout, CInterval).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Added))
 			eventIP := event.Object.(*v1alpha1.IP)
 			Expect(eventIP).NotTo(BeNil())
@@ -92,7 +86,7 @@ var _ = Describe("IP client", func() {
 				finished <- true
 			}()
 
-			Eventually(events).Should(Receive(event))
+			Eventually(events, CTimeout, CInterval).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Modified))
 			eventIP = event.Object.(*v1alpha1.IP)
 			Expect(eventIP).NotTo(BeNil())
@@ -110,7 +104,7 @@ var _ = Describe("IP client", func() {
 				finished <- true
 			}()
 
-			Eventually(events).Should(Receive(event))
+			Eventually(events, CTimeout, CInterval).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Modified))
 			eventIP = event.Object.(*v1alpha1.IP)
 			Expect(eventIP).NotTo(BeNil())
@@ -140,7 +134,7 @@ var _ = Describe("IP client", func() {
 				finished <- true
 			}()
 
-			Eventually(events).Should(Receive(event))
+			Eventually(events, CTimeout, CInterval).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Modified))
 			eventIP = event.Object.(*v1alpha1.IP)
 			Expect(eventIP).NotTo(BeNil())
@@ -166,7 +160,7 @@ var _ = Describe("IP client", func() {
 			By("Creating IP collection")
 			_, err = client.Create(ctx, ipToDelete, v1.CreateOptions{})
 			Expect(err).NotTo(HaveOccurred())
-			Eventually(events).Should(Receive())
+			Eventually(events, CTimeout, CInterval).Should(Receive())
 
 			By("Listing IPs")
 			ipList, err := client.List(ctx, v1.ListOptions{})
@@ -183,16 +177,16 @@ var _ = Describe("IP client", func() {
 					return false
 				}
 				return true
-			}, timeout, interval).Should(BeTrue())
+			}, CTimeout, CInterval).Should(BeTrue())
 			Eventually(func() bool {
 				_, err = client.Get(ctx, IPToDeleteName, v1.GetOptions{})
 				if err != nil {
 					return false
 				}
 				return true
-			}, timeout, interval).Should(BeFalse())
+			}, CTimeout, CInterval).Should(BeFalse())
 
-			Eventually(events).Should(Receive(event))
+			Eventually(events, CTimeout, CInterval).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Deleted))
 			eventIP = event.Object.(*v1alpha1.IP)
 			Expect(eventIP).NotTo(BeNil())
@@ -206,7 +200,7 @@ var _ = Describe("IP client", func() {
 				finished <- true
 			}()
 
-			Eventually(events).Should(Receive(event))
+			Eventually(events, CTimeout, CInterval).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Deleted))
 			eventIP = event.Object.(*v1alpha1.IP)
 			Expect(eventIP).NotTo(BeNil())
@@ -215,7 +209,7 @@ var _ = Describe("IP client", func() {
 			<-finished
 
 			watcher.Stop()
-			Eventually(events).Should(BeClosed())
+			Eventually(events, CTimeout, CInterval).Should(BeClosed())
 		})
 	})
 })

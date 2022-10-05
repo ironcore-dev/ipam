@@ -37,6 +37,16 @@ func NetworkIDFromBytes(b []byte) *NetworkID {
 	}
 }
 
+func (in *NetworkID) Eq(r *NetworkID) bool {
+	if in == r {
+		return true
+	}
+	if in == nil || r == nil {
+		return false
+	}
+	return in.Int.Cmp(&r.Int) == 0
+}
+
 func (in NetworkID) MarshalJSON() ([]byte, error) {
 	return json.Marshal(in.String())
 }

@@ -8,33 +8,23 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Subnet webhook", func() {
-	const (
-		SubnetNamespace = "default"
-	)
-
-	cidrMustParse := func(s string) *CIDR {
-		cidr, err := CIDRFromString(s)
-		Expect(err).NotTo(HaveOccurred())
-		return cidr
-	}
-
-	bytePtr := func(b byte) *byte {
-		return &b
-	}
-
 	Context("When Network is not created", func() {
 		It("Should check that invalid CR will be rejected", func() {
+			testNamespaceName := createTestNamespace()
+
 			crs := []Subnet{
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
 						Name:      "without-rules",
-						Namespace: SubnetNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: SubnetSpec{
 						ParentSubnet: corev1.LocalObjectReference{
@@ -54,7 +44,7 @@ var _ = Describe("Subnet webhook", func() {
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
 						Name:      "with-more-than-1-rule",
-						Namespace: SubnetNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: SubnetSpec{
 						CIDR:     cidrMustParse("127.0.0.0/24"),
@@ -76,7 +66,7 @@ var _ = Describe("Subnet webhook", func() {
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
 						Name:      "without-parent-subnet-and-with-cidr",
-						Namespace: SubnetNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: SubnetSpec{
 						Capacity: resource.NewScaledQuantity(60, 0),
@@ -94,7 +84,7 @@ var _ = Describe("Subnet webhook", func() {
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
 						Name:      "with-small-quantity",
-						Namespace: SubnetNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: SubnetSpec{
 						Capacity: resource.NewScaledQuantity(0, 0),
@@ -112,7 +102,7 @@ var _ = Describe("Subnet webhook", func() {
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
 						Name:      "with-big-quantity",
-						Namespace: SubnetNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: SubnetSpec{
 						Capacity: resource.NewScaledQuantity(math.MaxInt64, resource.Exa),
@@ -130,7 +120,7 @@ var _ = Describe("Subnet webhook", func() {
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
 						Name:      "with-duplicate-region",
-						Namespace: SubnetNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: SubnetSpec{
 						CIDR: cidrMustParse("127.0.0.0/24"),
@@ -155,7 +145,7 @@ var _ = Describe("Subnet webhook", func() {
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
 						Name:      "with-duplicate-az",
-						Namespace: SubnetNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: SubnetSpec{
 						CIDR: cidrMustParse("127.0.0.0/24"),
@@ -180,7 +170,7 @@ var _ = Describe("Subnet webhook", func() {
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
 						Name:      "with-invalid-consumer-ref",
-						Namespace: SubnetNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: SubnetSpec{
 						CIDR: cidrMustParse("127.0.0.0/24"),
@@ -215,11 +205,13 @@ var _ = Describe("Subnet webhook", func() {
 
 	Context("When Network is not created", func() {
 		It("Should check that valid CR will be accepted", func() {
+			testNamespaceName := createTestNamespace()
+
 			crs := []Subnet{
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
 						Name:      "without-regions",
-						Namespace: SubnetNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: SubnetSpec{
 						CIDR: cidrMustParse("127.0.0.0/24"),
@@ -234,7 +226,7 @@ var _ = Describe("Subnet webhook", func() {
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
 						Name:      "with-cidr-rule",
-						Namespace: SubnetNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: SubnetSpec{
 						CIDR: cidrMustParse("127.0.0.0/24"),
@@ -259,7 +251,7 @@ var _ = Describe("Subnet webhook", func() {
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
 						Name:      "with-capacity-rule",
-						Namespace: SubnetNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: SubnetSpec{
 						Capacity: resource.NewScaledQuantity(60, 0),
@@ -280,7 +272,7 @@ var _ = Describe("Subnet webhook", func() {
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
 						Name:      "with-host-bits-rule",
-						Namespace: SubnetNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: SubnetSpec{
 						PrefixBits: bytePtr(20),
@@ -301,7 +293,7 @@ var _ = Describe("Subnet webhook", func() {
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
 						Name:      "with-cidr-rule-and-without-parent-subnet",
-						Namespace: SubnetNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: SubnetSpec{
 						CIDR: cidrMustParse("127.0.0.0/24"),
@@ -319,7 +311,7 @@ var _ = Describe("Subnet webhook", func() {
 				{
 					ObjectMeta: controllerruntime.ObjectMeta{
 						Name:      "with-valid-consumer-ref",
-						Namespace: SubnetNamespace,
+						Namespace: testNamespaceName,
 					},
 					Spec: SubnetSpec{
 						CIDR: cidrMustParse("127.0.0.0/24"),
@@ -355,6 +347,8 @@ var _ = Describe("Subnet webhook", func() {
 
 	Context("When Subnet is created", func() {
 		It("Should not allow to update CR", func() {
+			testNamespaceName := createTestNamespace()
+
 			By("Create Subnet CR")
 			ctx := context.Background()
 
@@ -365,7 +359,7 @@ var _ = Describe("Subnet webhook", func() {
 			cr := Subnet{
 				ObjectMeta: controllerruntime.ObjectMeta{
 					Name:      "test-subnet",
-					Namespace: SubnetNamespace,
+					Namespace: testNamespaceName,
 				},
 				Spec: SubnetSpec{
 					CIDR: testCidr,
@@ -395,11 +389,247 @@ var _ = Describe("Subnet webhook", func() {
 					return false
 				}
 				return true
-			}).Should(BeTrue())
+			}, CTimeout, CInterval).Should(BeTrue())
 
 			By("Try to update Subnet CR")
 			cr.Spec.ParentSubnet.Name = "new"
 			Expect(k8sClient.Update(ctx, &cr)).ShouldNot(Succeed())
+		})
+	})
+
+	Context("When Subnet has sibling Subnets", func() {
+		It("Can't be deleted", func() {
+			testNamespaceName := createTestNamespace()
+			By("Parent Subnet is created")
+			ctx := context.Background()
+
+			parentSubnetCidr, err := CIDRFromString("10.0.0.0/8")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(parentSubnetCidr).NotTo(BeNil())
+
+			parentSubnet := Subnet{
+				ObjectMeta: controllerruntime.ObjectMeta{
+					Name:      "test-parent-subnet",
+					Namespace: testNamespaceName,
+				},
+				Spec: SubnetSpec{
+					CIDR: parentSubnetCidr,
+					Network: corev1.LocalObjectReference{
+						Name: "ng",
+					},
+					Regions: []Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
+				},
+			}
+
+			Expect(k8sClient.Create(ctx, &parentSubnet)).Should(Succeed())
+			Eventually(func() bool {
+				namespacedName := types.NamespacedName{
+					Namespace: parentSubnet.Namespace,
+					Name:      parentSubnet.Name,
+				}
+				err := k8sClient.Get(ctx, namespacedName, &parentSubnet)
+				if err != nil {
+					return false
+				}
+				return true
+			}, CTimeout, CInterval).Should(BeTrue())
+
+			By("Child Subnet is created")
+			childSubnetCidr, err := CIDRFromString("10.0.0.0/16")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(parentSubnetCidr).NotTo(BeNil())
+
+			childSubnet := Subnet{
+				ObjectMeta: controllerruntime.ObjectMeta{
+					Name:      "test-child-subnet",
+					Namespace: testNamespaceName,
+				},
+				Spec: SubnetSpec{
+					CIDR: childSubnetCidr,
+					ParentSubnet: corev1.LocalObjectReference{
+						Name: parentSubnet.Name,
+					},
+					Network: corev1.LocalObjectReference{
+						Name: "ng",
+					},
+					Regions: []Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
+				},
+			}
+
+			Expect(k8sClient.Create(ctx, &childSubnet)).Should(Succeed())
+			Eventually(func() bool {
+				namespacedName := types.NamespacedName{
+					Namespace: childSubnet.Namespace,
+					Name:      childSubnet.Name,
+				}
+				err := k8sClient.Get(ctx, namespacedName, &childSubnet)
+				if err != nil {
+					return false
+				}
+				return true
+			}, CTimeout, CInterval).Should(BeTrue())
+
+			childSubnet.Status.State = CFinishedSubnetState
+			Expect(k8sClient.Status().Update(ctx, &childSubnet)).Should(Succeed())
+			Eventually(func() bool {
+				childSubnetsMatchingFields := client.MatchingFields{
+					CFinishedChildSubnetToSubnetIndexKey: parentSubnet.Name,
+				}
+				subnets := &SubnetList{}
+				err := subnetWebhookClient.List(context.Background(), subnets, client.InNamespace(testNamespaceName), childSubnetsMatchingFields, client.Limit(1))
+				if err != nil {
+					return false
+				}
+				if len(subnets.Items) < 1 {
+					return false
+				}
+				return true
+			}, CTimeout, CInterval).Should(BeTrue())
+
+			By("Deletion of parent Subnet is failed")
+			Expect(k8sClient.Delete(ctx, &parentSubnet)).Should(Not(Succeed()))
+
+			By("Child Subnet is deleted")
+			Expect(k8sClient.Delete(ctx, &childSubnet)).Should(Succeed())
+			Eventually(func() bool {
+				namespacedName := types.NamespacedName{
+					Namespace: childSubnet.Namespace,
+					Name:      childSubnet.Name,
+				}
+				err := k8sClient.Get(ctx, namespacedName, &childSubnet)
+				if !apierrors.IsNotFound(err) {
+					return false
+				}
+				return true
+			}, CTimeout, CInterval).Should(BeTrue())
+
+			By("Parent Subnet is deleted")
+			Expect(k8sClient.Delete(ctx, &parentSubnet)).Should(Succeed())
+		})
+	})
+
+	Context("When Subnet has sibling IPs", func() {
+		It("Can't be deleted", func() {
+			testNamespaceName := createTestNamespace()
+			By("Parent Subnet is created")
+			ctx := context.Background()
+
+			parentSubnetCidr, err := CIDRFromString("10.0.0.0/8")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(parentSubnetCidr).NotTo(BeNil())
+
+			parentSubnet := Subnet{
+				ObjectMeta: controllerruntime.ObjectMeta{
+					Name:      "test-parent-subnet",
+					Namespace: testNamespaceName,
+				},
+				Spec: SubnetSpec{
+					CIDR: parentSubnetCidr,
+					ParentSubnet: corev1.LocalObjectReference{
+						Name: "ps",
+					},
+					Network: corev1.LocalObjectReference{
+						Name: "ng",
+					},
+					Regions: []Region{
+						{
+							Name:              "euw",
+							AvailabilityZones: []string{"a"},
+						},
+					},
+				},
+			}
+
+			Expect(k8sClient.Create(ctx, &parentSubnet)).Should(Succeed())
+			Eventually(func() bool {
+				namespacedName := types.NamespacedName{
+					Namespace: parentSubnet.Namespace,
+					Name:      parentSubnet.Name,
+				}
+				err := k8sClient.Get(ctx, namespacedName, &parentSubnet)
+				if err != nil {
+					return false
+				}
+				return true
+			}, CTimeout, CInterval).Should(BeTrue())
+
+			By("Child IP is created")
+			childIPAddr, err := IPAddrFromString("10.0.0.0")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(parentSubnetCidr).NotTo(BeNil())
+
+			childIP := IP{
+				ObjectMeta: controllerruntime.ObjectMeta{
+					Name:      "test-child-ip",
+					Namespace: testNamespaceName,
+				},
+				Spec: IPSpec{
+					Subnet: corev1.LocalObjectReference{
+						Name: parentSubnet.Name,
+					},
+					IP: childIPAddr,
+				},
+			}
+
+			Expect(k8sClient.Create(ctx, &childIP)).Should(Succeed())
+			Eventually(func() bool {
+				namespacedName := types.NamespacedName{
+					Namespace: childIP.Namespace,
+					Name:      childIP.Name,
+				}
+				err := k8sClient.Get(ctx, namespacedName, &childIP)
+				if err != nil {
+					return false
+				}
+				return true
+			}, CTimeout, CInterval).Should(BeTrue())
+
+			childIP.Status.State = CFinishedIPState
+			Expect(k8sClient.Status().Update(ctx, &childIP)).Should(Succeed())
+			Eventually(func() bool {
+				childIPsMatchingFields := client.MatchingFields{
+					CFinishedChildIPToSubnetIndexKey: parentSubnet.Name,
+				}
+				ips := &IPList{}
+				err := subnetWebhookClient.List(context.Background(), ips, client.InNamespace(testNamespaceName), childIPsMatchingFields, client.Limit(1))
+				if err != nil {
+					return false
+				}
+				if len(ips.Items) < 1 {
+					return false
+				}
+				return true
+			}, CTimeout, CInterval).Should(BeTrue())
+
+			By("Deletion of parent Subnet is failed")
+			Expect(k8sClient.Delete(ctx, &parentSubnet)).Should(Not(Succeed()))
+
+			By("Child IP is deleted")
+			Expect(k8sClient.Delete(ctx, &childIP)).Should(Succeed())
+			Eventually(func() bool {
+				namespacedName := types.NamespacedName{
+					Namespace: childIP.Namespace,
+					Name:      childIP.Name,
+				}
+				err := k8sClient.Get(ctx, namespacedName, &childIP)
+				if !apierrors.IsNotFound(err) {
+					return false
+				}
+				return true
+			}, CTimeout, CInterval).Should(BeTrue())
+
+			By("Parent Subnet is deleted")
+			Expect(k8sClient.Delete(ctx, &parentSubnet)).Should(Succeed())
 		})
 	})
 })

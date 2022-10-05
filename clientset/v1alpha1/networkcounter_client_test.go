@@ -1,9 +1,6 @@
 package v1alpha1
 
 import (
-	"context"
-	"time"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,16 +17,12 @@ var _ = Describe("NetworkCounter client", func() {
 		NetworkCounterToDeleteName = "test-networkcounter-to-delete"
 		DeleteLabel                = "delete-label"
 		NetworkCounterNamespace    = "default"
-
-		timeout  = time.Second * 10
-		interval = time.Millisecond * 250
 	)
 
 	Context("When NetworkCounter CR is installed", func() {
 		It("Should check that NetworkCounter CR is operational with client", func() {
 			By("Creating client")
 			finished := make(chan bool)
-			ctx := context.Background()
 
 			clientset, err := NewForConfig(cfg)
 			Expect(err).NotTo(HaveOccurred())
@@ -67,7 +60,7 @@ var _ = Describe("NetworkCounter client", func() {
 			}()
 
 			event := &watch.Event{}
-			Eventually(events).Should(Receive(event))
+			Eventually(events, CTimeout, CInterval).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Added))
 			eventNetworkCounter := event.Object.(*v1alpha1.NetworkCounter)
 			Expect(eventNetworkCounter).NotTo(BeNil())
@@ -85,7 +78,7 @@ var _ = Describe("NetworkCounter client", func() {
 				finished <- true
 			}()
 
-			Eventually(events).Should(Receive(event))
+			Eventually(events, CTimeout, CInterval).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Modified))
 			eventNetworkCounter = event.Object.(*v1alpha1.NetworkCounter)
 			Expect(eventNetworkCounter).NotTo(BeNil())
@@ -96,7 +89,7 @@ var _ = Describe("NetworkCounter client", func() {
 			By("Updating NetworkCounter status")
 			_, err = client.UpdateStatus(ctx, eventNetworkCounter, v1.UpdateOptions{})
 			Expect(err).NotTo(HaveOccurred())
-			Eventually(events).Should(Receive())
+			Eventually(events, CTimeout, CInterval).Should(Receive())
 
 			By("Patching NetworkCounter")
 			patch := []struct {
@@ -120,7 +113,7 @@ var _ = Describe("NetworkCounter client", func() {
 				finished <- true
 			}()
 
-			Eventually(events).Should(Receive(event))
+			Eventually(events, CTimeout, CInterval).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Modified))
 			eventNetworkCounter = event.Object.(*v1alpha1.NetworkCounter)
 			Expect(eventNetworkCounter).NotTo(BeNil())
@@ -148,7 +141,7 @@ var _ = Describe("NetworkCounter client", func() {
 			By("Creating NetworkCounter collection")
 			_, err = client.Create(ctx, networkCounterToDelete, v1.CreateOptions{})
 			Expect(err).NotTo(HaveOccurred())
-			Eventually(events).Should(Receive())
+			Eventually(events, CTimeout, CInterval).Should(Receive())
 
 			By("Listing NetworkCounters")
 			networkCounterList, err := client.List(ctx, v1.ListOptions{})
@@ -165,16 +158,16 @@ var _ = Describe("NetworkCounter client", func() {
 					return false
 				}
 				return true
-			}, timeout, interval).Should(BeTrue())
+			}, CTimeout, CInterval).Should(BeTrue())
 			Eventually(func() bool {
 				_, err = client.Get(ctx, NetworkCounterToDeleteName, v1.GetOptions{})
 				if err != nil {
 					return false
 				}
 				return true
-			}, timeout, interval).Should(BeFalse())
+			}, CTimeout, CInterval).Should(BeFalse())
 
-			Eventually(events).Should(Receive(event))
+			Eventually(events, CTimeout, CInterval).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Deleted))
 			eventNetworkCounter = event.Object.(*v1alpha1.NetworkCounter)
 			Expect(eventNetworkCounter).NotTo(BeNil())
@@ -188,7 +181,7 @@ var _ = Describe("NetworkCounter client", func() {
 				finished <- true
 			}()
 
-			Eventually(events).Should(Receive(event))
+			Eventually(events, CTimeout, CInterval).Should(Receive(event))
 			Expect(event.Type).To(Equal(watch.Deleted))
 			eventNetworkCounter = event.Object.(*v1alpha1.NetworkCounter)
 			Expect(eventNetworkCounter).NotTo(BeNil())
@@ -197,7 +190,7 @@ var _ = Describe("NetworkCounter client", func() {
 			<-finished
 
 			watcher.Stop()
-			Eventually(events).Should(BeClosed())
+			Eventually(events, CTimeout, CInterval).Should(BeClosed())
 		})
 	})
 })

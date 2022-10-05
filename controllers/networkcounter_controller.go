@@ -4,13 +4,14 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
-	machinev1alpha1 "github.com/onmetal/ipam/api/v1alpha1"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	machinev1alpha1 "github.com/onmetal/ipam/api/v1alpha1"
 )
 
 const (
