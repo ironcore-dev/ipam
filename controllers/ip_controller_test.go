@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -36,7 +35,6 @@ var _ = Describe("IP controller", func() {
 	}
 
 	AfterEach(func() {
-		ctx := context.Background()
 		resources := []struct {
 			res   client.Object
 			list  client.ObjectList
@@ -94,8 +92,6 @@ var _ = Describe("IP controller", func() {
 	Context("IP controller test", func() {
 		It("Should get IP assigned", func() {
 			By("Network is created")
-			ctx := context.Background()
-
 			network := &v1alpha1.Network{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      NetworkName,

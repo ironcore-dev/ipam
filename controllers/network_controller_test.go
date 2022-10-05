@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -31,7 +30,6 @@ var _ = Describe("Network controller", func() {
 	)
 
 	AfterEach(func() {
-		ctx := context.Background()
 		resources := []struct {
 			res   client.Object
 			list  client.ObjectList
@@ -133,8 +131,6 @@ var _ = Describe("Network controller", func() {
 					},
 				},
 			}
-
-			ctx := context.Background()
 
 			for _, testNetworkCase := range testNetworkCases {
 				testNetwork := testNetworkCase.network

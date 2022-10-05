@@ -354,6 +354,9 @@ var _ = Describe("Network webhook", func() {
 				if err != nil {
 					return false
 				}
+				if cr.Spec.Type != CMPLSNetworkType {
+					return false
+				}
 				return true
 			}).Should(BeTrue())
 

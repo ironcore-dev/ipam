@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -25,7 +24,6 @@ var _ = Describe("NetworkCounter controller", func() {
 	)
 
 	AfterEach(func() {
-		ctx := context.Background()
 		resources := []struct {
 			res   client.Object
 			list  client.ObjectList
@@ -83,8 +81,6 @@ var _ = Describe("NetworkCounter controller", func() {
 	Context("When network counter is updated", func() {
 		It("Should trigger update of failed networks", func() {
 			By("Counter is created")
-			ctx := context.Background()
-
 			counterSpec := v1alpha1.NewNetworkCounterSpec(v1alpha1.CVXLANNetworkType)
 			counterSpec.Vacant[0].Begin = v1alpha1.NetworkIDFromInt64(101)
 

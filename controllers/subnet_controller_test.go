@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -29,7 +28,6 @@ var _ = Describe("Subnet controller", func() {
 	)
 
 	AfterEach(func() {
-		ctx := context.Background()
 		resources := []struct {
 			res   client.Object
 			list  client.ObjectList
@@ -87,8 +85,6 @@ var _ = Describe("Subnet controller", func() {
 	Context("When Subnet CR is created", func() {
 		It("Should reserve CIDR in parent Network", func() {
 			By("Network is installed")
-			ctx := context.Background()
-
 			testNetwork := v1alpha1.Network{
 				ObjectMeta: v1.ObjectMeta{
 					Name:      NetworkName,
@@ -271,8 +267,6 @@ var _ = Describe("Subnet controller", func() {
 	Context("When Subnet CR is created", func() {
 		It("Should reserve CIDR in parent Subnet", func() {
 			By("Network is installed")
-			ctx := context.Background()
-
 			testNetwork := v1alpha1.Network{
 				ObjectMeta: v1.ObjectMeta{
 					Name:      NetworkName,
@@ -485,8 +479,6 @@ var _ = Describe("Subnet controller", func() {
 	Context("When child Subnet CR with capacity is created", func() {
 		It("Should reserve CIDR in parent Subnet", func() {
 			By("Network is installed")
-			ctx := context.Background()
-
 			testNetwork := v1alpha1.Network{
 				ObjectMeta: v1.ObjectMeta{
 					Name:      NetworkName,
@@ -619,8 +611,6 @@ var _ = Describe("Subnet controller", func() {
 	Context("When child Subnet CR with host bits is created", func() {
 		It("Should reserve CIDR in parent Subnet", func() {
 			By("Network is installed")
-			ctx := context.Background()
-
 			testNetwork := v1alpha1.Network{
 				ObjectMeta: v1.ObjectMeta{
 					Name:      NetworkName,
@@ -755,8 +745,6 @@ var _ = Describe("Subnet controller", func() {
 	Context("When Subnet CR is created with already booked CIDR", func() {
 		It("Should fall into the failed state", func() {
 			By("Network is installed")
-			ctx := context.Background()
-
 			testNetwork := v1alpha1.Network{
 				ObjectMeta: v1.ObjectMeta{
 					Name:      NetworkName,
@@ -944,8 +932,6 @@ var _ = Describe("Subnet controller", func() {
 	Context("When Subnet CR with wrong zone set is created for existing subnet", func() {
 		It("Should fall into the failed state", func() {
 			By("Network is installed")
-			ctx := context.Background()
-
 			testNetwork := v1alpha1.Network{
 				ObjectMeta: v1.ObjectMeta{
 					Name:      NetworkName,
