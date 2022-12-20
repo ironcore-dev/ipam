@@ -3,7 +3,7 @@ name: Release Drafter
 on:
   push:
     branches:
-      - master
+      - main
   pull_request_target:
 
 jobs:
@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: release-drafter/release-drafter@v5
         with:
-          disable-releaser: github.ref != 'refs/heads/master'
+          disable-releaser: github.ref != 'refs/heads/main'
           config-name: release-drafter.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
