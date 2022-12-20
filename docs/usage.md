@@ -252,14 +252,14 @@ Status:
 ```
 
 Examples:
-- [IPv4 parent (top level) subnet](config/samples/ipam_v1alpha1_ipv4_parent_cidr_subnet.yaml);
-- [IPv4 child subnet with CIDR set explicitly](config/samples/ipam_v1alpha1_ipv4_child_cidr_subnet.yaml);
-- [IPv4 child subnet with CIDR requested by network prefix bits](config/samples/ipam_v1alpha1_ipv4_child_bits_subnet.yaml);
-- [IPv4 child subnet with CIDR requested by address capacity](config/samples/ipam_v1alpha1_ipv4_child_capacity_subnet.yaml);
-- [IPv6 parent (top level) subnet](config/samples/ipam_v1alpha1_ipv6_parent_cidr_subnet.yaml);
-- [IPv6 child subnet with CIDR set explicitly](config/samples/ipam_v1alpha1_ipv6_child_cidr_subnet.yaml);
-- [IPv6 child subnet with CIDR requested by network prefix bits](config/samples/ipam_v1alpha1_ipv6_child_bits_subnet.yaml);
-- [IPv6 child subnet with CIDR requested by address capacity](config/samples/ipam_v1alpha1_ipv6_child_capacity_subnet.yaml);
+- [IPv4 parent (top level) subnet](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_parent_cidr_subnet.yaml);
+- [IPv4 child subnet with CIDR set explicitly](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_child_cidr_subnet.yaml);
+- [IPv4 child subnet with CIDR requested by network prefix bits](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_child_bits_subnet.yaml);
+- [IPv4 child subnet with CIDR requested by address capacity](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_child_capacity_subnet.yaml);
+- [IPv6 parent (top level) subnet](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_parent_cidr_subnet.yaml);
+- [IPv6 child subnet with CIDR set explicitly](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_child_cidr_subnet.yaml);
+- [IPv6 child subnet with CIDR requested by network prefix bits](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_child_bits_subnet.yaml);
+- [IPv6 child subnet with CIDR requested by address capacity](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_child_capacity_subnet.yaml);
 
 ## IPs
 
