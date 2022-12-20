@@ -9,7 +9,7 @@ on:
       - v*
     paths-ignore:
       - '**.md'
-  pull_request:
+  pull_request_target:
     branches:
       - main
     paths-ignore:
@@ -27,7 +27,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
       - name: Setup golang
         uses: actions/setup-go@v3
         with:
