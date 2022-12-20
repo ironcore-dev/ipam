@@ -106,10 +106,10 @@ Spec:
 ```
 
 Examples:
-- [empty network](config/samples/ipam_v1alpha1_network.yaml);
-- [network with VXLAN ID request](config/samples/ipam_v1alpha1_vxlan_network.yaml);
-- [network with GENEVE ID request](config/samples/ipam_v1alpha1_geneve_network.yaml);
-- [network with MPLS ID request](config/samples/ipam_v1alpha1_mpls_network.yaml).
+- [empty network](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_network.yaml);
+- [network with VXLAN ID request](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_vxlan_network.yaml);
+- [network with GENEVE ID request](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_geneve_network.yaml);
+- [network with MPLS ID request](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_mpls_network.yaml).
 
 ## Subnets 
 
@@ -325,11 +325,11 @@ Status:
 ```
 
 Examples:
-- [IPv4 IP request](config/samples/ipam_v1alpha1_ipv4_ip.yaml);
-- [IPv4 IP request with reference to related resource](config/samples/ipam_v1alpha1_ipv4_resource_ip.yaml);
-- [IPv4 IP request with IP set explicitly](config/samples/ipam_v1alpha1_ipv4_ip_ip.yaml);
-- [IPv4 IP request with reference to related resource and IP set explicitly](config/samples/ipam_v1alpha1_ipv4_resource_and_ip_ip.yaml);
-- [IPv6 IP request](config/samples/ipam_v1alpha1_ipv6_ip.yaml);
-- [IPv6 IP request with reference to related resource](config/samples/ipam_v1alpha1_ipv6_resource_ip.yaml);
-- [IPv6 IP request with IP set explicitly](config/samples/ipam_v1alpha1_ipv6_ip_ip.yaml);
-- [IPv6 IP request with reference to related resource and IP set explicitly](config/samples/ipam_v1alpha1_ipv6_resource_and_ip_ip.yaml);
+- [IPv4 IP request](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_ip.yaml);
+- [IPv4 IP request with reference to related resource](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_resource_ip.yaml);
+- [IPv4 IP request with IP set explicitly](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_ip_ip.yaml);
+- [IPv4 IP request with reference to related resource and IP set explicitly](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_resource_and_ip_ip.yaml);
+- [IPv6 IP request](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_ip.yaml);
+- [IPv6 IP request with reference to related resource](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_resource_ip.yaml);
+- [IPv6 IP request with IP set explicitly](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_ip_ip.yaml);
+- [IPv6 IP request with reference to related resource and IP set explicitly](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_resource_and_ip_ip.yaml);
