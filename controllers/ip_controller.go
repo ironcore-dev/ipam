@@ -52,6 +52,7 @@ type IPReconciler struct {
 }
 
 // +kubebuilder:rbac:groups=*,resources=*,verbs=get;list;watch
+// +kubebuilder:rbac:groups=*,resources=events,verbs=create;patch
 // +kubebuilder:rbac:groups=ipam.onmetal.de,resources=ips,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=ipam.onmetal.de,resources=ips/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=ipam.onmetal.de,resources=ips/finalizers,verbs=update
