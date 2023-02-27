@@ -4,8 +4,9 @@ go 1.20
 
 require (
 	github.com/go-logr/logr v1.2.3
+	github.com/google/addlicense v1.1.1
 	github.com/onsi/ginkgo/v2 v2.8.1
-	github.com/onsi/gomega v1.27.0
+	github.com/onsi/gomega v1.27.1
 	github.com/pkg/errors v0.9.1
 	gopkg.in/inf.v0 v0.9.1
 	inet.af/netaddr v0.0.0-20211027220019-c74959edd3b6
@@ -30,7 +31,6 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/addlicense v1.1.1 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
@@ -53,7 +53,7 @@ require (
 	go.uber.org/zap v1.24.0 // indirect
 	go4.org/intern v0.0.0-20211027215823-ae77deb06f29 // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20230209150437-ee73d164e760 // indirect
-	golang.org/x/net v0.6.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b // indirect
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
 	golang.org/x/sys v0.5.0 // indirect
