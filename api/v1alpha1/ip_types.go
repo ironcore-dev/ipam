@@ -51,6 +51,8 @@ type IPStatus struct {
 	Reserved *IPAddr `json:"reserved,omitempty"`
 	// Message contains error details if the one has occurred
 	Message string `json:"message,omitempty"`
+	// Timestamp contains last seen time of IP object
+	Timestamp int64 `json:"timestamp,omitempty"`
 }
 
 // IP is the Schema for the ips API
