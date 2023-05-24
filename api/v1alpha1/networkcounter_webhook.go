@@ -23,6 +23,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
@@ -39,26 +40,29 @@ func (in *NetworkCounter) SetupWebhookWithManager(mgr ctrl.Manager) error {
 var _ webhook.Validator = &NetworkCounter{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (in *NetworkCounter) ValidateCreate() error {
+func (in *NetworkCounter) ValidateCreate() (admission.Warnings, error) {
 	networkcounterlog.Info("validate create", "name", in.Name)
-	return nil
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (in *NetworkCounter) ValidateUpdate(_ runtime.Object) error {
+func (in *NetworkCounter) ValidateUpdate(_ runtime.Object) (admission.Warnings, error) {
 	networkcounterlog.Info("validate update", "name", in.Name)
-	return nil
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (in *NetworkCounter) ValidateDelete() error {
+func (in *NetworkCounter) ValidateDelete() (admission.Warnings, error) {
 	networkcounterlog.Info("validate delete", "name", in.Name)
 
 	var allErrs field.ErrorList
+	var warnings admission.Warnings
 
 	if len(in.Spec.Vacant) == 0 {
-		allErrs = append(allErrs, field.InternalError(field.NewPath("metadata.name"), errors.New("Network Counter is still in use by networks")))
-		return apierrors.NewInvalid(
+		allErrs = append(allErrs, field.InternalError(
+			field.NewPath("metadata.name"),
+			errors.New("Network Counter is still in use by networks")))
+		return warnings, apierrors.NewInvalid(
 			schema.GroupKind{
 				Group: GroupVersion.Group,
 				Kind:  "NetworkCounter",
@@ -69,15 +73,15 @@ func (in *NetworkCounter) ValidateDelete() error {
 	end := in.Spec.Vacant[0].End
 
 	if end == nil && begin.Eq(CMPLSFirstAvailableID) {
-		return nil
+		return warnings, nil
 	}
 
 	if begin.Eq(CVXLANFirstAvaliableID) && end.Eq(CVXLANMaxID) {
-		return nil
+		return warnings, nil
 	}
 
 	allErrs = append(allErrs, field.InternalError(field.NewPath("metadata.name"), errors.New("Network Counter is still in use by networks")))
-	return apierrors.NewInvalid(
+	return warnings, apierrors.NewInvalid(
 		schema.GroupKind{
 			Group: GroupVersion.Group,
 			Kind:  "NetworkCounter",

@@ -18,6 +18,8 @@ package v1alpha1
 
 import (
 	"context"
+	"fmt"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -48,35 +50,42 @@ func (in *IP) SetupWebhookWithManager(mgr ctrl.Manager) error {
 var _ webhook.Validator = &IP{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (in *IP) ValidateCreate() error {
+func (in *IP) ValidateCreate() (admission.Warnings, error) {
 	iplog.Info("validate create", "name", in.Name)
 
 	var allErrs field.ErrorList
+	var warnings admission.Warnings
 
 	if in.Spec.Consumer != nil {
 		if _, err := schema.ParseGroupVersion(in.Spec.Consumer.APIVersion); err != nil {
-			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer.apiVersion"), in.Spec.Consumer.APIVersion, err.Error()))
+			allErrs = append(allErrs,
+				field.Invalid(
+					field.NewPath("spec.consumer.apiVersion"), in.Spec.Consumer.APIVersion, err.Error()))
 		}
 	}
 
 	if in.Spec.Subnet.Name == "" {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.subnet.name"), in.Spec.IP, "Parent subnet should be defined"))
+		allErrs = append(allErrs, field.Invalid(
+			field.NewPath("spec.subnet.name"), in.Spec.IP, "Parent subnet should be defined"))
 	}
 
 	if len(allErrs) > 0 {
-		return apierrors.NewInvalid(in.GroupVersionKind().GroupKind(), in.Name, allErrs)
+		return warnings, apierrors.NewInvalid(in.GroupVersionKind().GroupKind(), in.Name, allErrs)
 	}
 
-	return nil
+	return warnings, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (in *IP) ValidateUpdate(old runtime.Object) error {
+func (in *IP) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	iplog.Info("validate update", "name", in.Name)
+
+	var warnings admission.Warnings
 
 	oldIP, ok := old.(*IP)
 	if !ok {
-		return apierrors.NewInternalError(errors.New("cannot cast previous object version to IP CR type"))
+		return warnings, apierrors.NewInternalError(
+			errors.New("cannot cast previous object version to IP CR type"))
 	}
 
 	var allErrs field.ErrorList
@@ -84,34 +93,41 @@ func (in *IP) ValidateUpdate(old runtime.Object) error {
 	if !(oldIP.Spec.IP == nil && in.Spec.IP == nil) {
 		if oldIP.Spec.IP == nil || in.Spec.IP == nil ||
 			!oldIP.Spec.IP.Equal(in.Spec.IP) {
-			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.ip"), in.Spec.IP, "IP change is disallowed"))
+			allErrs = append(allErrs, field.Invalid(
+				field.NewPath("spec.ip"), in.Spec.IP, "IP change is disallowed"))
 		}
 	}
 
 	if oldIP.Spec.Subnet.Name != in.Spec.Subnet.Name {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.subnet.name"), in.Spec.Subnet.Name, "Subnet change is disallowed"))
+		allErrs = append(allErrs, field.Invalid(
+			field.NewPath("spec.subnet.name"), in.Spec.Subnet.Name, "Subnet change is disallowed"))
 	}
 
 	if len(allErrs) > 0 {
-		return apierrors.NewInvalid(in.GroupVersionKind().GroupKind(), in.Name, allErrs)
+		return warnings, apierrors.NewInvalid(in.GroupVersionKind().GroupKind(), in.Name, allErrs)
 	}
 
-	return nil
+	return warnings, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (in *IP) ValidateDelete() error {
+func (in *IP) ValidateDelete() (admission.Warnings, error) {
 	iplog.Info("validate delete", "name", in.Name)
 
+	var warnings admission.Warnings
+
 	if in.Spec.Consumer == nil {
-		return nil
+		return warnings, nil
 	}
 
 	unstruct := &unstructured.Unstructured{}
 	gv, err := schema.ParseGroupVersion(in.Spec.Consumer.APIVersion)
 	if err != nil {
-		iplog.Error(err, "unable to parse APIVerson of consumer resource, therefore allowing to delete IP", "name", in.Name, "api version", in.Spec.Consumer.APIVersion)
-		return nil
+		message := fmt.Sprintf("unable to parse APIVerson of consumer resource, therefore allowing to delete IP."+
+			"name: %s, api version: %s",
+			in.Name, in.Spec.Consumer.APIVersion)
+		iplog.Error(err, message)
+		return append(warnings, message), nil
 	}
 
 	gvk := gv.WithKind(in.Spec.Consumer.Kind)
@@ -125,8 +141,8 @@ func (in *IP) ValidateDelete() error {
 	if err := ipWebhookClient.Get(ctx, namespacedName, unstruct); !apierrors.IsNotFound(err) {
 		var allErrs field.ErrorList
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), in.Spec.Consumer, "Consumer is not deleted"))
-		return apierrors.NewInvalid(gvk.GroupKind(), in.Name, allErrs)
+		return warnings, apierrors.NewInvalid(gvk.GroupKind(), in.Name, allErrs)
 	}
 
-	return nil
+	return warnings, nil
 }

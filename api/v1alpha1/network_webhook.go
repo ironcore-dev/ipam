@@ -17,6 +17,7 @@ package v1alpha1
 import (
 	"fmt"
 	"math"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -42,13 +43,15 @@ func (in *Network) SetupWebhookWithManager(mgr ctrl.Manager) error {
 var _ webhook.Validator = &Network{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (in *Network) ValidateCreate() error {
+func (in *Network) ValidateCreate() (admission.Warnings, error) {
 	networklog.Info("validate create", "name", in.Name)
 
 	var allErrs field.ErrorList
+	var warnings admission.Warnings
 
 	if in.Spec.Type == "" && in.Spec.ID != nil {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.id"), in.Spec.ID, "setting network ID without type is disallowed"))
+		allErrs = append(allErrs, field.Invalid(
+			field.NewPath("spec.id"), in.Spec.ID, "setting network ID without type is disallowed"))
 	}
 
 	if err := in.validateID(); err != nil {
@@ -61,30 +64,37 @@ func (in *Network) ValidateCreate() error {
 			Group: gvk.Group,
 			Kind:  gvk.Kind,
 		}
-		return apierrors.NewInvalid(gk, in.Name, allErrs)
+		return warnings, apierrors.NewInvalid(gk, in.Name, allErrs)
 	}
 
-	return nil
+	return warnings, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (in *Network) ValidateUpdate(old runtime.Object) error {
+func (in *Network) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	networklog.Info("validate update", "name", in.Name)
+
+	var warnings admission.Warnings
+
 	oldNetwork, ok := old.(*Network)
 	if !ok {
-		return apierrors.NewInternalError(errors.New("cannot cast previous object version to Network CR type"))
+		message := errors.New("cannot cast previous object version to Network CR type")
+		return append(warnings, message.Error()), apierrors.NewInternalError(message)
 	}
 
 	var allErrs field.ErrorList
 
 	if oldNetwork.Spec.Type != "" &&
 		oldNetwork.Spec.Type != in.Spec.Type {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.type"), in.Spec.Type, "network type change is disallowed; resource should be released (deleted) first"))
+		allErrs = append(allErrs, field.Invalid(
+			field.NewPath("spec.type"), in.Spec.Type, "network type change is disallowed; resource should be released (deleted) first"))
 	}
 
 	if (oldNetwork.Spec.ID != nil && oldNetwork.Spec.ID.Cmp(&in.Spec.ID.Int) != 0) ||
 		(oldNetwork.Spec.ID == nil && oldNetwork.Spec.Type != "" && in.Spec.ID != nil) {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.id"), in.Spec.ID, "network ID change after assignment is disallowed; resource should be released (deleted) first"))
+		allErrs = append(allErrs, field.Invalid(
+			field.NewPath("spec.id"), in.Spec.ID,
+			"network ID change after assignment is disallowed; resource should be released (deleted) first"))
 	}
 
 	if err := in.validateID(); err != nil {
@@ -97,35 +107,38 @@ func (in *Network) ValidateUpdate(old runtime.Object) error {
 			Group: gvk.Group,
 			Kind:  gvk.Kind,
 		}
-		return apierrors.NewInvalid(gk, in.Name, allErrs)
+		return warnings, apierrors.NewInvalid(gk, in.Name, allErrs)
 	}
 
-	return nil
+	return warnings, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (in *Network) ValidateDelete() error {
+func (in *Network) ValidateDelete() (admission.Warnings, error) {
 	networklog.Info("validate delete", "name", in.Name)
 
 	var allErrs field.ErrorList
+	var warnings admission.Warnings
 
 	if len(in.Status.IPv4Ranges) > 0 {
-		allErrs = append(allErrs, field.InternalError(field.NewPath("metadata.name"), errors.New("Network has active IPv4 subnets")))
+		allErrs = append(allErrs, field.InternalError(
+			field.NewPath("metadata.name"), errors.New("Network has active IPv4 subnets")))
 	}
 
 	if len(in.Status.IPv6Ranges) > 0 {
-		allErrs = append(allErrs, field.InternalError(field.NewPath("metadata.name"), errors.New("Network has active IPv6 subnets")))
+		allErrs = append(allErrs, field.InternalError(
+			field.NewPath("metadata.name"), errors.New("Network has active IPv6 subnets")))
 	}
 
 	if len(allErrs) > 0 {
-		return apierrors.NewInvalid(
+		return warnings, apierrors.NewInvalid(
 			schema.GroupKind{
 				Group: GroupVersion.Group,
 				Kind:  "Network",
 			}, in.Name, allErrs)
 	}
 
-	return nil
+	return warnings, nil
 }
 
 func (in *Network) validateID() *field.Error {

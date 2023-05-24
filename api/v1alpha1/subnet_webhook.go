@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -34,6 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	_ "sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 const (
@@ -96,16 +98,18 @@ func (in *Subnet) SetupWebhookWithManager(mgr ctrl.Manager) error {
 var _ webhook.Validator = &Subnet{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (in *Subnet) ValidateCreate() error {
+func (in *Subnet) ValidateCreate() (admission.Warnings, error) {
 	subnetlog.Info("validate create", "name", in.Name)
 
 	var allErrs field.ErrorList
+	var warnings admission.Warnings
+
 	rulesCount := in.countCIDRReservationRules()
 	rulesPaths := []string{"spec.cidr", "spec.capacity", "spec.hostIdentifierBits"}
 	minQuantity := resource.NewQuantity(1, resource.DecimalSI)
 	maxQuantity, err := resource.ParseQuantity("340282366920938463463374607431768211456")
 	if err != nil {
-		return apierrors.NewInternalError(err)
+		return warnings, apierrors.NewInternalError(err)
 	}
 
 	if rulesCount == 0 || rulesCount > 1 {
@@ -147,19 +151,21 @@ func (in *Subnet) ValidateCreate() error {
 			Group: gvk.Group,
 			Kind:  gvk.Kind,
 		}
-		return apierrors.NewInvalid(gk, in.Name, allErrs)
+		return warnings, apierrors.NewInvalid(gk, in.Name, allErrs)
 	}
 
-	return nil
+	return warnings, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (in *Subnet) ValidateUpdate(old runtime.Object) error {
+func (in *Subnet) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	subnetlog.Info("validate update", "name", in.Name)
+
+	var warnings admission.Warnings
 
 	oldSubnet, ok := old.(*Subnet)
 	if !ok {
-		return errors.New("cannot cast previous object version to Subnet CR type")
+		return warnings, errors.New("cannot cast previous object version to Subnet CR type")
 	}
 
 	var allErrs field.ErrorList
@@ -167,7 +173,9 @@ func (in *Subnet) ValidateUpdate(old runtime.Object) error {
 	if !(oldSubnet.Spec.CIDR == nil && in.Spec.CIDR == nil) {
 		if oldSubnet.Spec.CIDR == nil || in.Spec.CIDR == nil ||
 			!oldSubnet.Spec.CIDR.Equal(in.Spec.CIDR) {
-			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.cidr"), in.Spec.CIDR, "CIDR change is disallowed"))
+			allErrs = append(allErrs,
+				field.Invalid(
+					field.NewPath("spec.cidr"), in.Spec.CIDR, "CIDR change is disallowed"))
 		}
 	}
 
@@ -198,28 +206,33 @@ func (in *Subnet) ValidateUpdate(old runtime.Object) error {
 	}
 
 	if len(allErrs) > 0 {
-		return apierrors.NewInvalid(
+		return warnings, apierrors.NewInvalid(
 			schema.GroupKind{
 				Group: GroupVersion.Group,
 				Kind:  "Subnet",
 			}, in.Name, allErrs)
 	}
 
-	return nil
+	return warnings, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (in *Subnet) ValidateDelete() error {
+func (in *Subnet) ValidateDelete() (admission.Warnings, error) {
 	subnetlog.Info("validate delete", "name", in.Name)
 
 	var allErrs field.ErrorList
+	var warnings admission.Warnings
 
 	if in.Spec.Consumer != nil {
 		unstruct := &unstructured.Unstructured{}
 		gv, err := schema.ParseGroupVersion(in.Spec.Consumer.APIVersion)
 		if err != nil {
-			subnetlog.Error(err, "unable to parse APIVerson of consumer resource, therefore allowing to delete Subnet", "name", in.Name, "api version", in.Spec.Consumer.APIVersion)
-			return nil
+			message := fmt.Sprintf(
+				"unable to parse APIVersion of consumer resource, therefore allowing to delete Subnet."+
+					" name: %s, api version: %s", in.Name, in.Spec.Consumer.APIVersion)
+			subnetlog.Error(
+				err, message)
+			return append(warnings, message), nil
 		}
 
 		gvk := gv.WithKind(in.Spec.Consumer.Kind)
@@ -242,12 +255,15 @@ func (in *Subnet) ValidateDelete() error {
 	subnets := &SubnetList{}
 	if err := subnetWebhookClient.List(context.Background(), subnets, client.InNamespace(in.Namespace), childSubnetsMatchingFields, client.Limit(1)); err != nil {
 		wrappedErr := errors.Wrap(err, "unable to get connected child subnets")
-		subnetlog.Error(wrappedErr, "", "name", types.NamespacedName{Namespace: in.Namespace, Name: in.Name})
-		return wrappedErr
+		subnetlog.Error(wrappedErr,
+			"", "name", types.NamespacedName{Namespace: in.Namespace, Name: in.Name})
+		return append(warnings, wrappedErr.Error()), wrappedErr
 	}
 
 	if len(subnets.Items) > 0 {
-		allErrs = append(allErrs, field.InternalError(field.NewPath("metadata.name"), errors.New("Subnet is still in use by another subnets")))
+		allErrs = append(allErrs, field.InternalError(
+			field.NewPath("metadata.name"),
+			errors.New("Subnet is still in use by another subnets")))
 	}
 
 	childIPsMatchingFields := client.MatchingFields{
@@ -258,7 +274,7 @@ func (in *Subnet) ValidateDelete() error {
 	if err := subnetWebhookClient.List(context.Background(), ips, client.InNamespace(in.Namespace), childIPsMatchingFields, client.Limit(1)); err != nil {
 		wrappedErr := errors.Wrap(err, "unable to get connected child ips")
 		subnetlog.Error(wrappedErr, "", "name", types.NamespacedName{Namespace: in.Namespace, Name: in.Name})
-		return wrappedErr
+		return append(warnings, wrappedErr.Error()), wrappedErr
 	}
 
 	if len(ips.Items) > 0 {
@@ -266,14 +282,14 @@ func (in *Subnet) ValidateDelete() error {
 	}
 
 	if len(allErrs) > 0 {
-		return apierrors.NewInvalid(
+		return warnings, apierrors.NewInvalid(
 			schema.GroupKind{
 				Group: GroupVersion.Group,
 				Kind:  "Subnet",
 			}, in.Name, allErrs)
 	}
 
-	return nil
+	return warnings, nil
 }
 
 func (in *Subnet) countCIDRReservationRules() int {
