@@ -252,8 +252,6 @@ func (in *Subnet) ValidateDelete() (admission.Warnings, error) {
 			case err != nil:
 				allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), in.Spec.Consumer, err.Error()))
 			case deletionTimestamp == "":
-				break
-			default:
 				allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), in.Spec.Consumer, "Consumer is not deleted"))
 			}
 		}
