@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/pkg/errors"
@@ -138,10 +139,19 @@ func (in *IP) ValidateDelete() (admission.Warnings, error) {
 	}
 	ctx := context.Background()
 
-	if err := ipWebhookClient.Get(ctx, namespacedName, unstruct); !apierrors.IsNotFound(err) {
+	err = ipWebhookClient.Get(ctx, namespacedName, unstruct)
+	if !apierrors.IsNotFound(err) {
 		var allErrs field.ErrorList
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), in.Spec.Consumer, "Consumer is not deleted"))
-		return warnings, apierrors.NewInvalid(gvk.GroupKind(), in.Name, allErrs)
+		consumerUnstruct := unstruct.Object
+		deletionTimestamp, _, err := unstructured.NestedString(consumerUnstruct, "metadata", "deletionTimestamp")
+		switch {
+		case err != nil:
+			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), in.Spec.Consumer, err.Error()))
+			return warnings, apierrors.NewInvalid(gvk.GroupKind(), in.Name, allErrs)
+		case deletionTimestamp == "":
+			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), in.Spec.Consumer, "Consumer is not deleted"))
+			return warnings, apierrors.NewInvalid(gvk.GroupKind(), in.Name, allErrs)
+		}
 	}
 
 	return warnings, nil
