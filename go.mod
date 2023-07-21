@@ -12,7 +12,7 @@ require (
 	inet.af/netaddr v0.0.0-20211027220019-c74959edd3b6
 	k8s.io/api v0.27.4
 	k8s.io/apimachinery v0.27.4
-	k8s.io/client-go v0.27.3
+	k8s.io/client-go v0.27.4
 	sigs.k8s.io/controller-runtime v0.15.0
 )
 
