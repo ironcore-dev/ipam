@@ -20,8 +20,9 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 	"strings"
+
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -243,8 +244,16 @@ func (in *Subnet) ValidateDelete() (admission.Warnings, error) {
 		}
 		ctx := context.Background()
 
-		if err := subnetWebhookClient.Get(ctx, namespacedName, unstruct); !apierrors.IsNotFound(err) {
-			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), in.Spec.Consumer, "Consumer is not deleted"))
+		err = subnetWebhookClient.Get(ctx, namespacedName, unstruct)
+		if !apierrors.IsNotFound(err) {
+			consumerUnstruct := unstruct.Object
+			deletionTimestamp, _, err := unstructured.NestedString(consumerUnstruct, "metadata", "deletionTimestamp")
+			switch {
+			case err != nil:
+				allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), in.Spec.Consumer, err.Error()))
+			case deletionTimestamp == "":
+				allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), in.Spec.Consumer, "Consumer is not deleted"))
+			}
 		}
 	}
 
