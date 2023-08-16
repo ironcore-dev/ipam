@@ -41,7 +41,11 @@ func CIDRFromString(cidrString string) (*CIDR, error) {
 }
 
 func CIDRFromNet(n netip.Prefix) *CIDR {
-	return &CIDR{Net: n}
+	ipRange := netipx.RangeOfPrefix(n)
+	return &CIDR{
+		Net:     n,
+		IPRange: ipRange,
+	}
 }
 
 func (in *CIDR) MarshalJSON() ([]byte, error) {
