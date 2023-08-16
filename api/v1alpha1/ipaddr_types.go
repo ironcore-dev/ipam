@@ -16,12 +16,11 @@ package v1alpha1
 
 import (
 	"encoding/json"
-
-	"inet.af/netaddr"
+	"net/netip"
 )
 
 func IPAddrFromString(ipString string) (*IPAddr, error) {
-	ip, err := netaddr.ParseIP(ipString)
+	ip, err := netip.ParseAddr(ipString)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +29,7 @@ func IPAddrFromString(ipString string) (*IPAddr, error) {
 
 // +kubebuilder:validation:Type=string
 type IPAddr struct {
-	Net netaddr.IP `json:"-"`
+	Net netip.Addr `json:"-"`
 }
 
 func (in IPAddr) MarshalJSON() ([]byte, error) {
@@ -45,7 +44,7 @@ func (in *IPAddr) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &stringVal); err != nil {
 		return err
 	}
-	pIP, err := netaddr.ParseIP(stringVal)
+	pIP, err := netip.ParseAddr(stringVal)
 	if err != nil {
 		return err
 	}
@@ -67,7 +66,7 @@ func (in *IPAddr) AsCidr() *CIDR {
 		cidrRange = 128
 	}
 
-	ipNet := netaddr.IPPrefixFrom(in.Net, cidrRange)
+	ipNet := netip.PrefixFrom(in.Net, int(cidrRange))
 	return CIDRFromNet(ipNet)
 }
 

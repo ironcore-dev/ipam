@@ -16,10 +16,10 @@ package v1alpha1
 
 import (
 	"fmt"
+	"net/netip"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"inet.af/netaddr"
 	"k8s.io/apimachinery/pkg/util/json"
 )
 
@@ -81,10 +81,10 @@ var _ = Describe("CIDR operations", func() {
 				By(fmt.Sprintf("Comparing to expected address range %d", i))
 				first, last := cidr.ToAddressRange()
 
-				firstIP := netaddr.MustParseIP(testCase.firstIP)
+				firstIP := netip.MustParseAddr(testCase.firstIP)
 				Expect(firstIP.Compare(first)).To(Equal(0))
 
-				lastIP := netaddr.MustParseIP(testCase.lastIP)
+				lastIP := netip.MustParseAddr(testCase.lastIP)
 				Expect(lastIP.Compare(last)).To(Equal(0))
 
 			}
@@ -98,21 +98,22 @@ var _ = Describe("CIDR operations", func() {
 				expectedJSON string
 			}{
 				{
-					cidr:         CIDRFromNet(netaddr.IPPrefixFrom(netaddr.IPv4(192, 168, 1, 0), 24)),
+					cidr:         CIDRFromNet(netip.PrefixFrom(netip.AddrFrom4([4]byte{192, 168, 1, 0}), 24)),
 					expectedJSON: `"192.168.1.0/24"`,
 				},
 				{
-					cidr:         CIDRFromNet(netaddr.IPPrefixFrom(netaddr.IPv4(0, 0, 0, 0), 0)),
+					cidr:         CIDRFromNet(netip.PrefixFrom(netip.AddrFrom4([4]byte{0, 0, 0, 0}), 0)),
 					expectedJSON: `"0.0.0.0/0"`,
 				},
 				{
-					cidr: CIDRFromNet(netaddr.IPPrefixFrom(
-						netaddr.IPFrom16([16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), 0)),
+					cidr: CIDRFromNet(netip.PrefixFrom(netip.AddrFrom16(
+						[16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), 0)),
 					expectedJSON: `"::/0"`,
 				},
 				{
-					cidr: CIDRFromNet(netaddr.IPPrefixFrom(
-						netaddr.IPFrom16([16]byte{0x20, 0x1, 0xd, 0xb8, 0x12, 0x34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), 48)),
+					cidr: CIDRFromNet(netip.PrefixFrom(
+						netip.AddrFrom16(
+							[16]byte{0x20, 0x1, 0xd, 0xb8, 0x12, 0x34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), 48)),
 					expectedJSON: `"2001:db8:1234::/48"`,
 				},
 			}
