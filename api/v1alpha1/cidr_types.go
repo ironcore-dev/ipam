@@ -24,8 +24,7 @@ import (
 
 // +kubebuilder:validation:Type=string
 type CIDR struct {
-	Net     netip.Prefix   `json:"-"`
-	IPRange netipx.IPRange `json:"-"`
+	Net netip.Prefix `json:"-"`
 }
 
 func CIDRFromString(cidrString string) (*CIDR, error) {
@@ -33,18 +32,14 @@ func CIDRFromString(cidrString string) (*CIDR, error) {
 	if err != nil {
 		return nil, err
 	}
-	ipRange := netipx.RangeOfPrefix(cidr)
 	return &CIDR{
-		Net:     cidr,
-		IPRange: ipRange,
+		Net: cidr,
 	}, nil
 }
 
 func CIDRFromNet(n netip.Prefix) *CIDR {
-	ipRange := netipx.RangeOfPrefix(n)
 	return &CIDR{
-		Net:     n,
-		IPRange: ipRange,
+		Net: n,
 	}
 }
 
@@ -100,7 +95,8 @@ func (in *CIDR) MaskCapacity() *big.Int {
 }
 
 func (in *CIDR) ToAddressRange() (netip.Addr, netip.Addr) {
-	return in.IPRange.From(), in.IPRange.To()
+	ipRange := netipx.RangeOfPrefix(in.Net)
+	return ipRange.From(), ipRange.To()
 }
 
 func (in *CIDR) Equal(cidr *CIDR) bool {
