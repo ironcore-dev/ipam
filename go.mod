@@ -10,7 +10,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	go4.org/netipx v0.0.0-20230728184502-ec4c8b891b28
 	gopkg.in/inf.v0 v0.9.1
-	inet.af/netaddr v0.0.0-20211027220019-c74959edd3b6
 	k8s.io/api v0.27.4
 	k8s.io/apimachinery v0.27.4
 	k8s.io/client-go v0.27.4
@@ -54,8 +53,6 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
-	go4.org/intern v0.0.0-20211027215823-ae77deb06f29 // indirect
-	go4.org/unsafe/assume-no-moving-gc v0.0.0-20230209150437-ee73d164e760 // indirect
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/oauth2 v0.5.0 // indirect
 	golang.org/x/sync v0.2.0 // indirect
