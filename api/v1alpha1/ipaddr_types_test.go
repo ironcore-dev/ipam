@@ -16,10 +16,10 @@ package v1alpha1
 
 import (
 	"fmt"
+	"net/netip"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"inet.af/netaddr"
 	"k8s.io/apimachinery/pkg/util/json"
 )
 
@@ -50,25 +50,26 @@ var _ = Describe("IP operations", func() {
 			}{
 				{
 					ip: &IPAddr{
-						Net: netaddr.IPv4(192, 168, 1, 0),
+						Net: netip.AddrFrom4([4]byte{192, 168, 1, 0}),
 					},
 					expectedJSON: `"192.168.1.0"`,
 				},
 				{
 					ip: &IPAddr{
-						Net: netaddr.IPv4(0, 0, 0, 0),
+						Net: netip.AddrFrom4([4]byte{0, 0, 0, 0}),
 					},
 					expectedJSON: `"0.0.0.0"`,
 				},
 				{
 					ip: &IPAddr{
-						Net: netaddr.IPv6Raw([16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
+						Net: netip.AddrFrom16([16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
 					},
 					expectedJSON: `"::"`,
 				},
 				{
 					ip: &IPAddr{
-						Net: netaddr.IPv6Raw([16]byte{0x20, 0x1, 0xd, 0xb8, 0x12, 0x34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
+						Net: netip.AddrFrom16(
+							[16]byte{0x20, 0x1, 0xd, 0xb8, 0x12, 0x34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
 					},
 					expectedJSON: `"2001:db8:1234::"`,
 				},
