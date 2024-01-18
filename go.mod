@@ -10,7 +10,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	go4.org/netipx v0.0.0-20230728184502-ec4c8b891b28
 	gopkg.in/inf.v0 v0.9.1
-	k8s.io/api v0.29.0
+	k8s.io/api v0.29.1
 	k8s.io/apimachinery v0.29.1
 	k8s.io/client-go v0.29.0
 	sigs.k8s.io/controller-runtime v0.17.0
