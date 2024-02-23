@@ -9,7 +9,7 @@ on:
       - v*
     paths-ignore:
       - '**.md'
-  pull_request_target:
+  pull_request:
     branches:
       - main
     paths-ignore:
@@ -23,7 +23,7 @@ env:
 
 jobs:
   go-lint:
-    runs-on: [ self-hosted, Linux, X64 ]
+    runs-on: [ ubuntu-latest, Linux, X64 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,7 +46,7 @@ jobs:
           args: -e S1008 --timeout 15m
 
   go-test:
-    runs-on: [ self-hosted, Linux, X64 ]
+    runs-on: [ ubuntu-latest, Linux, X64 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -67,7 +67,7 @@ jobs:
         run: make test
 
   kustomize-test:
-    runs-on: [ self-hosted, Linux, X64 ]
+    runs-on: [ ubuntu-latest, Linux, X64 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -84,7 +84,7 @@ jobs:
 
   docker-build:
     needs: [ kustomize-test, go-lint, go-test ]
-    runs-on: [ self-hosted, Linux, X64 ]
+    runs-on: [ ubuntu-latest, Linux, X64 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
