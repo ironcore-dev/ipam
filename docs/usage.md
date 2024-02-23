@@ -106,10 +106,10 @@ Spec:
 ```
 
 Examples:
-- [empty network](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_network.yaml);
-- [network with VXLAN ID request](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_vxlan_network.yaml);
-- [network with GENEVE ID request](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_geneve_network.yaml);
-- [network with MPLS ID request](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_mpls_network.yaml).
+- [empty network](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_network.yaml);
+- [network with VXLAN ID request](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_vxlan_network.yaml);
+- [network with GENEVE ID request](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_geneve_network.yaml);
+- [network with MPLS ID request](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_mpls_network.yaml).
 
 ## Subnets 
 
@@ -252,14 +252,14 @@ Status:
 ```
 
 Examples:
-- [IPv4 parent (top level) subnet](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_parent_cidr_subnet.yaml);
-- [IPv4 child subnet with CIDR set explicitly](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_child_cidr_subnet.yaml);
-- [IPv4 child subnet with CIDR requested by network prefix bits](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_child_bits_subnet.yaml);
-- [IPv4 child subnet with CIDR requested by address capacity](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_child_capacity_subnet.yaml);
-- [IPv6 parent (top level) subnet](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_parent_cidr_subnet.yaml);
-- [IPv6 child subnet with CIDR set explicitly](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_child_cidr_subnet.yaml);
-- [IPv6 child subnet with CIDR requested by network prefix bits](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_child_bits_subnet.yaml);
-- [IPv6 child subnet with CIDR requested by address capacity](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_child_capacity_subnet.yaml);
+- [IPv4 parent (top level) subnet](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_parent_cidr_subnet.yaml);
+- [IPv4 child subnet with CIDR set explicitly](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_child_cidr_subnet.yaml);
+- [IPv4 child subnet with CIDR requested by network prefix bits](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_child_bits_subnet.yaml);
+- [IPv4 child subnet with CIDR requested by address capacity](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_child_capacity_subnet.yaml);
+- [IPv6 parent (top level) subnet](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_parent_cidr_subnet.yaml);
+- [IPv6 child subnet with CIDR set explicitly](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_child_cidr_subnet.yaml);
+- [IPv6 child subnet with CIDR requested by network prefix bits](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_child_bits_subnet.yaml);
+- [IPv6 child subnet with CIDR requested by address capacity](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_child_capacity_subnet.yaml);
 
 ## IPs
 
@@ -325,11 +325,11 @@ Status:
 ```
 
 Examples:
-- [IPv4 IP request](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_ip.yaml);
-- [IPv4 IP request with reference to related resource](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_resource_ip.yaml);
-- [IPv4 IP request with IP set explicitly](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_ip_ip.yaml);
-- [IPv4 IP request with reference to related resource and IP set explicitly](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_resource_and_ip_ip.yaml);
-- [IPv6 IP request](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_ip.yaml);
-- [IPv6 IP request with reference to related resource](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_resource_ip.yaml);
-- [IPv6 IP request with IP set explicitly](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_ip_ip.yaml);
-- [IPv6 IP request with reference to related resource and IP set explicitly](https://github.com/onmetal/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_resource_and_ip_ip.yaml);
+- [IPv4 IP request](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_ip.yaml);
+- [IPv4 IP request with reference to related resource](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_resource_ip.yaml);
+- [IPv4 IP request with IP set explicitly](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_ip_ip.yaml);
+- [IPv4 IP request with reference to related resource and IP set explicitly](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_ipv4_resource_and_ip_ip.yaml);
+- [IPv6 IP request](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_ip.yaml);
+- [IPv6 IP request with reference to related resource](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_resource_ip.yaml);
+- [IPv6 IP request with IP set explicitly](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_ip_ip.yaml);
+- [IPv6 IP request with reference to related resource and IP set explicitly](https://github.com/ironcore-dev/ipam/blob/main/config/samples/ipam_v1alpha1_ipv6_resource_and_ip_ip.yaml);

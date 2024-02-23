@@ -25,7 +25,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	machinev1alpha1 "github.com/onmetal/ipam/api/v1alpha1"
+	machinev1alpha1 "github.com/ironcore-dev/ipam/api/v1alpha1"
 )
 
 const (
