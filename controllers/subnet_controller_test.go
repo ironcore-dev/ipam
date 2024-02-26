@@ -26,7 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/ironcore-dev/ipam/api/v1alpha1"
+	"github.com/ironcore-dev/ipam/api/ipam/v1alpha1"
 )
 
 var _ = Describe("Subnet controller", func() {
@@ -118,10 +118,7 @@ var _ = Describe("Subnet controller", func() {
 			}
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, testNetworkNamespacedName, &createdNetwork)
-				if err != nil {
-					return false
-				}
-				return true
+				return err == nil
 			}, timeout, interval).Should(BeTrue())
 
 			By("Subnet is installed")
@@ -233,10 +230,7 @@ var _ = Describe("Subnet controller", func() {
 			Expect(k8sClient.Delete(ctx, &createdSubnet)).To(Succeed())
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, testSubnetNamespacedName, &createdSubnet)
-				if !apierrors.IsNotFound(err) {
-					return false
-				}
-				return true
+				return apierrors.IsNotFound(err)
 			}, timeout, interval).Should(BeTrue())
 
 			By("Subnet copy gets CIDR reserved")
@@ -258,10 +252,7 @@ var _ = Describe("Subnet controller", func() {
 			Expect(k8sClient.Delete(ctx, &subnetCopy)).To(Succeed())
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, testSubnetNamespacedName, &subnetCopy)
-				if !apierrors.IsNotFound(err) {
-					return false
-				}
-				return true
+				return apierrors.IsNotFound(err)
 			}, timeout, interval).Should(BeTrue())
 
 			By("Subnet CIDR is released in Network")
@@ -442,10 +433,7 @@ var _ = Describe("Subnet controller", func() {
 			Expect(k8sClient.Delete(ctx, &createdSubnet)).To(Succeed())
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, testSubnetNamespacedName, &createdSubnet)
-				if !apierrors.IsNotFound(err) {
-					return false
-				}
-				return true
+				return apierrors.IsNotFound(err)
 			}, timeout, interval).Should(BeTrue())
 
 			By("Subnet copy gets CIDR reserved")
@@ -467,10 +455,7 @@ var _ = Describe("Subnet controller", func() {
 			Expect(k8sClient.Delete(ctx, &subnetCopy)).To(Succeed())
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, testSubnetNamespacedName, &subnetCopy)
-				if !apierrors.IsNotFound(err) {
-					return false
-				}
-				return true
+				return apierrors.IsNotFound(err)
 			}, timeout, interval).Should(BeTrue())
 
 			By("Subnet CIDR is released in parent Subnet")

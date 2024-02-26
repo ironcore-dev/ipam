@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/apimachinery/pkg/watch"
 
-	"github.com/ironcore-dev/ipam/api/v1alpha1"
+	"github.com/ironcore-dev/ipam/api/ipam/v1alpha1"
 )
 
 var _ = Describe("IP client", func() {
@@ -187,17 +187,11 @@ var _ = Describe("IP client", func() {
 			By("Requesting created IP")
 			Eventually(func() bool {
 				_, err = client.Get(ctx, IPName, v1.GetOptions{})
-				if err != nil {
-					return false
-				}
-				return true
+				return err == nil
 			}, CTimeout, CInterval).Should(BeTrue())
 			Eventually(func() bool {
 				_, err = client.Get(ctx, IPToDeleteName, v1.GetOptions{})
-				if err != nil {
-					return false
-				}
-				return true
+				return err == nil
 			}, CTimeout, CInterval).Should(BeFalse())
 
 			Eventually(events, CTimeout, CInterval).Should(Receive(event))

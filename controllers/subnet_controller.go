@@ -30,7 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/ironcore-dev/ipam/api/v1alpha1"
+	"github.com/ironcore-dev/ipam/api/ipam/v1alpha1"
 )
 
 const (

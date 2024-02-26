@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/ironcore-dev/ipam/api/v1alpha1"
+	"github.com/ironcore-dev/ipam/api/ipam/v1alpha1"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -251,10 +251,7 @@ var _ = Describe("IP controller", func() {
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, ipNamespacedName, createdIP)
-				if !apierrors.IsNotFound(err) {
-					return false
-				}
-				return true
+				return apierrors.IsNotFound(err)
 			}, timeout, interval).Should(BeTrue())
 
 			By("IP copy gets reserved")
@@ -276,10 +273,7 @@ var _ = Describe("IP controller", func() {
 			Expect(k8sClient.Delete(ctx, ipCopy)).To(Succeed())
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, ipCopyNamespacedName, ipCopy)
-				if !apierrors.IsNotFound(err) {
-					return false
-				}
-				return true
+				return apierrors.IsNotFound(err)
 			}, timeout, interval).Should(BeTrue())
 
 			By("IP is released in subnet")

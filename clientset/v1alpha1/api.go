@@ -18,7 +18,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 
-	"github.com/ironcore-dev/ipam/api/v1alpha1"
+	"github.com/ironcore-dev/ipam/api/ipam/v1alpha1"
 )
 
 const (
@@ -38,7 +38,7 @@ type v1Alpha1Client struct {
 
 func NewForConfig(c *rest.Config) (V1Alpha1Interface, error) {
 	config := *c
-	config.ContentConfig.GroupVersion = &v1alpha1.GroupVersion
+	config.ContentConfig.GroupVersion = &v1alpha1.SchemeGroupVersion
 	config.APIPath = "/apis"
 	config.NegotiatedSerializer = scheme.Codecs.WithoutConversion()
 	config.UserAgent = rest.DefaultKubernetesUserAgent()
