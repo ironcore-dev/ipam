@@ -18,7 +18,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 
-	apiv1alpha1 "github.com/onmetal/ipam/api/ipam/v1alpha1"
+	apiv1alpha1 "github.com/ironcore-dev/ipam/api/ipam/v1alpha1"
 	clientv1alpha1 "github.com/ironcore-dev/ipam/clientset"
 )
 
@@ -74,7 +74,7 @@ import (
     
     "k8s.io/client-go/kubernetes/scheme"
 
-    apiv1alpha1 "github.com/onmetal/ipam/api/ipam/v1alpha1"
+    apiv1alpha1 "github.com/ironcore-dev/ipam/api/ipam/v1alpha1"
     clientv1alpha1 "github.com/ironcore-dev/ipam/clientset"
 )
 

@@ -18,28 +18,28 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.CIDR":                 schema_ipam_api_ipam_v1alpha1_CIDR(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.IP":                   schema_ipam_api_ipam_v1alpha1_IP(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.IPAddr":               schema_ipam_api_ipam_v1alpha1_IPAddr(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.IPList":               schema_ipam_api_ipam_v1alpha1_IPList(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.IPSpec":               schema_ipam_api_ipam_v1alpha1_IPSpec(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.IPStatus":             schema_ipam_api_ipam_v1alpha1_IPStatus(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.Network":              schema_ipam_api_ipam_v1alpha1_Network(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkCounter":       schema_ipam_api_ipam_v1alpha1_NetworkCounter(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkCounterList":   schema_ipam_api_ipam_v1alpha1_NetworkCounterList(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkCounterSpec":   schema_ipam_api_ipam_v1alpha1_NetworkCounterSpec(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkCounterStatus": schema_ipam_api_ipam_v1alpha1_NetworkCounterStatus(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkID":            schema_ipam_api_ipam_v1alpha1_NetworkID(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkIDInterval":    schema_ipam_api_ipam_v1alpha1_NetworkIDInterval(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkList":          schema_ipam_api_ipam_v1alpha1_NetworkList(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkSpec":          schema_ipam_api_ipam_v1alpha1_NetworkSpec(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkStatus":        schema_ipam_api_ipam_v1alpha1_NetworkStatus(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.Region":               schema_ipam_api_ipam_v1alpha1_Region(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.ResourceReference":    schema_ipam_api_ipam_v1alpha1_ResourceReference(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.Subnet":               schema_ipam_api_ipam_v1alpha1_Subnet(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.SubnetList":           schema_ipam_api_ipam_v1alpha1_SubnetList(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.SubnetSpec":           schema_ipam_api_ipam_v1alpha1_SubnetSpec(ref),
-		"github.com/onmetal/ipam/api/ipam/v1alpha1.SubnetStatus":         schema_ipam_api_ipam_v1alpha1_SubnetStatus(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.CIDR":                 schema_ipam_api_ipam_v1alpha1_CIDR(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.IP":                   schema_ipam_api_ipam_v1alpha1_IP(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.IPAddr":               schema_ipam_api_ipam_v1alpha1_IPAddr(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.IPList":               schema_ipam_api_ipam_v1alpha1_IPList(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.IPSpec":               schema_ipam_api_ipam_v1alpha1_IPSpec(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.IPStatus":             schema_ipam_api_ipam_v1alpha1_IPStatus(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.Network":              schema_ipam_api_ipam_v1alpha1_Network(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkCounter":       schema_ipam_api_ipam_v1alpha1_NetworkCounter(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkCounterList":   schema_ipam_api_ipam_v1alpha1_NetworkCounterList(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkCounterSpec":   schema_ipam_api_ipam_v1alpha1_NetworkCounterSpec(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkCounterStatus": schema_ipam_api_ipam_v1alpha1_NetworkCounterStatus(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkID":            schema_ipam_api_ipam_v1alpha1_NetworkID(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkIDInterval":    schema_ipam_api_ipam_v1alpha1_NetworkIDInterval(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkList":          schema_ipam_api_ipam_v1alpha1_NetworkList(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkSpec":          schema_ipam_api_ipam_v1alpha1_NetworkSpec(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkStatus":        schema_ipam_api_ipam_v1alpha1_NetworkStatus(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.Region":               schema_ipam_api_ipam_v1alpha1_Region(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.ResourceReference":    schema_ipam_api_ipam_v1alpha1_ResourceReference(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.Subnet":               schema_ipam_api_ipam_v1alpha1_Subnet(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.SubnetList":           schema_ipam_api_ipam_v1alpha1_SubnetList(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.SubnetSpec":           schema_ipam_api_ipam_v1alpha1_SubnetSpec(ref),
+		"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.SubnetStatus":         schema_ipam_api_ipam_v1alpha1_SubnetStatus(ref),
 		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":            schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
 		"k8s.io/api/core/v1.Affinity":                                    schema_k8sio_api_core_v1_Affinity(ref),
 		"k8s.io/api/core/v1.AttachedVolume":                              schema_k8sio_api_core_v1_AttachedVolume(ref),
@@ -358,20 +358,20 @@ func schema_ipam_api_ipam_v1alpha1_IP(ref common.ReferenceCallback) common.OpenA
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/onmetal/ipam/api/ipam/v1alpha1.IPSpec"),
+							Ref:     ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.IPSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/onmetal/ipam/api/ipam/v1alpha1.IPStatus"),
+							Ref:     ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.IPStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/onmetal/ipam/api/ipam/v1alpha1.IPSpec", "github.com/onmetal/ipam/api/ipam/v1alpha1.IPStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.IPSpec", "github.com/ironcore-dev/ipam/api/ipam/v1alpha1.IPStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -419,7 +419,7 @@ func schema_ipam_api_ipam_v1alpha1_IPList(ref common.ReferenceCallback) common.O
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/onmetal/ipam/api/ipam/v1alpha1.IP"),
+										Ref:     ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.IP"),
 									},
 								},
 							},
@@ -430,7 +430,7 @@ func schema_ipam_api_ipam_v1alpha1_IPList(ref common.ReferenceCallback) common.O
 			},
 		},
 		Dependencies: []string{
-			"github.com/onmetal/ipam/api/ipam/v1alpha1.IP", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.IP", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -451,13 +451,13 @@ func schema_ipam_api_ipam_v1alpha1_IPSpec(ref common.ReferenceCallback) common.O
 					"consumer": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Consumer refers to resource IP has been booked for",
-							Ref:         ref("github.com/onmetal/ipam/api/ipam/v1alpha1.ResourceReference"),
+							Ref:         ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.ResourceReference"),
 						},
 					},
 					"ip": {
 						SchemaProps: spec.SchemaProps{
 							Description: "IP allows to set desired IP address explicitly",
-							Ref:         ref("github.com/onmetal/ipam/api/ipam/v1alpha1.IPAddr"),
+							Ref:         ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.IPAddr"),
 						},
 					},
 				},
@@ -465,7 +465,7 @@ func schema_ipam_api_ipam_v1alpha1_IPSpec(ref common.ReferenceCallback) common.O
 			},
 		},
 		Dependencies: []string{
-			"github.com/onmetal/ipam/api/ipam/v1alpha1.IPAddr", "github.com/onmetal/ipam/api/ipam/v1alpha1.ResourceReference", "k8s.io/api/core/v1.LocalObjectReference"},
+			"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.IPAddr", "github.com/ironcore-dev/ipam/api/ipam/v1alpha1.ResourceReference", "k8s.io/api/core/v1.LocalObjectReference"},
 	}
 }
 
@@ -486,7 +486,7 @@ func schema_ipam_api_ipam_v1alpha1_IPStatus(ref common.ReferenceCallback) common
 					"reserved": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Reserved is a reserved IP",
-							Ref:         ref("github.com/onmetal/ipam/api/ipam/v1alpha1.IPAddr"),
+							Ref:         ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.IPAddr"),
 						},
 					},
 					"message": {
@@ -500,7 +500,7 @@ func schema_ipam_api_ipam_v1alpha1_IPStatus(ref common.ReferenceCallback) common
 			},
 		},
 		Dependencies: []string{
-			"github.com/onmetal/ipam/api/ipam/v1alpha1.IPAddr"},
+			"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.IPAddr"},
 	}
 }
 
@@ -534,20 +534,20 @@ func schema_ipam_api_ipam_v1alpha1_Network(ref common.ReferenceCallback) common.
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkSpec"),
+							Ref:     ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkStatus"),
+							Ref:     ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkSpec", "github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkSpec", "github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -581,20 +581,20 @@ func schema_ipam_api_ipam_v1alpha1_NetworkCounter(ref common.ReferenceCallback) 
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkCounterSpec"),
+							Ref:     ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkCounterSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkCounterStatus"),
+							Ref:     ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkCounterStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkCounterSpec", "github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkCounterStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkCounterSpec", "github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkCounterStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -632,7 +632,7 @@ func schema_ipam_api_ipam_v1alpha1_NetworkCounterList(ref common.ReferenceCallba
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkCounter"),
+										Ref:     ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkCounter"),
 									},
 								},
 							},
@@ -643,7 +643,7 @@ func schema_ipam_api_ipam_v1alpha1_NetworkCounterList(ref common.ReferenceCallba
 			},
 		},
 		Dependencies: []string{
-			"github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkCounter", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkCounter", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -662,7 +662,7 @@ func schema_ipam_api_ipam_v1alpha1_NetworkCounterSpec(ref common.ReferenceCallba
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkIDInterval"),
+										Ref:     ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkIDInterval"),
 									},
 								},
 							},
@@ -672,7 +672,7 @@ func schema_ipam_api_ipam_v1alpha1_NetworkCounterSpec(ref common.ReferenceCallba
 			},
 		},
 		Dependencies: []string{
-			"github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkIDInterval"},
+			"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkIDInterval"},
 	}
 }
 
@@ -708,26 +708,26 @@ func schema_ipam_api_ipam_v1alpha1_NetworkIDInterval(ref common.ReferenceCallbac
 					"begin": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Begin is a first available value in interval",
-							Ref:         ref("github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkID"),
+							Ref:         ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkID"),
 						},
 					},
 					"exact": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Exact represents a single value in interval",
-							Ref:         ref("github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkID"),
+							Ref:         ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkID"),
 						},
 					},
 					"end": {
 						SchemaProps: spec.SchemaProps{
 							Description: "End is a last available value in interval",
-							Ref:         ref("github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkID"),
+							Ref:         ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkID"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkID"},
+			"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkID"},
 	}
 }
 
@@ -765,7 +765,7 @@ func schema_ipam_api_ipam_v1alpha1_NetworkList(ref common.ReferenceCallback) com
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/onmetal/ipam/api/ipam/v1alpha1.Network"),
+										Ref:     ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.Network"),
 									},
 								},
 							},
@@ -776,7 +776,7 @@ func schema_ipam_api_ipam_v1alpha1_NetworkList(ref common.ReferenceCallback) com
 			},
 		},
 		Dependencies: []string{
-			"github.com/onmetal/ipam/api/ipam/v1alpha1.Network", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.Network", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -790,7 +790,7 @@ func schema_ipam_api_ipam_v1alpha1_NetworkSpec(ref common.ReferenceCallback) com
 					"id": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ID is a unique network identifier. For VXLAN it is a single 24 bit value. First 100 values are reserved. For GENEVE it is a single 24 bit value. First 100 values are reserved. For MLPS it is a set of 20 bit values. First 16 values are reserved. Represented with number encoded to string.",
-							Ref:         ref("github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkID"),
+							Ref:         ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkID"),
 						},
 					},
 					"type": {
@@ -810,7 +810,7 @@ func schema_ipam_api_ipam_v1alpha1_NetworkSpec(ref common.ReferenceCallback) com
 			},
 		},
 		Dependencies: []string{
-			"github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkID"},
+			"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkID"},
 	}
 }
 
@@ -829,7 +829,7 @@ func schema_ipam_api_ipam_v1alpha1_NetworkStatus(ref common.ReferenceCallback) c
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/onmetal/ipam/api/ipam/v1alpha1.CIDR"),
+										Ref:     ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.CIDR"),
 									},
 								},
 							},
@@ -843,7 +843,7 @@ func schema_ipam_api_ipam_v1alpha1_NetworkStatus(ref common.ReferenceCallback) c
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/onmetal/ipam/api/ipam/v1alpha1.CIDR"),
+										Ref:     ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.CIDR"),
 									},
 								},
 							},
@@ -852,7 +852,7 @@ func schema_ipam_api_ipam_v1alpha1_NetworkStatus(ref common.ReferenceCallback) c
 					"reserved": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Reserved is a reserved network ID",
-							Ref:         ref("github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkID"),
+							Ref:         ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkID"),
 						},
 					},
 					"ipv4Capacity": {
@@ -887,7 +887,7 @@ func schema_ipam_api_ipam_v1alpha1_NetworkStatus(ref common.ReferenceCallback) c
 			},
 		},
 		Dependencies: []string{
-			"github.com/onmetal/ipam/api/ipam/v1alpha1.CIDR", "github.com/onmetal/ipam/api/ipam/v1alpha1.NetworkID", "k8s.io/apimachinery/pkg/api/resource.Quantity"},
+			"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.CIDR", "github.com/ironcore-dev/ipam/api/ipam/v1alpha1.NetworkID", "k8s.io/apimachinery/pkg/api/resource.Quantity"},
 	}
 }
 
@@ -992,20 +992,20 @@ func schema_ipam_api_ipam_v1alpha1_Subnet(ref common.ReferenceCallback) common.O
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/onmetal/ipam/api/ipam/v1alpha1.SubnetSpec"),
+							Ref:     ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.SubnetSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/onmetal/ipam/api/ipam/v1alpha1.SubnetStatus"),
+							Ref:     ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.SubnetStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/onmetal/ipam/api/ipam/v1alpha1.SubnetSpec", "github.com/onmetal/ipam/api/ipam/v1alpha1.SubnetStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.SubnetSpec", "github.com/ironcore-dev/ipam/api/ipam/v1alpha1.SubnetStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -1043,7 +1043,7 @@ func schema_ipam_api_ipam_v1alpha1_SubnetList(ref common.ReferenceCallback) comm
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/onmetal/ipam/api/ipam/v1alpha1.Subnet"),
+										Ref:     ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.Subnet"),
 									},
 								},
 							},
@@ -1054,7 +1054,7 @@ func schema_ipam_api_ipam_v1alpha1_SubnetList(ref common.ReferenceCallback) comm
 			},
 		},
 		Dependencies: []string{
-			"github.com/onmetal/ipam/api/ipam/v1alpha1.Subnet", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.Subnet", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -1068,7 +1068,7 @@ func schema_ipam_api_ipam_v1alpha1_SubnetSpec(ref common.ReferenceCallback) comm
 					"cidr": {
 						SchemaProps: spec.SchemaProps{
 							Description: "CIDR represents the IP Address Range",
-							Ref:         ref("github.com/onmetal/ipam/api/ipam/v1alpha1.CIDR"),
+							Ref:         ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.CIDR"),
 						},
 					},
 					"prefixBits": {
@@ -1106,7 +1106,7 @@ func schema_ipam_api_ipam_v1alpha1_SubnetSpec(ref common.ReferenceCallback) comm
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/onmetal/ipam/api/ipam/v1alpha1.Region"),
+										Ref:     ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.Region"),
 									},
 								},
 							},
@@ -1115,7 +1115,7 @@ func schema_ipam_api_ipam_v1alpha1_SubnetSpec(ref common.ReferenceCallback) comm
 					"consumer": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Consumer refers to resource Subnet has been booked for",
-							Ref:         ref("github.com/onmetal/ipam/api/ipam/v1alpha1.ResourceReference"),
+							Ref:         ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.ResourceReference"),
 						},
 					},
 				},
@@ -1123,7 +1123,7 @@ func schema_ipam_api_ipam_v1alpha1_SubnetSpec(ref common.ReferenceCallback) comm
 			},
 		},
 		Dependencies: []string{
-			"github.com/onmetal/ipam/api/ipam/v1alpha1.CIDR", "github.com/onmetal/ipam/api/ipam/v1alpha1.Region", "github.com/onmetal/ipam/api/ipam/v1alpha1.ResourceReference", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/apimachinery/pkg/api/resource.Quantity"},
+			"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.CIDR", "github.com/ironcore-dev/ipam/api/ipam/v1alpha1.Region", "github.com/ironcore-dev/ipam/api/ipam/v1alpha1.ResourceReference", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/apimachinery/pkg/api/resource.Quantity"},
 	}
 }
 
@@ -1172,7 +1172,7 @@ func schema_ipam_api_ipam_v1alpha1_SubnetStatus(ref common.ReferenceCallback) co
 					"reserved": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Reserved is a CIDR that was reserved",
-							Ref:         ref("github.com/onmetal/ipam/api/ipam/v1alpha1.CIDR"),
+							Ref:         ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.CIDR"),
 						},
 					},
 					"vacant": {
@@ -1183,7 +1183,7 @@ func schema_ipam_api_ipam_v1alpha1_SubnetStatus(ref common.ReferenceCallback) co
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/onmetal/ipam/api/ipam/v1alpha1.CIDR"),
+										Ref:     ref("github.com/ironcore-dev/ipam/api/ipam/v1alpha1.CIDR"),
 									},
 								},
 							},
@@ -1207,7 +1207,7 @@ func schema_ipam_api_ipam_v1alpha1_SubnetStatus(ref common.ReferenceCallback) co
 			},
 		},
 		Dependencies: []string{
-			"github.com/onmetal/ipam/api/ipam/v1alpha1.CIDR", "k8s.io/apimachinery/pkg/api/resource.Quantity"},
+			"github.com/ironcore-dev/ipam/api/ipam/v1alpha1.CIDR", "k8s.io/apimachinery/pkg/api/resource.Quantity"},
 	}
 }
 

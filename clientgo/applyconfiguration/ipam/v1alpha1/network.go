@@ -5,9 +5,9 @@
 package v1alpha1
 
 import (
-	ipamv1alpha1 "github.com/onmetal/ipam/api/ipam/v1alpha1"
-	internal "github.com/onmetal/ipam/clientgo/applyconfiguration/internal"
-	v1 "github.com/onmetal/ipam/clientgo/applyconfiguration/meta/v1"
+	ipamv1alpha1 "github.com/ironcore-dev/ipam/api/ipam/v1alpha1"
+	internal "github.com/ironcore-dev/ipam/clientgo/applyconfiguration/internal"
+	v1 "github.com/ironcore-dev/ipam/clientgo/applyconfiguration/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	managedfields "k8s.io/apimachinery/pkg/util/managedfields"

@@ -7,8 +7,8 @@ package v1alpha1
 import (
 	"net/http"
 
-	v1alpha1 "github.com/onmetal/ipam/api/ipam/v1alpha1"
-	"github.com/onmetal/ipam/clientgo/ipam/scheme"
+	v1alpha1 "github.com/ironcore-dev/ipam/api/ipam/v1alpha1"
+	"github.com/ironcore-dev/ipam/clientgo/ipam/scheme"
 	rest "k8s.io/client-go/rest"
 )
 

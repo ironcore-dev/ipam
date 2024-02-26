@@ -45,9 +45,9 @@ Replace `localhost:5000` with your registry if you're using quay or anything els
     # generate code and configs
     make fmt vet generate manifests kustomize
     # build container and push to local registry
-    make docker-build docker-push IMG="localhost:5000/onmetal/ipam:latest"
+    make docker-build docker-push IMG="localhost:5000/ironcore-dev/ipam:latest"
     # deploy controller
-    make deploy IMG="localhost:5000/onmetal/ipam:latest"
+    make deploy IMG="localhost:5000/ironcore-dev/ipam:latest"
 
 Check `Makefile` for the full list of `make` goals with descriptions.
 

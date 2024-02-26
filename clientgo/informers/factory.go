@@ -9,9 +9,9 @@ import (
 	sync "sync"
 	time "time"
 
-	internalinterfaces "github.com/onmetal/ipam/clientgo/informers/internalinterfaces"
-	informersipam "github.com/onmetal/ipam/clientgo/informers/ipam"
-	ipam "github.com/onmetal/ipam/clientgo/ipam"
+	internalinterfaces "github.com/ironcore-dev/ipam/clientgo/informers/internalinterfaces"
+	informersipam "github.com/ironcore-dev/ipam/clientgo/informers/ipam"
+	ipam "github.com/ironcore-dev/ipam/clientgo/ipam"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

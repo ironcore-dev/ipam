@@ -9,8 +9,8 @@ import (
 	json "encoding/json"
 	"fmt"
 
-	v1alpha1 "github.com/onmetal/ipam/api/ipam/v1alpha1"
-	ipamv1alpha1 "github.com/onmetal/ipam/clientgo/applyconfiguration/ipam/v1alpha1"
+	v1alpha1 "github.com/ironcore-dev/ipam/api/ipam/v1alpha1"
+	ipamv1alpha1 "github.com/ironcore-dev/ipam/clientgo/applyconfiguration/ipam/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	types "k8s.io/apimachinery/pkg/types"

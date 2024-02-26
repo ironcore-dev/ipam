@@ -6,4 +6,4 @@
 // +groupName=ipam.onmetal.de
 
 // Package v1alpha1 is the v1alpha1 version of the API.
-package v1alpha1 // import "github.com/onmetal/ipam/api/ipam/v1alpha1"
+package v1alpha1 // import "github.com/ironcore-dev/ipam/api/ipam/v1alpha1"

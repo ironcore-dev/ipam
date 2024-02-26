@@ -5,7 +5,7 @@
 package v1alpha1
 
 import (
-	internalinterfaces "github.com/onmetal/ipam/clientgo/informers/internalinterfaces"
+	internalinterfaces "github.com/ironcore-dev/ipam/clientgo/informers/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.

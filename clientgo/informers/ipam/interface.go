@@ -5,8 +5,8 @@
 package ipam
 
 import (
-	internalinterfaces "github.com/onmetal/ipam/clientgo/informers/internalinterfaces"
-	v1alpha1 "github.com/onmetal/ipam/clientgo/informers/ipam/v1alpha1"
+	internalinterfaces "github.com/ironcore-dev/ipam/clientgo/informers/internalinterfaces"
+	v1alpha1 "github.com/ironcore-dev/ipam/clientgo/informers/ipam/v1alpha1"
 )
 
 // Interface provides access to each of this group's versions.

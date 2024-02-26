@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"net/http"
 
-	ipamv1alpha1 "github.com/onmetal/ipam/clientgo/ipam/typed/ipam/v1alpha1"
+	ipamv1alpha1 "github.com/ironcore-dev/ipam/clientgo/ipam/typed/ipam/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

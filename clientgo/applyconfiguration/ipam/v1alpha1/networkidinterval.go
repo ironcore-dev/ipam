@@ -5,7 +5,7 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/onmetal/ipam/api/ipam/v1alpha1"
+	v1alpha1 "github.com/ironcore-dev/ipam/api/ipam/v1alpha1"
 )
 
 // NetworkIDIntervalApplyConfiguration represents an declarative configuration of the NetworkIDInterval type for use

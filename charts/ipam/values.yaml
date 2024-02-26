@@ -8,7 +8,7 @@ proxy:
     tag: "v0.5.0"
 manager:
   image:
-    repository: core.harbor.onmetal.de/onmetal/ipam
+    repository: core.harbor.onmetal.de/ironcore-dev/ipam
     pullPolicy: IfNotPresent
     tag: "latest"
   resources:

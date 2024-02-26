@@ -58,7 +58,7 @@ process. We use [the standard DCO text of the Linux Foundation](https://develope
 * Fork and clone the repository to you local machine.
 
 ```shell
-git clone git@github.com:onmetal/ipam.git
+git clone git@github.com:ironcore-dev/ipam.git
 cd ipam
 ```
 

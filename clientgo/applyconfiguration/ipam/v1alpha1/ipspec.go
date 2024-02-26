@@ -5,7 +5,7 @@
 package v1alpha1
 
 import (
-	ipamv1alpha1 "github.com/onmetal/ipam/api/ipam/v1alpha1"
+	ipamv1alpha1 "github.com/ironcore-dev/ipam/api/ipam/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 )
 

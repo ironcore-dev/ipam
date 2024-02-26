@@ -5,9 +5,9 @@
 package applyconfiguration
 
 import (
-	v1alpha1 "github.com/onmetal/ipam/api/ipam/v1alpha1"
-	ipamv1alpha1 "github.com/onmetal/ipam/clientgo/applyconfiguration/ipam/v1alpha1"
-	metav1 "github.com/onmetal/ipam/clientgo/applyconfiguration/meta/v1"
+	v1alpha1 "github.com/ironcore-dev/ipam/api/ipam/v1alpha1"
+	ipamv1alpha1 "github.com/ironcore-dev/ipam/clientgo/applyconfiguration/ipam/v1alpha1"
+	metav1 "github.com/ironcore-dev/ipam/clientgo/applyconfiguration/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 )

@@ -56,7 +56,7 @@ echo "Generating ${blue}deepcopy${normal}"
 "$DEEPCOPY_GEN" \
   --output-base "$GOPATH/src" \
   --go-header-file "$SCRIPT_DIR/boilerplate.go.txt" \
-  --input-dirs "$(qualify-gvs "github.com/onmetal/ipam/api" "$ALL_VERSION_GROUPS")" \
+  --input-dirs "$(qualify-gvs "github.com/ironcore-dev/ipam/api" "$ALL_VERSION_GROUPS")" \
   -O zz_generated.deepcopy
 
 echo "Generating ${blue}openapi${normal}"
@@ -70,32 +70,32 @@ popd >/dev/null
 "$OPENAPI_GEN" \
   --output-base "$GOPATH/src" \
   --go-header-file "$SCRIPT_DIR/boilerplate.go.txt" \
-  --input-dirs "$(qualify-gvs "github.com/onmetal/ipam/api" "$ALL_VERSION_GROUPS")" \
+  --input-dirs "$(qualify-gvs "github.com/ironcore-dev/ipam/api" "$ALL_VERSION_GROUPS")" \
   --input-dirs "k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/apimachinery/pkg/runtime,k8s.io/apimachinery/pkg/version" \
   --input-dirs "k8s.io/api/core/v1" \
   --input-dirs "k8s.io/apimachinery/pkg/api/resource" \
-  --output-package "github.com/onmetal/ipam/clientgo/openapi" \
+  --output-package "github.com/ironcore-dev/ipam/clientgo/openapi" \
   -O zz_generated.openapi \
   --report-filename "$SCRIPT_DIR/../clientgo/openapi/api_violations.report"
 
 echo "Generating ${blue}applyconfiguration${normal}"
 applyconfigurationgen_external_apis+=("k8s.io/apimachinery/pkg/apis/meta/v1")
-applyconfigurationgen_external_apis+=("$(qualify-gvs "github.com/onmetal/ipam/api" "$ALL_VERSION_GROUPS")")
+applyconfigurationgen_external_apis+=("$(qualify-gvs "github.com/ironcore-dev/ipam/api" "$ALL_VERSION_GROUPS")")
 applyconfigurationgen_external_apis_csv=$(IFS=,; echo "${applyconfigurationgen_external_apis[*]}")
 "$APPLYCONFIGURATION_GEN" \
   --output-base "$GOPATH/src" \
   --go-header-file "$SCRIPT_DIR/boilerplate.go.txt" \
   --input-dirs "${applyconfigurationgen_external_apis_csv}" \
-  --openapi-schema <("$MODELS_SCHEMA" --openapi-package "github.com/onmetal/ipam/clientgo/openapi" --openapi-title "ipam") \
-  --output-package "github.com/onmetal/ipam/clientgo/applyconfiguration"
+  --openapi-schema <("$MODELS_SCHEMA" --openapi-package "github.com/ironcore-dev/ipam/clientgo/openapi" --openapi-title "ipam") \
+  --output-package "github.com/ironcore-dev/ipam/clientgo/applyconfiguration"
 
 echo "Generating ${blue}client${normal}"
 "$CLIENT_GEN" \
   --output-base "$GOPATH/src" \
   --go-header-file "$SCRIPT_DIR/boilerplate.go.txt" \
-  --input "$(qualify-gvs "github.com/onmetal/ipam/api" "$CLIENT_VERSION_GROUPS")" \
-  --output-package "github.com/onmetal/ipam/clientgo" \
-  --apply-configuration-package "github.com/onmetal/ipam/clientgo/applyconfiguration" \
+  --input "$(qualify-gvs "github.com/ironcore-dev/ipam/api" "$CLIENT_VERSION_GROUPS")" \
+  --output-package "github.com/ironcore-dev/ipam/clientgo" \
+  --apply-configuration-package "github.com/ironcore-dev/ipam/clientgo/applyconfiguration" \
   --clientset-name "ipam" \
   --input-base ""
 
@@ -103,15 +103,15 @@ echo "Generating ${blue}lister${normal}"
 "$LISTER_GEN" \
   --output-base "$GOPATH/src" \
   --go-header-file "$SCRIPT_DIR/boilerplate.go.txt" \
-  --input-dirs "$(qualify-gvs "github.com/onmetal/ipam/api" "$CLIENT_VERSION_GROUPS")" \
-  --output-package "github.com/onmetal/ipam/clientgo/listers"
+  --input-dirs "$(qualify-gvs "github.com/ironcore-dev/ipam/api" "$CLIENT_VERSION_GROUPS")" \
+  --output-package "github.com/ironcore-dev/ipam/clientgo/listers"
 
 echo "Generating ${blue}informer${normal}"
 "$INFORMER_GEN" \
   --output-base "$GOPATH/src" \
   --go-header-file "$SCRIPT_DIR/boilerplate.go.txt" \
-  --input-dirs "$(qualify-gvs "github.com/onmetal/ipam/api" "$CLIENT_VERSION_GROUPS")" \
-  --versioned-clientset-package "github.com/onmetal/ipam/clientgo/ipam" \
-  --listers-package "github.com/onmetal/ipam/clientgo/listers" \
-  --output-package "github.com/onmetal/ipam/clientgo/informers" \
+  --input-dirs "$(qualify-gvs "github.com/ironcore-dev/ipam/api" "$CLIENT_VERSION_GROUPS")" \
+  --versioned-clientset-package "github.com/ironcore-dev/ipam/clientgo/ipam" \
+  --listers-package "github.com/ironcore-dev/ipam/clientgo/listers" \
+  --output-package "github.com/ironcore-dev/ipam/clientgo/informers" \
   --single-directory
