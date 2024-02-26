@@ -1,4 +1,4 @@
-module github.com/onmetal/ipam
+module github.com/ironcore-dev/ipam
 
 go 1.21
 

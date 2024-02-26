@@ -32,8 +32,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	ipamv1alpha1 "github.com/onmetal/ipam/api/ipam/v1alpha1"
-	"github.com/onmetal/ipam/controllers"
+	ipamv1alpha1 "github.com/ironcore-dev/ipam/api/ipam/v1alpha1"
+	"github.com/ironcore-dev/ipam/controllers"
 	// +kubebuilder:scaffold:imports
 )
 

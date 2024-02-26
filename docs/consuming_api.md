@@ -19,7 +19,7 @@ import (
 	"k8s.io/client-go/rest"
 
 	apiv1alpha1 "github.com/onmetal/ipam/api/ipam/v1alpha1"
-	clientv1alpha1 "github.com/onmetal/ipam/clientset"
+	clientv1alpha1 "github.com/ironcore-dev/ipam/clientset"
 )
 
 func inbound() error {
@@ -75,7 +75,7 @@ import (
     "k8s.io/client-go/kubernetes/scheme"
 
     apiv1alpha1 "github.com/onmetal/ipam/api/ipam/v1alpha1"
-    clientv1alpha1 "github.com/onmetal/ipam/clientset"
+    clientv1alpha1 "github.com/ironcore-dev/ipam/clientset"
 )
 
 func outbound() error {
