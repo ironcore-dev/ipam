@@ -4,13 +4,13 @@ on:
   push:
     branches:
       - main
-  pull_request_target:
+  pull_request:
 
 jobs:
   update_release_draft:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           disable-releaser: github.ref != 'refs/heads/main'
           config-name: release-drafter.yml
