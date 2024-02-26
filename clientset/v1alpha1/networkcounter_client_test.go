@@ -22,7 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/apimachinery/pkg/watch"
 
-	"github.com/onmetal/ipam/api/v1alpha1"
+	"github.com/ironcore-dev/ipam/api/v1alpha1"
 )
 
 var _ = Describe("NetworkCounter client", func() {

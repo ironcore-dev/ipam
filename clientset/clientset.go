@@ -20,7 +20,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/flowcontrol"
 
-	"github.com/onmetal/ipam/clientset/v1alpha1"
+	"github.com/ironcore-dev/ipam/clientset/v1alpha1"
 )
 
 type Clientset interface {

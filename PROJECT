@@ -4,7 +4,7 @@ plugins:
   manifests.sdk.operatorframework.io/v2: {}
   scorecard.sdk.operatorframework.io/v2: {}
 projectName: ipam
-repo: github.com/onmetal/ipam
+repo: github.com/ironcore-dev/ipam
 resources:
 - api:
     crdVersion: v1
@@ -13,7 +13,7 @@ resources:
   domain: onmetal.de
   group: ipam
   kind: Ip
-  path: github.com/onmetal/ipam/api/v1alpha1
+  path: github.com/ironcore-dev/ipam/api/v1alpha1
   version: v1alpha1
   webhooks:
     defaulting: true

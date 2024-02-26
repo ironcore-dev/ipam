@@ -28,7 +28,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	machinev1alpha1 "github.com/onmetal/ipam/api/v1alpha1"
+	machinev1alpha1 "github.com/ironcore-dev/ipam/api/v1alpha1"
 )
 
 const (
