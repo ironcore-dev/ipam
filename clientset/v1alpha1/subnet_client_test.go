@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/apimachinery/pkg/watch"
 
-	"github.com/onmetal/ipam/api/v1alpha1"
+	"github.com/onmetal/ipam/api/ipam/v1alpha1"
 )
 
 var _ = Describe("Subnet client", func() {
@@ -207,17 +207,11 @@ var _ = Describe("Subnet client", func() {
 			By("Requesting created Subnet")
 			Eventually(func() bool {
 				_, err = client.Get(ctx, SubnetName, v1.GetOptions{})
-				if err != nil {
-					return false
-				}
-				return true
+				return err == nil
 			}, CTimeout, CInterval).Should(BeTrue())
 			Eventually(func() bool {
 				_, err = client.Get(ctx, SubnetToDeleteName, v1.GetOptions{})
-				if err != nil {
-					return false
-				}
-				return true
+				return err == nil
 			}, CTimeout, CInterval).Should(BeFalse())
 
 			Eventually(events, CTimeout, CInterval).Should(Receive(event))

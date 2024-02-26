@@ -31,7 +31,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	"github.com/onmetal/ipam/api/v1alpha1"
+	"github.com/onmetal/ipam/api/ipam/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 

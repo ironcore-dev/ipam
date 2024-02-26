@@ -5,6 +5,14 @@ set -o nounset
 set -o pipefail
 
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+# api_violations.report is required by openapi-gen tool.
+# if this file is not present in target folder, code generation fails.
+if [ ! -f "clientgo/openapi/api_violations.report" ]; then
+  mkdir -p clientgo/openapi
+  touch clientgo/openapi/api_violations.report
+fi
+
 export TERM="xterm-256color"
 
 bold="$(tput bold)"
@@ -60,13 +68,6 @@ echo "Generating ${blue}deepcopy${normal}"
   -O zz_generated.deepcopy
 
 echo "Generating ${blue}openapi${normal}"
-if [ ! -f $SCRIPT_DIR/../clientgo/openapi/api_violations.report ]; then
-  mkdir -p $SCRIPT_DIR/../clientgo/openapi
-  pushd $SCRIPT_DIR/../clientgo/openapi >/dev/null
-  touch api_violations.report
-  popd >/dev/null
-  cd "$SCRIPT_DIR/.."
-fi
 "$OPENAPI_GEN" \
   --output-base "$GOPATH/src" \
   --go-header-file "$SCRIPT_DIR/boilerplate.go.txt" \
@@ -104,14 +105,14 @@ echo "Generating ${blue}lister${normal}"
   --output-base "$GOPATH/src" \
   --go-header-file "$SCRIPT_DIR/boilerplate.go.txt" \
   --input-dirs "$(qualify-gvs "github.com/onmetal/ipam/api" "$CLIENT_VERSION_GROUPS")" \
-  --output-package "github.com/onmetal/ipam/client-go/listers"
+  --output-package "github.com/onmetal/ipam/clientgo/listers"
 
 echo "Generating ${blue}informer${normal}"
 "$INFORMER_GEN" \
   --output-base "$GOPATH/src" \
   --go-header-file "$SCRIPT_DIR/boilerplate.go.txt" \
   --input-dirs "$(qualify-gvs "github.com/onmetal/ipam/api" "$CLIENT_VERSION_GROUPS")" \
-  --versioned-clientset-package "github.com/onmetal/ipam/clientgo/ironcore" \
+  --versioned-clientset-package "github.com/onmetal/ipam/clientgo/ipam" \
   --listers-package "github.com/onmetal/ipam/clientgo/listers" \
   --output-package "github.com/onmetal/ipam/clientgo/informers" \
   --single-directory

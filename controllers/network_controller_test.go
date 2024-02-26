@@ -26,7 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/onmetal/ipam/api/v1alpha1"
+	"github.com/onmetal/ipam/api/ipam/v1alpha1"
 )
 
 var _ = Describe("Network controller", func() {
@@ -182,10 +182,7 @@ var _ = Describe("Network controller", func() {
 
 				Eventually(func() bool {
 					err := k8sClient.Get(ctx, networkCounterNamespacedName, &counter)
-					if err != nil {
-						return false
-					}
-					return true
+					return err == nil
 				}, timeout, interval).Should(BeTrue())
 
 				By(fmt.Sprintf("%s network ID reserved in counter", testNetworkCase.network.Spec.Type))
@@ -227,19 +224,13 @@ var _ = Describe("Network controller", func() {
 				Expect(k8sClient.Delete(ctx, testNetwork)).Should(Succeed())
 				Eventually(func() bool {
 					err := k8sClient.Get(ctx, networkNamespacedName, testNetwork)
-					if apierrors.IsNotFound(err) {
-						return true
-					}
-					return false
+					return apierrors.IsNotFound(err)
 				}, timeout, interval).Should(BeTrue())
 
 				By(fmt.Sprintf("%s network ID released", testNetworkCase.network.Spec.Type))
 				Eventually(func() bool {
 					err := k8sClient.Get(ctx, networkCounterNamespacedName, &counter)
-					if err != nil {
-						return false
-					}
-					return true
+					return err == nil
 				}, timeout, interval).Should(BeTrue())
 
 				Expect(counter.Spec.CanReserve(oldNetworkID)).Should(BeTrue())

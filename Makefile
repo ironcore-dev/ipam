@@ -46,24 +46,25 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: test
-test: manifests generate fmt vet envtest check-license ## Run tests.
+test: ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
 
 .PHONY: add-license
 add-license: addlicense ## Add license headers to all go files.
-	find . -name '*.go' -exec go run github.com/google/addlicense -c 'OnMetal authors' {} +
+	find . -name '*.go' -exec $(ADDLICENSE) -c 'OnMetal authors' {} +
 
 .PHONY: check-license
 check-license: addlicense ## Check that every file has a license header present.
-	find . -name '*.go' -exec go run github.com/google/addlicense  -check -c 'OnMetal authors' {} +
+	find . -name '*.go' -exec $(ADDLICENSE)  -check -c 'OnMetal authors' {} +
 
-lint: ## Run golangci-lint against code.
-	golangci-lint run ./...
+.PHONY: lint
+lint: golangci-lint ## Run golangci-lint against code.
+	$(GOLANGCI_LINT) run ./...
 
-check: manifests generate check-license lint test
+.PHONY: check
+check: manifests generate check-license lint
 
 ##@ Build
-
 .PHONY: build
 build: manifests generate fmt vet ## Build manager binary.
 	go build -o bin/manager main.go

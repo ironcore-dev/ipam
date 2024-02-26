@@ -24,7 +24,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 
-	"github.com/onmetal/ipam/api/v1alpha1"
+	"github.com/onmetal/ipam/api/ipam/v1alpha1"
 )
 
 const (

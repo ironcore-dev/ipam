@@ -30,7 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/onmetal/ipam/api/v1alpha1"
+	"github.com/onmetal/ipam/api/ipam/v1alpha1"
 )
 
 const (

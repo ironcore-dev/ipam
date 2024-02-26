@@ -13,7 +13,7 @@ resources:
   domain: onmetal.de
   group: ipam
   kind: Ip
-  path: github.com/onmetal/ipam/api/v1alpha1
+  path: github.com/onmetal/ipam/api/ipam/v1alpha1
   version: v1alpha1
   webhooks:
     defaulting: true
