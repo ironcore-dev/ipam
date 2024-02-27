@@ -51,7 +51,7 @@ test: envtest ## Run tests.
 
 .PHONY: add-license
 add-license: addlicense ## Add license headers to all go files.
-	find . -name '*.go' -exec $(ADDLICENSE) -c 'OnMetal authors' {} +
+	find . -name '*.go' -exec $(ADDLICENSE) -f hack/license-header.txt {} +
 
 .PHONY: check-license
 check-license: addlicense ## Check that every file has a license header present.
