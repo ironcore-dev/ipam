@@ -35,11 +35,6 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Configure git for private modules
-        run: ./hack/setup-git-redirect.sh
-        env:
-          GITHUB_PAT: ${{ secrets.BOT_PAT }}
-
       - name: Lint golang sources
         uses: golangci/golangci-lint-action@v4
         with:
@@ -57,11 +52,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-
-      - name: Configure git for private modules
-        run: ./hack/setup-git-redirect.sh
-        env:
-          GITHUB_PAT: ${{ secrets.BOT_PAT }}
 
       - name: Run tests
         run: make test
@@ -141,7 +131,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            GOPRIVATE=github.com/onmetal/*
           secrets: |
             "github_pat=${{ secrets.BOT_PAT }}"
