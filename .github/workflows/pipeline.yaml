@@ -16,6 +16,11 @@ on:
       - 'docs/**'
       - '**/*.md'
 
+permissions:
+  contents: read
+  packages: write
+
+
 env:
   platforms: linux/amd64,linux/arm64
   registry: ghcr.io
