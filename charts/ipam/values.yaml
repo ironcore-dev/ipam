@@ -8,7 +8,7 @@ proxy:
     tag: "v0.5.0"
 manager:
   image:
-    repository: core.harbor.onmetal.de/ironcore-dev/ipam
+    repository: ghcr.io/ironcore-dev/ipam
     pullPolicy: IfNotPresent
     tag: "latest"
   resources:
@@ -47,28 +47,28 @@ cluster:
 
 crd:
   ip:
-    group: ipam.onmetal.de
+    group: ipam.ironcore.dev
     plural: ips
     singular: ip
     kind: IP
     listKind: IPList
     scope: Namespaced
   subnet:
-    group: ipam.onmetal.de
+    group: ipam.ironcore.dev
     plural: subnets
     singular: subnet
     kind: Subnet
     listKind: SubnetList
     scope: Namespaced
   network:
-    group: ipam.onmetal.de
+    group: ipam.ironcore.dev
     plural: networks
     singular: network
     kind: Network
     listKind: NetworkList
     scope: Namespaced
   networkcounter:
-    group: ipam.onmetal.de
+    group: ipam.ironcore.dev
     plural: networkcounters
     singular: networkcounter
     kind: NetworkCounter
@@ -77,4 +77,4 @@ crd:
 
 leaderElection:
   leaderElect: true
-  resourceName: f42c18d5.onmetal.de
+  resourceName: f42c18d5.ironcore.dev

@@ -17,7 +17,7 @@ import (
 // apply configuration type exists for the given GroupVersionKind.
 func ForKind(kind schema.GroupVersionKind) interface{} {
 	switch kind {
-	// Group=ipam.onmetal.de, Version=v1alpha1
+	// Group=ipam.ironcore.dev, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithKind("IP"):
 		return &ipamv1alpha1.IPApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("IPSpec"):

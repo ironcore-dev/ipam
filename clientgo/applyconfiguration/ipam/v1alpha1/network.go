@@ -30,7 +30,7 @@ func Network(name, namespace string) *NetworkApplyConfiguration {
 	b.WithName(name)
 	b.WithNamespace(namespace)
 	b.WithKind("Network")
-	b.WithAPIVersion("ipam.onmetal.de/v1alpha1")
+	b.WithAPIVersion("ipam.ironcore.dev/v1alpha1")
 	return b
 }
 
@@ -66,7 +66,7 @@ func extractNetwork(network *ipamv1alpha1.Network, fieldManager string, subresou
 	b.WithNamespace(network.Namespace)
 
 	b.WithKind("Network")
-	b.WithAPIVersion("ipam.onmetal.de/v1alpha1")
+	b.WithAPIVersion("ipam.ironcore.dev/v1alpha1")
 	return b, nil
 }
 

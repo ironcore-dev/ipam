@@ -93,7 +93,7 @@ Operator can be deployed to the environment with kubectl, kustomize or Helm. Use
 
 ### With Helm chart
 
-    # install release "dev" to "onmetal" namespace
-    helm install dev ./chart/ -n onmetal --create-namespace
-    # remove release "dev" from "onmetal" namespace
-    helm uninstall dev -n onmetal
+    # install release "dev" to "ironcore-dev" namespace
+    helm install dev ./chart/ -n ironcore-dev --create-namespace
+    # remove release "dev" from "ironcore-dev" namespace
+    helm uninstall dev -n ironcore-dev

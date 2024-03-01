@@ -1,4 +1,4 @@
-domain: onmetal.de
+domain: ironcore.dev
 layout: go.kubebuilder.io/v3
 plugins:
   manifests.sdk.operatorframework.io/v2: {}
@@ -10,7 +10,7 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: onmetal.de
+  domain: ironcore.dev
   group: ipam
   kind: Ip
   path: github.com/ironcore-dev/ipam/api/ipam/v1alpha1

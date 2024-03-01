@@ -1,4 +1,4 @@
-apiVersion: ipam.onmetal.de/v1alpha1
+apiVersion: ipam.ironcore.dev/v1alpha1
 kind: Network
 metadata:
   name: mpls-network-sample
