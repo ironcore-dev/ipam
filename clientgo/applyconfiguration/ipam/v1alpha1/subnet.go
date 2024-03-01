@@ -30,7 +30,7 @@ func Subnet(name, namespace string) *SubnetApplyConfiguration {
 	b.WithName(name)
 	b.WithNamespace(namespace)
 	b.WithKind("Subnet")
-	b.WithAPIVersion("ipam.onmetal.de/v1alpha1")
+	b.WithAPIVersion("ipam.ironcore.dev/v1alpha1")
 	return b
 }
 
@@ -66,7 +66,7 @@ func extractSubnet(subnet *ipamv1alpha1.Subnet, fieldManager string, subresource
 	b.WithNamespace(subnet.Namespace)
 
 	b.WithKind("Subnet")
-	b.WithAPIVersion("ipam.onmetal.de/v1alpha1")
+	b.WithAPIVersion("ipam.ironcore.dev/v1alpha1")
 	return b, nil
 }
 

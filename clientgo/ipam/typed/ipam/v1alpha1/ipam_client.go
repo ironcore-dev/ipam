@@ -21,7 +21,7 @@ type IpamV1alpha1Interface interface {
 	SubnetsGetter
 }
 
-// IpamV1alpha1Client is used to interact with features provided by the ipam.onmetal.de group.
+// IpamV1alpha1Client is used to interact with features provided by the ipam.ironcore.dev group.
 type IpamV1alpha1Client struct {
 	restClient rest.Interface
 }

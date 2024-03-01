@@ -4,9 +4,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-  name: subnets.ipam.onmetal.de
+  name: subnets.ipam.ironcore.dev
 spec:
-  group: ipam.onmetal.de
+  group: ipam.ironcore.dev
   names:
     kind: Subnet
     listKind: SubnetList

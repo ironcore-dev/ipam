@@ -51,7 +51,7 @@ patchesJson6902:
       version: v1
       group: apiextensions.k8s.io
       kind: CustomResourceDefinition
-      name: ipam.onmetal.de
+      name: ipam.ironcore.dev
     path: crd_patch.yaml
 ```
 

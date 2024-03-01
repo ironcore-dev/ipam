@@ -60,7 +60,7 @@ func main() {
 		},
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "f42c18d5.onmetal.de",
+		LeaderElectionID:       "f42c18d5.ironcore.dev",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

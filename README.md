@@ -1,6 +1,6 @@
 # IPAM
 [![REUSE status](https://api.reuse.software/badge/github.com/ironcore-dev/ipam)](https://api.reuse.software/info/github.com/ironcore-dev/ipam)
-[![Go Reference](https://pkg.go.dev/badge/github.com/onmetal/controller-utils.svg)](https://pkg.go.dev/github.com/onmetal/controller-utils)
+[![Go Reference](https://pkg.go.dev/badge/github.com/ironcore-dev/controller-utils.svg)](https://pkg.go.dev/github.com/ironcore-dev/controller-utils)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com) 
 [![GitHub License](https://img.shields.io/static/v1?label=License&message=Apache-2.0&color=blue&style=flat-square)](LICENSE)
 

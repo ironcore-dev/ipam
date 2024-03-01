@@ -3,7 +3,7 @@
 
 // +k8s:deepcopy-gen=package
 // +k8s:openapi-gen=true
-// +groupName=ipam.onmetal.de
+// +groupName=ipam.ironcore.dev
 
 // Package v1alpha1 is the v1alpha1 version of the API.
 package v1alpha1 // import "github.com/ironcore-dev/ipam/api/ipam/v1alpha1"

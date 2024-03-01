@@ -55,7 +55,7 @@ add-license: addlicense ## Add license headers to all go files.
 
 .PHONY: check-license
 check-license: addlicense ## Check that every file has a license header present.
-	find . -name '*.go' -exec $(ADDLICENSE)  -check -c 'OnMetal authors' {} +
+	find . -name '*.go' -exec $(ADDLICENSE)  -check -c 'IronCore authors' {} +
 
 .PHONY: lint
 lint: golangci-lint ## Run golangci-lint against code.
