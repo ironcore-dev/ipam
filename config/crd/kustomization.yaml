@@ -2,10 +2,10 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/ipam.ironcore.dev_ips.yaml
-- bases/ipam.ironcore.dev_subnets.yaml
-- bases/ipam.ironcore.dev_networks.yaml
-- bases/ipam.ironcore.dev_networkcounters.yaml
+- bases/ipam.metal.ironcore.dev_ips.yaml
+- bases/ipam.metal.ironcore.dev_subnets.yaml
+- bases/ipam.metal.ironcore.dev_networks.yaml
+- bases/ipam.metal.ironcore.dev_networkcounters.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:

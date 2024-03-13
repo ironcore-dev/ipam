@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	CNetworkFinalizer = "network.ipam.ironcore.dev/finalizer"
+	CNetworkFinalizer = "network.ipam.metal.ironcore.dev/finalizer"
 
 	CNetworkIDProposalFailureReason    = "NetworkIDProposalFailure"
 	CNetworkIDReservationFailureReason = "NetworkIDReservationFailure"
@@ -39,13 +39,13 @@ type NetworkReconciler struct {
 	EventRecorder record.EventRecorder
 }
 
-// +kubebuilder:rbac:groups=ipam.ironcore.dev,resources=networkcounters,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=ipam.ironcore.dev,resources=networkcounters/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=ipam.ironcore.dev,resources=networkcounters/finalizers,verbs=update
+// +kubebuilder:rbac:groups=ipam.metal.ironcore.dev,resources=networkcounters,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=ipam.metal.ironcore.dev,resources=networkcounters/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=ipam.metal.ironcore.dev,resources=networkcounters/finalizers,verbs=update
 
-// +kubebuilder:rbac:groups=ipam.ironcore.dev,resources=networks,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=ipam.ironcore.dev,resources=networks/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=ipam.ironcore.dev,resources=networks/finalizers,verbs=update
+// +kubebuilder:rbac:groups=ipam.metal.ironcore.dev,resources=networks,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=ipam.metal.ironcore.dev,resources=networks/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=ipam.metal.ironcore.dev,resources=networks/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
