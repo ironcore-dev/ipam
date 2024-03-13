@@ -30,7 +30,7 @@ func IP(name, namespace string) *IPApplyConfiguration {
 	b.WithName(name)
 	b.WithNamespace(namespace)
 	b.WithKind("IP")
-	b.WithAPIVersion("ipam.ironcore.dev/v1alpha1")
+	b.WithAPIVersion("ipam.metal.ironcore.dev/v1alpha1")
 	return b
 }
 
@@ -66,7 +66,7 @@ func extractIP(iP *ipamv1alpha1.IP, fieldManager string, subresource string) (*I
 	b.WithNamespace(iP.Namespace)
 
 	b.WithKind("IP")
-	b.WithAPIVersion("ipam.ironcore.dev/v1alpha1")
+	b.WithAPIVersion("ipam.metal.ironcore.dev/v1alpha1")
 	return b, nil
 }
 

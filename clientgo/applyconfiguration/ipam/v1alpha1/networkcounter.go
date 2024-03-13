@@ -30,7 +30,7 @@ func NetworkCounter(name, namespace string) *NetworkCounterApplyConfiguration {
 	b.WithName(name)
 	b.WithNamespace(namespace)
 	b.WithKind("NetworkCounter")
-	b.WithAPIVersion("ipam.ironcore.dev/v1alpha1")
+	b.WithAPIVersion("ipam.metal.ironcore.dev/v1alpha1")
 	return b
 }
 
@@ -66,7 +66,7 @@ func extractNetworkCounter(networkCounter *ipamv1alpha1.NetworkCounter, fieldMan
 	b.WithNamespace(networkCounter.Namespace)
 
 	b.WithKind("NetworkCounter")
-	b.WithAPIVersion("ipam.ironcore.dev/v1alpha1")
+	b.WithAPIVersion("ipam.metal.ironcore.dev/v1alpha1")
 	return b, nil
 }
 

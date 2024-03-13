@@ -25,7 +25,7 @@ Network is able to handle both IPv4 and IPv6 address spaces simultaneously.
 A proper Network CR should be formed following the rules below. 
 
 ```yaml
-apiVersion: ipam.ironcore.dev/v1alpha1
+apiVersion: ipam.metal.ironcore.dev/v1alpha1
 kind: Network
 metadata:
   name: network-sample
@@ -63,7 +63,7 @@ may be inspected. It contains a list of address ranges booked by subnets.
 [user@localhost ~]$ kubectl describe network mpls-network-sample
 Name:         network-sample
 Namespace:    default
-API Version:  ipam.ironcore.dev/v1alpha1
+API Version:  ipam.metal.ironcore.dev/v1alpha1
 Kind:         Network
 Status:
   ipv4Capacity:  16777216
@@ -96,7 +96,7 @@ If `Vacant` collection is empty, then there are no intervals left.
 [user@localhost ~]$ kubectl describe networkcounter k8s-vxlan-network-counter
 Name:         k8s-vxlan-network-counter
 Namespace:    default
-API Version:  ipam.ironcore.dev/v1alpha1
+API Version:  ipam.metal.ironcore.dev/v1alpha1
 Kind:         NetworkCounter
 Spec:
   Vacant:
@@ -131,7 +131,7 @@ Subnets may be also categorized by their regional affiliation:
 Here is an explanation on how to setup the Subnet.
 
 ```yaml
-apiVersion: ipam.ironcore.dev/v1alpha1
+apiVersion: ipam.metal.ironcore.dev/v1alpha1
 kind: Subnet
 metadata:
   name: subnet-sample
@@ -195,7 +195,7 @@ spec:
   # Optional
   # Object with string fields
   consumer:
-     apiVersion: ipam.ironcore.dev/v1alpha1
+     apiVersion: ipam.metal.ironcore.dev/v1alpha1
      kind: SampleReource
      name: sample-resorce-name
 ```
@@ -222,7 +222,7 @@ Vacant ranges left may be also checked with `describe` method of `kubectl`.
 [user@localhost ~]$ kubectl describe subnet ipv4-parent-cidr-subnet-sample
 Name:         ipv4-parent-cidr-subnet-sample
 Namespace:    default
-API Version:  ipam.ironcore.dev/v1alpha1
+API Version:  ipam.metal.ironcore.dev/v1alpha1
 Kind:         Subnet
 Status:
   Capacity:       16777216
@@ -271,7 +271,7 @@ IPs are always booked on specified Subnet as CIDRs, reducing their capacity.
 IPs may or may not point to resource they are assigned to. 
 
 ```yaml
-apiVersion: ipam.ironcore.dev/v1alpha1
+apiVersion: ipam.metal.ironcore.dev/v1alpha1
 kind: Ip
 metadata:
   name: ip-sample
@@ -286,7 +286,7 @@ spec:
   # Optional
   # Object with string fields
   consumer:
-    apiVersion: ipam.ironcore.dev/v1alpha1
+    apiVersion: ipam.metal.ironcore.dev/v1alpha1
     kind: SampleReource
     name: sample-resorce-name
   # IP
@@ -301,14 +301,14 @@ Sample output for the `kubectl`.
 ```shell
 [user@localhost ~]$ kubectl get ips
 NAME                             IP                       SUBNET                          RESOURCE GROUP               RESOURCE KIND    RESOURCE NAME                    STATE      MESSAGE
-ipv4-ip-ip-sample                10.0.0.1                 ipv4-child-cidr-subnet-sample                                                                                  Finished   
-ipv4-ip-sample                   10.0.0.3                 ipv4-child-cidr-subnet-sample                                                                                  Finished   
-ipv4-resource-and-ip-ip-sample   10.0.0.2                 ipv4-child-cidr-subnet-sample   ipam.ironcore.dev/v1alpha1   NetworkCounter   referred-networkcounter-sample   Finished   
-ipv4-resource-ip-sample          10.0.0.0                 ipv4-child-cidr-subnet-sample   ipam.ironcore.dev/v1alpha1   NetworkCounter   referred-networkcounter-sample   Finished   
-ipv6-ip-ip-sample                fd34:5d8f:e75e:f3a2::1   ipv6-child-cidr-subnet-sample                                                                                  Finished   
-ipv6-ip-sample                   fd34:5d8f:e75e:f3a2::3   ipv6-child-cidr-subnet-sample                                                                                  Finished   
-ipv6-resource-and-ip-ip-sample   fd34:5d8f:e75e:f3a2::2   ipv6-child-cidr-subnet-sample   ipam.ironcore.dev/v1alpha1   NetworkCounter   referred-networkcounter-sample   Finished   
-ipv6-resource-ip-sample          fd34:5d8f:e75e:f3a2::    ipv6-child-cidr-subnet-sample   ipam.ironcore.dev/v1alpha1   NetworkCounter   referred-networkcounter-sample   Finished
+ipv4-ip-ip-sample                10.0.0.1                 ipv4-child-cidr-subnet-sample                                                                                        Finished
+ipv4-ip-sample                   10.0.0.3                 ipv4-child-cidr-subnet-sample                                                                                        Finished
+ipv4-resource-and-ip-ip-sample   10.0.0.2                 ipv4-child-cidr-subnet-sample   ipam.metal.ironcore.dev/v1alpha1   NetworkCounter   referred-networkcounter-sample   Finished
+ipv4-resource-ip-sample          10.0.0.0                 ipv4-child-cidr-subnet-sample   ipam.metal.ironcore.dev/v1alpha1   NetworkCounter   referred-networkcounter-sample   Finished
+ipv6-ip-ip-sample                fd34:5d8f:e75e:f3a2::1   ipv6-child-cidr-subnet-sample                                                                                        Finished
+ipv6-ip-sample                   fd34:5d8f:e75e:f3a2::3   ipv6-child-cidr-subnet-sample                                                                                        Finished
+ipv6-resource-and-ip-ip-sample   fd34:5d8f:e75e:f3a2::2   ipv6-child-cidr-subnet-sample   ipam.metal.ironcore.dev/v1alpha1   NetworkCounter   referred-networkcounter-sample   Finished
+ipv6-resource-ip-sample          fd34:5d8f:e75e:f3a2::    ipv6-child-cidr-subnet-sample   ipam.metal.ironcore.dev/v1alpha1   NetworkCounter   referred-networkcounter-sample   Finished
 ```
 
 IPs status is pretty simple and does not provide any additional info. 
@@ -316,7 +316,7 @@ IPs status is pretty simple and does not provide any additional info.
 ```shell
 Name:         ipv4-ip-ip-sample
 Namespace:    default
-API Version:  ipam.ironcore.dev/v1alpha1
+API Version:  ipam.metal.ironcore.dev/v1alpha1
 Kind:         Ip
 Status:
   Reserved:   10.0.0.1

@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	CSubnetFinalizer = "subnet.ipam.ironcore.dev/finalizer"
+	CSubnetFinalizer = "subnet.ipam.metal.ironcore.dev/finalizer"
 
 	CSubnetFinalizationSuccessReason = "SubnetFinalizationSuccess"
 
@@ -48,9 +48,9 @@ type SubnetReconciler struct {
 	EventRecorder record.EventRecorder
 }
 
-// +kubebuilder:rbac:groups=ipam.ironcore.dev,resources=subnets,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=ipam.ironcore.dev,resources=subnets/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=ipam.ironcore.dev,resources=subnets/finalizers,verbs=update
+// +kubebuilder:rbac:groups=ipam.metal.ironcore.dev,resources=subnets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=ipam.metal.ironcore.dev,resources=subnets/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=ipam.metal.ironcore.dev,resources=subnets/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

@@ -1,4 +1,4 @@
-apiVersion: ipam.ironcore.dev/v1alpha1
+apiVersion: ipam.metal.ironcore.dev/v1alpha1
 kind: Subnet
 metadata:
   name: ipv6-child-capacity-subnet-sample

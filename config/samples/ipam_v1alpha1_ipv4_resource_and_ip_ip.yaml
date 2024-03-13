@@ -1,11 +1,11 @@
-apiVersion: ipam.ironcore.dev/v1alpha1
+apiVersion: ipam.metal.ironcore.dev/v1alpha1
 kind: IP
 metadata:
   name: ipv4-resource-and-ip-ip-sample
 spec:
   subnetName: ipv4-child-cidr-subnet-sample
   resourceReference:
-    apiVersion: ipam.ironcore.dev/v1alpha1
+    apiVersion: ipam.metal.ironcore.dev/v1alpha1
     kind: NetworkCounter
     name: referred-networkcounter-sample
   ip: 10.0.0.2

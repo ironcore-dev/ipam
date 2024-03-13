@@ -11,12 +11,12 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-ipam-ironcore-dev-v1alpha1-ip
+      path: /validate-ipam-metal-ironcore-dev-v1alpha1-ip
   failurePolicy: Fail
   name: vip.kb.io
   rules:
   - apiGroups:
-    - ipam.ironcore.dev
+    - ipam.metal.ironcore.dev
     apiVersions:
     - v1alpha1
     operations:
@@ -33,12 +33,12 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-ipam-ironcore-dev-v1alpha1-network
+      path: /validate-ipam-metal-ironcore-dev-v1alpha1-network
   failurePolicy: Fail
   name: vnetwork.kb.io
   rules:
   - apiGroups:
-    - ipam.ironcore.dev
+    - ipam.metal.ironcore.dev
     apiVersions:
     - v1alpha1
     operations:
@@ -55,12 +55,12 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-ipam-ironcore-dev-v1alpha1-networkcounter
+      path: /validate-ipam-metal-ironcore-dev-v1alpha1-networkcounter
   failurePolicy: Fail
   name: vnetworkcounter.kb.io
   rules:
   - apiGroups:
-    - ipam.ironcore.dev
+    - ipam.metal.ironcore.dev
     apiVersions:
     - v1alpha1
     operations:
@@ -77,12 +77,12 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-ipam-ironcore-dev-v1alpha1-subnet
+      path: /validate-ipam-metal-ironcore-dev-v1alpha1-subnet
   failurePolicy: Fail
   name: vsubnet.kb.io
   rules:
   - apiGroups:
-    - ipam.ironcore.dev
+    - ipam.metal.ironcore.dev
     apiVersions:
     - v1alpha1
     operations:

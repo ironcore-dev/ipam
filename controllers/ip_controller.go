@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	CIPFinalizer = "ip.ipam.ironcore.dev/finalizer"
+	CIPFinalizer = "ip.ipam.metal.ironcore.dev/finalizer"
 
 	CIPReservationFailureReason = "IPReservationFailure"
 	CIPProposalFailureReason    = "IPProposalFailure"
@@ -40,9 +40,9 @@ type IPReconciler struct {
 
 // +kubebuilder:rbac:groups=*,resources=*,verbs=get;list;watch
 // +kubebuilder:rbac:groups=*,resources=events,verbs=create;patch
-// +kubebuilder:rbac:groups=ipam.ironcore.dev,resources=ips,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=ipam.ironcore.dev,resources=ips/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=ipam.ironcore.dev,resources=ips/finalizers,verbs=update
+// +kubebuilder:rbac:groups=ipam.metal.ironcore.dev,resources=ips,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=ipam.metal.ironcore.dev,resources=ips/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=ipam.metal.ironcore.dev,resources=ips/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

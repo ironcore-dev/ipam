@@ -47,28 +47,28 @@ cluster:
 
 crd:
   ip:
-    group: ipam.ironcore.dev
+    group: ipam.metal.ironcore.dev
     plural: ips
     singular: ip
     kind: IP
     listKind: IPList
     scope: Namespaced
   subnet:
-    group: ipam.ironcore.dev
+    group: ipam.metal.ironcore.dev
     plural: subnets
     singular: subnet
     kind: Subnet
     listKind: SubnetList
     scope: Namespaced
   network:
-    group: ipam.ironcore.dev
+    group: ipam.metal.ironcore.dev
     plural: networks
     singular: network
     kind: Network
     listKind: NetworkList
     scope: Namespaced
   networkcounter:
-    group: ipam.ironcore.dev
+    group: ipam.metal.ironcore.dev
     plural: networkcounters
     singular: networkcounter
     kind: NetworkCounter
