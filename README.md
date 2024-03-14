@@ -26,4 +26,4 @@ We`d love to get a feedback from you.
 Please report bugs, suggestions or post question by opening a [Github issue](https://github.com/ironcore-dev/ipam/issues)
 
 ## License
-[Apache License 2.0](LICENCE)
+[Apache License 2.0](LICENSE)
