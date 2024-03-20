@@ -69,11 +69,6 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 			}
 
 			controllerutil.RemoveFinalizer(ip, CIPFinalizer)
-			err := r.Update(ctx, ip)
-			if err != nil {
-				log.Error(err, "unable to update ip resource on finalizer removal", "name", req.NamespacedName)
-				return ctrl.Result{}, err
-			}
 		}
 		return ctrl.Result{}, nil
 	}
