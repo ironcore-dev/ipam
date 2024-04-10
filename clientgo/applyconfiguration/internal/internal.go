@@ -60,17 +60,7 @@ var schemaYAML = typed.YAMLObject(`types:
         namedType: com.github.ironcore-dev.ipam.api.ipam.v1alpha1.IPStatus
       default: {}
 - name: com.github.ironcore-dev.ipam.api.ipam.v1alpha1.IPAddr
-  map:
-    elementType:
-      scalar: untyped
-      list:
-        elementType:
-          namedType: __untyped_atomic_
-        elementRelationship: atomic
-      map:
-        elementType:
-          namedType: __untyped_deduced_
-        elementRelationship: separable
+  scalar: string
 - name: com.github.ironcore-dev.ipam.api.ipam.v1alpha1.IPSpec
   map:
     fields:

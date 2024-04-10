@@ -11,6 +11,7 @@
 package openapi
 
 import (
+	v1alpha1 "github.com/ironcore-dev/ipam/api/ipam/v1alpha1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	common "k8s.io/kube-openapi/pkg/common"
@@ -380,7 +381,8 @@ func schema_ipam_api_ipam_v1alpha1_IPAddr(ref common.ReferenceCallback) common.O
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
+				Type:   v1alpha1.IPAddr{}.OpenAPISchemaType(),
+				Format: v1alpha1.IPAddr{}.OpenAPISchemaFormat(),
 			},
 		},
 	}

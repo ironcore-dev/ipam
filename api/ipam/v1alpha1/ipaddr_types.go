@@ -65,3 +65,11 @@ func (in *IPAddr) DeepCopyInto(out *IPAddr) {
 		out.Net = in.Net
 	}
 }
+
+// OpenAPISchemaType is used by the kube-openapi generator when constructing
+// the OpenAPI spec of this type.
+func (_ IPAddr) OpenAPISchemaType() []string { return []string{"string"} }
+
+// OpenAPISchemaFormat is used by the kube-openapi generator when constructing
+// the OpenAPI spec of this type.
+func (_ IPAddr) OpenAPISchemaFormat() string { return "" }
