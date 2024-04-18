@@ -1,6 +1,7 @@
 module github.com/ironcore-dev/ipam
 
 go 1.22
+toolchain go1.22.2
 
 require (
 	github.com/go-logr/logr v1.4.1
@@ -11,7 +12,7 @@ require (
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
 	gopkg.in/inf.v0 v0.9.1
 	k8s.io/api v0.29.4
-	k8s.io/apimachinery v0.29.4
+	k8s.io/apimachinery v0.30.0
 	k8s.io/client-go v0.29.4
 	k8s.io/kube-openapi v0.0.0-20240403164606-bc84c2ddaf99
 	sigs.k8s.io/controller-runtime v0.17.3
