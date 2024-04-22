@@ -14,7 +14,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1
 	k8s.io/api v0.30.0
 	k8s.io/apimachinery v0.30.0
-	k8s.io/client-go v0.29.4
+	k8s.io/client-go v0.30.0
 	k8s.io/kube-openapi v0.0.0-20240403164606-bc84c2ddaf99
 	sigs.k8s.io/controller-runtime v0.17.3
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1
