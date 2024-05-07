@@ -7,7 +7,7 @@ toolchain go1.22.2
 require (
 	github.com/go-logr/logr v1.4.1
 	github.com/google/addlicense v1.1.1
-	github.com/onsi/ginkgo/v2 v2.17.2
+	github.com/onsi/ginkgo/v2 v2.17.3
 	github.com/onsi/gomega v1.33.1
 	github.com/pkg/errors v0.9.1
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
