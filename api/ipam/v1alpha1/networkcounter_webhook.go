@@ -26,6 +26,12 @@ func (in *NetworkCounter) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // +kubebuilder:webhook:path=/validate-ipam-metal-ironcore-dev-v1alpha1-networkcounter,mutating=false,failurePolicy=fail,sideEffects=None,groups=ipam.metal.ironcore.dev,resources=networkcounters,verbs=create;update;delete,versions=v1alpha1,name=vnetworkcounter.kb.io,admissionReviewVersions={v1,v1beta1}
 
+var _ webhook.Defaulter = &NetworkCounter{}
+
+func (in *NetworkCounter) Default() {
+	iplog.Info("default", "name", in.Name)
+}
+
 var _ webhook.Validator = &NetworkCounter{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
