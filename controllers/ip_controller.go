@@ -100,6 +100,9 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 			return ctrl.Result{}, err
 		}
 
+		if ip.Labels == nil {
+			ip.Labels = map[string]string{}
+		}
 		ip.Labels[IPFamilyLabelKey] = string(subnet.Status.Type)
 		err = r.Update(ctx, ip)
 		return ctrl.Result{}, err
