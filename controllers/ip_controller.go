@@ -28,6 +28,8 @@ const (
 	CIPProposalFailureReason    = "IPProposalFailure"
 	CIPReservationSuccessReason = "IPReservationSuccess"
 	CIPReleaseSuccessReason     = "IPReleaseSuccess"
+
+	IPFamilyLabelKey = "ip.ipam.metal.ironcore.dev/ip-family"
 )
 
 // IPReconciler reconciles a Ip object
@@ -86,6 +88,24 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
+	}
+
+	if _, ok := ip.Labels[IPFamilyLabelKey]; !ok {
+		subnet := &v1alpha1.Subnet{}
+		if err := r.Get(ctx, types.NamespacedName{
+			Namespace: ip.Namespace,
+			Name:      ip.Spec.Subnet.Name,
+		}, subnet); err != nil {
+			log.Error(err, "unable to get subnet resource", "name", req.NamespacedName)
+			return ctrl.Result{}, err
+		}
+
+		if ip.Labels == nil {
+			ip.Labels = map[string]string{}
+		}
+		ip.Labels[IPFamilyLabelKey] = string(subnet.Status.Type)
+		err = r.Update(ctx, ip)
+		return ctrl.Result{}, err
 	}
 
 	if ip.Status.State == v1alpha1.CFinishedIPState ||
