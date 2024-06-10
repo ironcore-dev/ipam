@@ -35,6 +35,12 @@ func (in *IP) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // +kubebuilder:webhook:path=/validate-ipam-metal-ironcore-dev-v1alpha1-ip,mutating=false,failurePolicy=fail,sideEffects=None,groups=ipam.metal.ironcore.dev,resources=ips,verbs=create;update;delete,versions=v1alpha1,name=vip.kb.io,admissionReviewVersions={v1,v1beta1}
 
+var _ webhook.Defaulter = &IP{}
+
+func (in *IP) Default() {
+	iplog.Info("default", "name", in.Name)
+}
+
 var _ webhook.Validator = &IP{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
