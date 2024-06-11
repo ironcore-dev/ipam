@@ -54,7 +54,8 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 	ip := &v1alpha1.IP{}
 	err := r.Get(ctx, req.NamespacedName, ip)
 	if apierrors.IsNotFound(err) {
-		log.Error(err, "requested ip resource not found", "name", req.NamespacedName)
+		// object not found, it may have been deleted after the reconcile request.
+		log.Info("Resource not found, it might have been deleted.")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	if err != nil {
