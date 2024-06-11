@@ -39,7 +39,7 @@ func (r *NetworkCounterReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	nc := &machinev1alpha1.NetworkCounter{}
 	err := r.Get(ctx, req.NamespacedName, nc)
 	if apierrors.IsNotFound(err) {
-		log.Error(err, "requested machine resource not found", "name", req.NamespacedName)
+		log.Info("Resource not found, it might have been deleted.")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	if err != nil {

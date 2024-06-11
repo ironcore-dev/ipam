@@ -55,7 +55,7 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	network := &machinev1alpha1.Network{}
 	err := r.Get(ctx, req.NamespacedName, network)
 	if apierrors.IsNotFound(err) {
-		log.Error(err, "requested network resource not found", "name", req.NamespacedName)
+		log.Info("Resource not found, it might have been deleted.")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	if err != nil {

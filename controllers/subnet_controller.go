@@ -64,7 +64,7 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	subnet := &v1alpha1.Subnet{}
 	err := r.Get(ctx, req.NamespacedName, subnet)
 	if apierrors.IsNotFound(err) {
-		log.Error(err, "requested subnet resource not found", "name", req.NamespacedName)
+		log.Info("Resource not found, it might have been deleted.")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	if err != nil {
