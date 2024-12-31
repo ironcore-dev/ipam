@@ -167,6 +167,14 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 		return ctrl.Result{}, err
 	}
 
+	if subnet.Spec.Gateway != nil {
+		ip.Status.Gateway = subnet.Spec.Gateway
+		if err := r.Status().Update(ctx, ip); err != nil {
+			log.Error(err, "unable to update ip status", "name", req.NamespacedName, "name", subnetNamespacedName)
+			return ctrl.Result{}, err
+		}
+	}
+
 	ip.Status.State = v1alpha1.CFinishedIPState
 	ip.Status.Message = ""
 	ip.Status.Reserved = ipCidrToReserve.AsIPAddr()

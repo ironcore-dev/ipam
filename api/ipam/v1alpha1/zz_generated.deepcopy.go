@@ -126,6 +126,10 @@ func (in *IPStatus) DeepCopyInto(out *IPStatus) {
 		in, out := &in.Reserved, &out.Reserved
 		*out = (*in).DeepCopy()
 	}
+	if in.Gateway != nil {
+		in, out := &in.Gateway, &out.Gateway
+		*out = (*in).DeepCopy()
+	}
 	return
 }
 
@@ -539,6 +543,10 @@ func (in *SubnetSpec) DeepCopyInto(out *SubnetSpec) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.Gateway != nil {
+		in, out := &in.Gateway, &out.Gateway
+		*out = (*in).DeepCopy()
 	}
 	if in.Consumer != nil {
 		in, out := &in.Consumer, &out.Consumer

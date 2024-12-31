@@ -72,6 +72,15 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, err
 	}
 
+	// Remove gateway IP from the vacant list
+	var gwToReserve *v1alpha1.CIDR
+	if subnet.Spec.Gateway != nil {
+		gwToReserve = subnet.Spec.Gateway.AsCidr()
+		if err := subnet.Reserve(gwToReserve); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
 	// If deletion timestamp is present,
 	// then resource is scheduled for deletion.
 	if subnet.GetDeletionTimestamp() != nil {

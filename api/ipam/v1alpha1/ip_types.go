@@ -36,6 +36,8 @@ type IPStatus struct {
 	State IPState `json:"state,omitempty"`
 	// Reserved is a reserved IP
 	Reserved *IPAddr `json:"reserved,omitempty"`
+	// Gateway represents the gateway address for the subnet
+	Gateway *IPAddr `json:"gateway,omitempty"`
 	// Message contains error details if the one has occurred
 	Message string `json:"message,omitempty"`
 }
