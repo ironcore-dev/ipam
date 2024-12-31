@@ -35,6 +35,9 @@ type SubnetSpec struct {
 	// Regions represents the network service location
 	// +kubebuilder:validation:Optional
 	Regions []Region `json:"regions,omitempty"`
+	// Gateway represents the gateway address for the subnet
+	// +kubebuilder:validation:Optional
+	Gateway *IPAddr `json:"gateway,omitempty"`
 	// Consumer refers to resource Subnet has been booked for
 	// +kubebuilder:validation:Optional
 	Consumer *ResourceReference `json:"consumer,omitempty"`
