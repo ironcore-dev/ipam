@@ -16,7 +16,7 @@ require (
 	k8s.io/apimachinery v0.31.4
 	k8s.io/client-go v0.31.4
 	k8s.io/kube-openapi v0.0.0-20240403164606-bc84c2ddaf99
-	sigs.k8s.io/controller-runtime v0.19.3
+	sigs.k8s.io/controller-runtime v0.19.4
 	sigs.k8s.io/structured-merge-diff/v4 v4.5.0
 )
 
@@ -28,6 +28,7 @@ require (
 	github.com/emicklei/go-restful/v3 v3.11.3 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.9.0 // indirect
+	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/go-logr/zapr v1.3.0 // indirect
 	github.com/go-openapi/jsonpointer v0.20.2 // indirect
