@@ -3,4 +3,5 @@ kind: IP
 metadata:
   name: ipv4-ip-sample
 spec:
-  subnetName: ipv4-child-cidr-subnet-sample
+  subnet:
+    name: ipv4-child-cidr-subnet-sample

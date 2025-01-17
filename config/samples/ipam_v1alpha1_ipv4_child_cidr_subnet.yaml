@@ -5,7 +5,8 @@ metadata:
 spec:
   cidr: "10.0.0.0/16"
   parentSubnetName: "ipv4-parent-cidr-subnet-sample"
-  networkName: network-sample
+  network:
+    name: network-sample
   regions:
     - name: euw
       availabilityZones:
