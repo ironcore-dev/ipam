@@ -7,6 +7,9 @@ IMG ?= controller:latest
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
+GOARCH  := $(shell go env GOARCH)
+GOOS    := $(shell go env GOOS)
+
 .PHONY: all
 all: build
 
@@ -130,6 +133,9 @@ LOCAL_BIN ?= $(shell pwd)/bin
 $(LOCAL_BIN):
 	mkdir -p $(LOCAL_BIN)
 
+# curl retries
+CURL_RETRIES=3
+
 ## Tools locations
 ADDLICENSE ?= $(LOCAL_BIN)/addlicense
 CONTROLLER_GEN ?= $(LOCAL_BIN)/controller-gen
@@ -148,13 +154,15 @@ MODELS_SCHEMA ?= $(LOCAL_BIN)/models-schema
 VGOPATH ?= $(LOCAL_BIN)/vgopath
 GEN_CRD_API_REFERENCE_DOCS ?= $(LOCAL_BIN)/gen-crd-api-reference-docs
 KUSTOMIZE ?= $(LOCAL_BIN)/kustomize
+KUBECTL ?= $(LOCAL_BIN)/kubectl-$(ENVTEST_K8S_VERSION)
+KUBECTL_BIN ?= $(LOCAL_BIN)/kubectl
 
 ## Tools versions
 ADDLICENSE_VERSION ?= v1.1.1
 CONTROLLER_GEN_VERSION ?= v0.14.0
 GOLANGCI_LINT_VERSION ?= v1.55.2
 GOIMPORTS_VERSION ?= v0.16.1
-ENVTEST_K8S_VERSION ?= 1.28.3
+ENVTEST_K8S_VERSION ?= 1.31.0
 CODE_GENERATOR_VERSION ?= v0.28.3
 VGOPATH_VERSION ?= v0.1.3
 GEN_CRD_API_REFERENCE_DOCS_VERSION ?= v0.3.0
@@ -249,3 +257,29 @@ $(INFORMER_GEN): $(LOCAL_BIN)
 kustomize: $(KUSTOMIZE)
 $(KUSTOMIZE): $(LOCAL_BIN)
 	@test -s $(KUSTOMIZE) || GOBIN=$(LOCAL_BIN) go install sigs.k8s.io/kustomize/kustomize/v4@$(KUSTOMIZE_VERSION)
+
+.PHONY: kubectl
+kubectl: $(KUBECTL) ## Download kubectl locally if necessary.
+$(KUBECTL): $(LOCAL_BIN)
+	curl --retry $(CURL_RETRIES) -fsL https://dl.k8s.io/release/v$(ENVTEST_K8S_VERSION)/bin/$(GOOS)/$(GOARCH)/kubectl -o $(KUBECTL)
+	ln -sf "$(KUBECTL)" "$(KUBECTL_BIN)"
+	chmod +x "$(KUBECTL_BIN)" "$(KUBECTL)"
+
+## --------------------------------------
+## Tilt / Kind
+## --------------------------------------
+
+KIND_CLUSTER_NAME ?= ipam
+
+.PHONY: kind-create
+kind-create: $(ENVTEST) ## create ipam kind cluster if needed
+	./scripts/kind-with-registry.sh
+
+.PHONY: kind-delete
+kind-delete: ## Destroys the "ipam" kind cluster.
+	kind delete cluster --name=$(KIND_CLUSTER_NAME)
+	docker stop kind-registry && docker rm kind-registry
+
+.PHONY: tilt-up
+tilt-up: $(ENVTEST) $(KUSTOMIZE) $(KUBECTL) kind-create ## start tilt and build kind cluster if needed
+	EXP_CLUSTER_RESOURCE_SET=true tilt up
