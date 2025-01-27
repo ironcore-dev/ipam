@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	CFailedIPState     IPState = "Failed"
-	CProcessingIPState IPState = "Processing"
-	CFinishedIPState   IPState = "Finished"
+	// TODO: Remove failed state
+	IPStateFailed    IPState = "Failed"
+	IPStatePending   IPState = "Pending"
+	IPStateAllocated IPState = "Allocated"
 )
 
 // IPState is a processing state of IP resource

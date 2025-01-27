@@ -59,7 +59,7 @@ func (in *Subnet) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		}
 		state := ip.Status.State
 		parentSubnet := ip.Spec.Subnet.Name
-		if state != CFinishedIPState {
+		if state != IPStateAllocated {
 			return nil
 		}
 		return []string{parentSubnet}
