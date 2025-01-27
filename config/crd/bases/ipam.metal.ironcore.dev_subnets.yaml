@@ -129,38 +129,12 @@ spec:
                 - name
                 type: object
               network:
+                $ref: '#/definitions/k8s.io~1api~1core~1v1~0LocalObjectReference'
                 description: NetworkName contains a reference (name) to the network
-                properties:
-                  name:
-                    default: ""
-                    description: |-
-                      Name of the referent.
-                      This field is effectively required, but due to backwards compatibility is
-                      allowed to be empty. Instances of this type with an empty value here are
-                      almost certainly wrong.
-                      TODO: Add other useful fields. apiVersion, kind, uid?
-                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
-                    type: string
-                type: object
-                x-kubernetes-map-type: atomic
               parentSubnet:
+                $ref: '#/definitions/k8s.io~1api~1core~1v1~0LocalObjectReference'
                 description: ParentSubnetName contains a reference (name) to the parent
                   subent
-                properties:
-                  name:
-                    default: ""
-                    description: |-
-                      Name of the referent.
-                      This field is effectively required, but due to backwards compatibility is
-                      allowed to be empty. Instances of this type with an empty value here are
-                      almost certainly wrong.
-                      TODO: Add other useful fields. apiVersion, kind, uid?
-                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
-                    type: string
-                type: object
-                x-kubernetes-map-type: atomic
               prefixBits:
                 description: PrefixBits is an amount of ones zero bits at the beginning
                   of the netmask
