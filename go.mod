@@ -1,8 +1,6 @@
 module github.com/ironcore-dev/ipam
 
-go 1.22.0
-
-toolchain go1.22.2
+go 1.23.0
 
 require (
 	github.com/go-logr/logr v1.4.2
