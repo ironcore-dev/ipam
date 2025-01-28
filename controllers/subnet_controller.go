@@ -72,15 +72,6 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, err
 	}
 
-	// Remove gateway IP from the vacant list
-	var gwToReserve *v1alpha1.CIDR
-	if subnet.Spec.Gateway != nil {
-		gwToReserve = subnet.Spec.Gateway.AsCidr()
-		if err := subnet.Reserve(gwToReserve); err != nil {
-			return ctrl.Result{}, err
-		}
-	}
-
 	// If deletion timestamp is present,
 	// then resource is scheduled for deletion.
 	if subnet.GetDeletionTimestamp() != nil {
@@ -176,6 +167,25 @@ func (r *SubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		}
 
 		subnet.FillStatusFromCidr(subnet.Spec.CIDR)
+
+		// Remove gateway IP from the vacant list
+		if subnet.Spec.Gateway != nil {
+			gw := subnet.Spec.Gateway.AsCidr()
+			if err := subnet.Reserve(gw); err != nil {
+				log.Error(err, "unable to reserve subnet's gateway", "subnet", req.NamespacedName, "gateway", gw)
+				subnet.Status.State = v1alpha1.CFailedSubnetState
+				subnet.Status.Message = err.Error()
+				if err := r.Status().Update(ctx, subnet); err != nil {
+					log.Error(err, "unable to update subnet status", "name", req.NamespacedName)
+					return ctrl.Result{}, err
+				}
+				r.EventRecorder.Event(subnet, v1.EventTypeWarning, CTopSubnetReservationFailureReason, subnet.Status.Message)
+				return ctrl.Result{}, err
+			}
+
+			log.Info("gateway was reserved", "gateway", gw)
+		}
+
 		if err := r.Status().Update(ctx, subnet); err != nil {
 			log.Error(err, "unable to update subnet status", "name", req.NamespacedName)
 			return ctrl.Result{}, err

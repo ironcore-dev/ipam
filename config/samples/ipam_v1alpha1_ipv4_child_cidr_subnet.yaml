@@ -4,10 +4,13 @@ metadata:
   name: ipv4-child-cidr-subnet-sample
 spec:
   cidr: "10.0.0.0/16"
-  parentSubnetName: "ipv4-parent-cidr-subnet-sample"
-  networkName: network-sample
+  parentSubnet:
+    name: "ipv4-parent-cidr-subnet-sample"
+  network:
+    name: network-sample
   regions:
     - name: euw
       availabilityZones:
         - a
         - b
+  gateway: 10.0.0.0
