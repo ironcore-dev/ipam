@@ -122,6 +122,10 @@ var _ = Describe("IP controller", func() {
 				return true
 			}, timeout, interval).Should(BeTrue())
 
+			testGW, err := v1alpha1.IPAddrFromString("10.0.0.1")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(testGW).NotTo(BeNil())
+
 			By("Subnet is created")
 			subnet := &v1alpha1.Subnet{
 				ObjectMeta: metav1.ObjectMeta{
@@ -129,7 +133,8 @@ var _ = Describe("IP controller", func() {
 					Namespace: Namespace,
 				},
 				Spec: v1alpha1.SubnetSpec{
-					CIDR: cidrMustParse("10.0.0.0/30"),
+					CIDR:    cidrMustParse("10.0.0.0/24"),
+					Gateway: testGW,
 					Network: corev1.LocalObjectReference{
 						Name: NetworkName,
 					},
