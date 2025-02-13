@@ -10,9 +10,9 @@ require (
 	github.com/pkg/errors v0.9.1
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
 	gopkg.in/inf.v0 v0.9.1
-	k8s.io/api v0.32.1
-	k8s.io/apimachinery v0.32.1
-	k8s.io/client-go v0.32.1
+	k8s.io/api v0.32.2
+	k8s.io/apimachinery v0.32.2
+	k8s.io/client-go v0.32.2
 	k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f
 	sigs.k8s.io/controller-runtime v0.19.4
 	sigs.k8s.io/structured-merge-diff/v4 v4.5.0
