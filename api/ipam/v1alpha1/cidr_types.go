@@ -16,22 +16,11 @@ type CIDR struct {
 	Net netip.Prefix `json:"-"`
 }
 
-func CIDRFromString(cidrString string) (*CIDR, error) {
-	cidr, err := netip.ParsePrefix(cidrString)
-	if err != nil {
-		return nil, err
-	}
-	return &CIDR{
-		Net: cidr,
-	}, nil
-}
-
 func CIDRFromNet(n netip.Prefix) *CIDR {
 	return &CIDR{
 		Net: n,
 	}
 }
-
 func (in *CIDR) MarshalJSON() ([]byte, error) {
 	return json.Marshal(in.String())
 }
@@ -368,7 +357,7 @@ func (in *CIDR) AsIPAddr() *IPAddr {
 	}
 }
 
-// DeepCopyInto is an deepcopy function, copying the receiver, writing into out. in must be non-nil.
+// DeepCopyInto is a deepcopy function, copying the receiver, writing into out. in must be non-nil.
 func (in *CIDR) DeepCopyInto(out *CIDR) {
 	*out = *in
 	if in.Net.Addr().String() != "" {

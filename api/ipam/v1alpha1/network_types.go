@@ -64,7 +64,6 @@ type NetworkStatus struct {
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`,description="Request state"
 // +kubebuilder:printcolumn:name="Message",type=string,JSONPath=`.status.message`,description="Message about request processing resutls"
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +genclient
 type Network struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
