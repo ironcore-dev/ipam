@@ -23,83 +23,8 @@ rules:
   - ipam.metal.ironcore.dev
   resources:
   - ips
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ipam.metal.ironcore.dev
-  resources:
-  - ips/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - ipam.metal.ironcore.dev
-  resources:
-  - ips/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - ipam.metal.ironcore.dev
-  resources:
   - networkcounters
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ipam.metal.ironcore.dev
-  resources:
-  - networkcounters/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - ipam.metal.ironcore.dev
-  resources:
-  - networkcounters/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - ipam.metal.ironcore.dev
-  resources:
   - networks
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ipam.metal.ironcore.dev
-  resources:
-  - networks/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - ipam.metal.ironcore.dev
-  resources:
-  - networks/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - ipam.metal.ironcore.dev
-  resources:
   - subnets
   verbs:
   - create
@@ -112,12 +37,18 @@ rules:
 - apiGroups:
   - ipam.metal.ironcore.dev
   resources:
+  - ips/finalizers
+  - networkcounters/finalizers
+  - networks/finalizers
   - subnets/finalizers
   verbs:
   - update
 - apiGroups:
   - ipam.metal.ironcore.dev
   resources:
+  - ips/status
+  - networkcounters/status
+  - networks/status
   - subnets/status
   verbs:
   - get

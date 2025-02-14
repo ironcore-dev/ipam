@@ -60,7 +60,7 @@ func (in *NetworkIDInterval) Before(id *NetworkID) bool {
 
 func (in *NetworkIDInterval) CanJoinLeft(id *NetworkID) bool {
 	next := &big.Int{}
-	next.Add(&id.Int, CIncrement)
+	next.Add(&id.Int, Increment)
 
 	if in.Begin != nil && in.Begin.Cmp(next) == 0 ||
 		in.Exact != nil && in.Exact.Cmp(next) == 0 {
@@ -72,7 +72,7 @@ func (in *NetworkIDInterval) CanJoinLeft(id *NetworkID) bool {
 
 func (in *NetworkIDInterval) CanJoinRight(id *NetworkID) bool {
 	prev := &big.Int{}
-	prev.Sub(&id.Int, CIncrement)
+	prev.Sub(&id.Int, Increment)
 
 	if in.End != nil && in.End.Cmp(prev) == 0 ||
 		in.Exact != nil && in.Exact.Cmp(prev) == 0 {
@@ -149,21 +149,21 @@ func (in *NetworkIDInterval) Reserve(id *NetworkID) []NetworkIDInterval {
 	// Second check is for border cases
 	if in.Begin != nil && in.Begin.Cmp(&id.Int) == 0 {
 		newBegin = &big.Int{}
-		newBegin.Add(&in.Begin.Int, CIncrement)
+		newBegin.Add(&in.Begin.Int, Increment)
 	}
 
 	if in.End != nil && in.End.Cmp(&id.Int) == 0 {
 		newEnd = &big.Int{}
-		newEnd.Sub(&in.End.Int, CIncrement)
+		newEnd.Sub(&in.End.Int, Increment)
 	}
 
 	// If id is not on border, it is inside of interval
 	if newBegin == nil && newEnd == nil {
 		newEnd = &big.Int{}
-		newEnd.Sub(&id.Int, CIncrement)
+		newEnd.Sub(&id.Int, Increment)
 
 		newBegin = &big.Int{}
-		newBegin.Add(&id.Int, CIncrement)
+		newBegin.Add(&id.Int, Increment)
 	}
 
 	intervals := make([]NetworkIDInterval, 0)

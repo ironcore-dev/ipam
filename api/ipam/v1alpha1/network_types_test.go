@@ -20,39 +20,39 @@ var _ = Describe("Network operations", func() {
 				resultingCidrs []CIDR
 			}{
 				{
-					network:       networkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
-					cidrToReserve: cidrMustParse("10.0.0.0/8"),
-					resultingCidrs: []CIDR{*cidrMustParse("10.0.0.0/8"), *cidrMustParse("192.168.0.0/24"),
-						*cidrMustParse("192.168.2.0/24")},
+					network:       NetworkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
+					cidrToReserve: CidrMustParse("10.0.0.0/8"),
+					resultingCidrs: []CIDR{*CidrMustParse("10.0.0.0/8"), *CidrMustParse("192.168.0.0/24"),
+						*CidrMustParse("192.168.2.0/24")},
 				},
 				{
-					network:       networkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
-					cidrToReserve: cidrMustParse("200.0.0.0/8"),
-					resultingCidrs: []CIDR{*cidrMustParse("192.168.0.0/24"), *cidrMustParse("192.168.2.0/24"),
-						*cidrMustParse("200.0.0.0/8")},
+					network:       NetworkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
+					cidrToReserve: CidrMustParse("200.0.0.0/8"),
+					resultingCidrs: []CIDR{*CidrMustParse("192.168.0.0/24"), *CidrMustParse("192.168.2.0/24"),
+						*CidrMustParse("200.0.0.0/8")},
 				},
 				{
-					network:       networkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
-					cidrToReserve: cidrMustParse("192.167.255.255/32"),
-					resultingCidrs: []CIDR{*cidrMustParse("192.167.255.255/32"), *cidrMustParse("192.168.0.0/24"),
-						*cidrMustParse("192.168.2.0/24")},
+					network:       NetworkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
+					cidrToReserve: CidrMustParse("192.167.255.255/32"),
+					resultingCidrs: []CIDR{*CidrMustParse("192.167.255.255/32"), *CidrMustParse("192.168.0.0/24"),
+						*CidrMustParse("192.168.2.0/24")},
 				},
 				{
-					network:       networkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
-					cidrToReserve: cidrMustParse("192.168.1.0/24"),
-					resultingCidrs: []CIDR{*cidrMustParse("192.168.0.0/24"), *cidrMustParse("192.168.1.0/24"),
-						*cidrMustParse("192.168.2.0/24")},
+					network:       NetworkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
+					cidrToReserve: CidrMustParse("192.168.1.0/24"),
+					resultingCidrs: []CIDR{*CidrMustParse("192.168.0.0/24"), *CidrMustParse("192.168.1.0/24"),
+						*CidrMustParse("192.168.2.0/24")},
 				},
 				{
-					network:       networkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
-					cidrToReserve: cidrMustParse("192.168.3.0/25"),
-					resultingCidrs: []CIDR{*cidrMustParse("192.168.0.0/24"), *cidrMustParse("192.168.2.0/24"),
-						*cidrMustParse("192.168.3.0/25")},
+					network:       NetworkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
+					cidrToReserve: CidrMustParse("192.168.3.0/25"),
+					resultingCidrs: []CIDR{*CidrMustParse("192.168.0.0/24"), *CidrMustParse("192.168.2.0/24"),
+						*CidrMustParse("192.168.3.0/25")},
 				},
 				{
-					network:        networkFromCidrs(),
-					cidrToReserve:  cidrMustParse("0.0.0.0/0"),
-					resultingCidrs: []CIDR{*cidrMustParse("0.0.0.0/0")},
+					network:        NetworkFromCidrs(),
+					cidrToReserve:  CidrMustParse("0.0.0.0/0"),
+					resultingCidrs: []CIDR{*CidrMustParse("0.0.0.0/0")},
 				},
 			}
 
@@ -73,16 +73,16 @@ var _ = Describe("Network operations", func() {
 				cidrToReserve *CIDR
 			}{
 				{
-					network:       networkFromCidrs("0.0.0.0/0"),
-					cidrToReserve: cidrMustParse("10.0.0.0/8"),
+					network:       NetworkFromCidrs("0.0.0.0/0"),
+					cidrToReserve: CidrMustParse("10.0.0.0/8"),
 				},
 				{
-					network:       networkFromCidrs("192.168.0.0/24"),
-					cidrToReserve: cidrMustParse("192.168.0.0/23"),
+					network:       NetworkFromCidrs("192.168.0.0/24"),
+					cidrToReserve: CidrMustParse("192.168.0.0/23"),
 				},
 				{
-					network:       networkFromCidrs("192.168.1.0/24"),
-					cidrToReserve: cidrMustParse("192.168.0.0/23"),
+					network:       NetworkFromCidrs("192.168.1.0/24"),
+					cidrToReserve: CidrMustParse("192.168.0.0/23"),
 				},
 			}
 
@@ -104,23 +104,23 @@ var _ = Describe("Network operations", func() {
 				resultingCidrs []CIDR
 			}{
 				{
-					network:        networkFromCidrs("192.168.0.0/24", "192.168.1.0/24", "192.168.2.0/24"),
-					cidrToRelease:  cidrMustParse("192.168.0.0/24"),
-					resultingCidrs: []CIDR{*cidrMustParse("192.168.1.0/24"), *cidrMustParse("192.168.2.0/24")},
+					network:        NetworkFromCidrs("192.168.0.0/24", "192.168.1.0/24", "192.168.2.0/24"),
+					cidrToRelease:  CidrMustParse("192.168.0.0/24"),
+					resultingCidrs: []CIDR{*CidrMustParse("192.168.1.0/24"), *CidrMustParse("192.168.2.0/24")},
 				},
 				{
-					network:        networkFromCidrs("192.168.0.0/24", "192.168.1.0/24", "192.168.2.0/24"),
-					cidrToRelease:  cidrMustParse("192.168.1.0/24"),
-					resultingCidrs: []CIDR{*cidrMustParse("192.168.0.0/24"), *cidrMustParse("192.168.2.0/24")},
+					network:        NetworkFromCidrs("192.168.0.0/24", "192.168.1.0/24", "192.168.2.0/24"),
+					cidrToRelease:  CidrMustParse("192.168.1.0/24"),
+					resultingCidrs: []CIDR{*CidrMustParse("192.168.0.0/24"), *CidrMustParse("192.168.2.0/24")},
 				},
 				{
-					network:        networkFromCidrs("192.168.0.0/24", "192.168.1.0/24", "192.168.2.0/24"),
-					cidrToRelease:  cidrMustParse("192.168.2.0/24"),
-					resultingCidrs: []CIDR{*cidrMustParse("192.168.0.0/24"), *cidrMustParse("192.168.1.0/24")},
+					network:        NetworkFromCidrs("192.168.0.0/24", "192.168.1.0/24", "192.168.2.0/24"),
+					cidrToRelease:  CidrMustParse("192.168.2.0/24"),
+					resultingCidrs: []CIDR{*CidrMustParse("192.168.0.0/24"), *CidrMustParse("192.168.1.0/24")},
 				},
 				{
-					network:        networkFromCidrs("192.168.0.0/24"),
-					cidrToRelease:  cidrMustParse("192.168.0.0/24"),
+					network:        NetworkFromCidrs("192.168.0.0/24"),
+					cidrToRelease:  CidrMustParse("192.168.0.0/24"),
 					resultingCidrs: []CIDR{},
 				},
 			}
@@ -142,16 +142,16 @@ var _ = Describe("Network operations", func() {
 				cidrToRelease *CIDR
 			}{
 				{
-					network:       networkFromCidrs(),
-					cidrToRelease: cidrMustParse("192.168.0.0/24"),
+					network:       NetworkFromCidrs(),
+					cidrToRelease: CidrMustParse("192.168.0.0/24"),
 				},
 				{
-					network:       networkFromCidrs("192.168.0.0/16"),
-					cidrToRelease: cidrMustParse("192.168.0.0/24"),
+					network:       NetworkFromCidrs("192.168.0.0/16"),
+					cidrToRelease: CidrMustParse("192.168.0.0/24"),
 				},
 				{
-					network:       networkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
-					cidrToRelease: cidrMustParse("192.168.1.0/24"),
+					network:       NetworkFromCidrs("192.168.0.0/24", "192.168.2.0/24"),
+					cidrToRelease: CidrMustParse("192.168.1.0/24"),
 				},
 			}
 
@@ -167,9 +167,9 @@ var _ = Describe("Network operations", func() {
 
 	Context("When IPv4 and IPv6 subnets are booked in the same network", func() {
 		It("Should reserve both IPv4 and IPv6 subnets", func() {
-			network := networkFromCidrs()
-			v4Cidr := cidrMustParse("192.168.0.0/24")
-			v6Cidr := cidrMustParse("2002::1234:abcd:ffff:c0a8:101/64")
+			network := NetworkFromCidrs()
+			v4Cidr := CidrMustParse("192.168.0.0/24")
+			v6Cidr := CidrMustParse("2002::1234:abcd:ffff:c0a8:101/64")
 
 			By("Reserve CIDRs in network")
 			Expect(network.CanReserve(v4Cidr)).To(BeTrue())

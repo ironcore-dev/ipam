@@ -126,60 +126,60 @@ var _ = Describe("CIDR operations", func() {
 				remainingCidrs []CIDR
 			}{
 				{
-					cidr:          cidrMustParse("192.168.1.1/24"),
-					cidrToReserve: cidrMustParse("192.168.1.8/30"),
-					remainingCidrs: []CIDR{*cidrMustParse("192.168.1.0/29"), *cidrMustParse("192.168.1.12/30"),
-						*cidrMustParse("192.168.1.16/28"), *cidrMustParse("192.168.1.32/27"),
-						*cidrMustParse("192.168.1.64/26"), *cidrMustParse("192.168.1.128/25")},
+					cidr:          CidrMustParse("192.168.1.1/24"),
+					cidrToReserve: CidrMustParse("192.168.1.8/30"),
+					remainingCidrs: []CIDR{*CidrMustParse("192.168.1.0/29"), *CidrMustParse("192.168.1.12/30"),
+						*CidrMustParse("192.168.1.16/28"), *CidrMustParse("192.168.1.32/27"),
+						*CidrMustParse("192.168.1.64/26"), *CidrMustParse("192.168.1.128/25")},
 				},
 				{
-					cidr:          cidrMustParse("192.168.1.1/24"),
-					cidrToReserve: cidrMustParse("192.168.1.0/30"),
-					remainingCidrs: []CIDR{*cidrMustParse("192.168.1.4/30"), *cidrMustParse("192.168.1.8/29"),
-						*cidrMustParse("192.168.1.16/28"), *cidrMustParse("192.168.1.32/27"),
-						*cidrMustParse("192.168.1.64/26"), *cidrMustParse("192.168.1.128/25")},
+					cidr:          CidrMustParse("192.168.1.1/24"),
+					cidrToReserve: CidrMustParse("192.168.1.0/30"),
+					remainingCidrs: []CIDR{*CidrMustParse("192.168.1.4/30"), *CidrMustParse("192.168.1.8/29"),
+						*CidrMustParse("192.168.1.16/28"), *CidrMustParse("192.168.1.32/27"),
+						*CidrMustParse("192.168.1.64/26"), *CidrMustParse("192.168.1.128/25")},
 				},
 				{
-					cidr:          cidrMustParse("192.168.1.1/24"),
-					cidrToReserve: cidrMustParse("192.168.1.252/30"),
-					remainingCidrs: []CIDR{*cidrMustParse("192.168.1.0/25"), *cidrMustParse("192.168.1.128/26"),
-						*cidrMustParse("192.168.1.192/27"), *cidrMustParse("192.168.1.224/28"),
-						*cidrMustParse("192.168.1.240/29"), *cidrMustParse("192.168.1.248/30")},
+					cidr:          CidrMustParse("192.168.1.1/24"),
+					cidrToReserve: CidrMustParse("192.168.1.252/30"),
+					remainingCidrs: []CIDR{*CidrMustParse("192.168.1.0/25"), *CidrMustParse("192.168.1.128/26"),
+						*CidrMustParse("192.168.1.192/27"), *CidrMustParse("192.168.1.224/28"),
+						*CidrMustParse("192.168.1.240/29"), *CidrMustParse("192.168.1.248/30")},
 				},
 				{
-					cidr:           cidrMustParse("192.168.1.1/24"),
-					cidrToReserve:  cidrMustParse("192.168.1.1/24"),
+					cidr:           CidrMustParse("192.168.1.1/24"),
+					cidrToReserve:  CidrMustParse("192.168.1.1/24"),
 					remainingCidrs: []CIDR{},
 				},
 				{
-					cidr:           cidrMustParse("192.168.1.0/24"),
-					cidrToReserve:  cidrMustParse("192.168.1.0/25"),
-					remainingCidrs: []CIDR{*cidrMustParse("192.168.1.128/25")},
+					cidr:           CidrMustParse("192.168.1.0/24"),
+					cidrToReserve:  CidrMustParse("192.168.1.0/25"),
+					remainingCidrs: []CIDR{*CidrMustParse("192.168.1.128/25")},
 				},
 				{
-					cidr:           cidrMustParse("192.168.1.0/24"),
-					cidrToReserve:  cidrMustParse("192.168.1.128/25"),
-					remainingCidrs: []CIDR{*cidrMustParse("192.168.1.0/25")},
+					cidr:           CidrMustParse("192.168.1.0/24"),
+					cidrToReserve:  CidrMustParse("192.168.1.128/25"),
+					remainingCidrs: []CIDR{*CidrMustParse("192.168.1.0/25")},
 				},
 				{
-					cidr:           cidrMustParse("192.168.1.0/31"),
-					cidrToReserve:  cidrMustParse("192.168.1.0/32"),
-					remainingCidrs: []CIDR{*cidrMustParse("192.168.1.1/32")},
+					cidr:           CidrMustParse("192.168.1.0/31"),
+					cidrToReserve:  CidrMustParse("192.168.1.0/32"),
+					remainingCidrs: []CIDR{*CidrMustParse("192.168.1.1/32")},
 				},
 				{
-					cidr:           cidrMustParse("192.168.1.0/31"),
-					cidrToReserve:  cidrMustParse("192.168.1.1/32"),
-					remainingCidrs: []CIDR{*cidrMustParse("192.168.1.0/32")},
+					cidr:           CidrMustParse("192.168.1.0/31"),
+					cidrToReserve:  CidrMustParse("192.168.1.1/32"),
+					remainingCidrs: []CIDR{*CidrMustParse("192.168.1.0/32")},
 				},
 				{
-					cidr:           cidrMustParse("192.168.1.0/24"),
-					cidrToReserve:  cidrMustParse("10.0.0.0/16"),
-					remainingCidrs: []CIDR{*cidrMustParse("192.168.1.0/24")},
+					cidr:           CidrMustParse("192.168.1.0/24"),
+					cidrToReserve:  CidrMustParse("10.0.0.0/16"),
+					remainingCidrs: []CIDR{*CidrMustParse("192.168.1.0/24")},
 				},
 				{
-					cidr:           cidrMustParse("0.0.0.0/0"),
-					cidrToReserve:  cidrMustParse("0.0.0.0/1"),
-					remainingCidrs: []CIDR{*cidrMustParse("128.0.0.0/1")},
+					cidr:           CidrMustParse("0.0.0.0/0"),
+					cidrToReserve:  CidrMustParse("0.0.0.0/1"),
+					remainingCidrs: []CIDR{*CidrMustParse("128.0.0.0/1")},
 				},
 			}
 
@@ -200,34 +200,34 @@ var _ = Describe("CIDR operations", func() {
 				resultingCidr *CIDR
 			}{
 				{
-					leftCidr:      cidrMustParse("192.168.0.0/32"),
-					rightCidr:     cidrMustParse("192.168.0.1/32"),
-					resultingCidr: cidrMustParse("192.168.0.0/31"),
+					leftCidr:      CidrMustParse("192.168.0.0/32"),
+					rightCidr:     CidrMustParse("192.168.0.1/32"),
+					resultingCidr: CidrMustParse("192.168.0.0/31"),
 				},
 				{
-					leftCidr:      cidrMustParse("127.255.255.255/1"),
-					rightCidr:     cidrMustParse("128.0.0.0/1"),
-					resultingCidr: cidrMustParse("0.0.0.0/0"),
+					leftCidr:      CidrMustParse("127.255.255.255/1"),
+					rightCidr:     CidrMustParse("128.0.0.0/1"),
+					resultingCidr: CidrMustParse("0.0.0.0/0"),
 				},
 				{
-					leftCidr:      cidrMustParse("192.168.0.0/24"),
-					rightCidr:     cidrMustParse("192.168.1.0/24"),
-					resultingCidr: cidrMustParse("192.168.0.0/23"),
+					leftCidr:      CidrMustParse("192.168.0.0/24"),
+					rightCidr:     CidrMustParse("192.168.1.0/24"),
+					resultingCidr: CidrMustParse("192.168.0.0/23"),
 				},
 				{
-					leftCidr:      cidrMustParse("192.168.0.0/24"),
-					rightCidr:     cidrMustParse("192.168.1.0/24"),
-					resultingCidr: cidrMustParse("192.168.0.0/23"),
+					leftCidr:      CidrMustParse("192.168.0.0/24"),
+					rightCidr:     CidrMustParse("192.168.1.0/24"),
+					resultingCidr: CidrMustParse("192.168.0.0/23"),
 				},
 				{
-					leftCidr:      cidrMustParse("2001:db8:1234::/48"),
-					rightCidr:     cidrMustParse("2001:db8:1235::/48"),
-					resultingCidr: cidrMustParse("2001:db8:1234::/47"),
+					leftCidr:      CidrMustParse("2001:db8:1234::/48"),
+					rightCidr:     CidrMustParse("2001:db8:1235::/48"),
+					resultingCidr: CidrMustParse("2001:db8:1234::/47"),
 				},
 				{
-					leftCidr:      cidrMustParse("::/2"),
-					rightCidr:     cidrMustParse("4000::/2"),
-					resultingCidr: cidrMustParse("::/1"),
+					leftCidr:      CidrMustParse("::/2"),
+					rightCidr:     CidrMustParse("4000::/2"),
+					resultingCidr: CidrMustParse("::/1"),
 				},
 			}
 
@@ -254,28 +254,28 @@ var _ = Describe("CIDR operations", func() {
 				bCidr *CIDR
 			}{
 				{
-					aCidr: cidrMustParse("192.168.0.0/24"),
-					bCidr: cidrMustParse("192.168.0.1/32"),
+					aCidr: CidrMustParse("192.168.0.0/24"),
+					bCidr: CidrMustParse("192.168.0.1/32"),
 				},
 				{
-					aCidr: cidrMustParse("192.168.0.0/24"),
-					bCidr: cidrMustParse("192.168.0.0/24"),
+					aCidr: CidrMustParse("192.168.0.0/24"),
+					bCidr: CidrMustParse("192.168.0.0/24"),
 				},
 				{
-					aCidr: cidrMustParse("192.168.0.0/24"),
-					bCidr: cidrMustParse("192.167.255.0/24"),
+					aCidr: CidrMustParse("192.168.0.0/24"),
+					bCidr: CidrMustParse("192.167.255.0/24"),
 				},
 				{
-					aCidr: cidrMustParse("192.168.0.0/29"),
-					bCidr: cidrMustParse("192.168.0.8/30"),
+					aCidr: CidrMustParse("192.168.0.0/29"),
+					bCidr: CidrMustParse("192.168.0.8/30"),
 				},
 				{
-					aCidr: cidrMustParse("::/1"),
-					bCidr: cidrMustParse("4000::/2"),
+					aCidr: CidrMustParse("::/1"),
+					bCidr: CidrMustParse("4000::/2"),
 				},
 				{
-					aCidr: cidrMustParse("::/0"),
-					bCidr: cidrMustParse("::/0"),
+					aCidr: CidrMustParse("::/0"),
+					bCidr: CidrMustParse("::/0"),
 				},
 			}
 
@@ -304,38 +304,38 @@ var _ = Describe("CIDR operations", func() {
 				ourAfter  bool
 			}{
 				{
-					ourCidr:   cidrMustParse("192.168.0.0/32"),
-					theirCidr: cidrMustParse("192.168.0.1/32"),
+					ourCidr:   CidrMustParse("192.168.0.0/32"),
+					theirCidr: CidrMustParse("192.168.0.1/32"),
 					ourBefore: true,
 					ourAfter:  false,
 				},
 				{
-					ourCidr:   cidrMustParse("192.168.0.1/32"),
-					theirCidr: cidrMustParse("192.168.0.0/32"),
+					ourCidr:   CidrMustParse("192.168.0.1/32"),
+					theirCidr: CidrMustParse("192.168.0.0/32"),
 					ourBefore: false,
 					ourAfter:  true,
 				},
 				{
-					ourCidr:   cidrMustParse("10.0.0.0/8"),
-					theirCidr: cidrMustParse("192.168.0.0/24"),
+					ourCidr:   CidrMustParse("10.0.0.0/8"),
+					theirCidr: CidrMustParse("192.168.0.0/24"),
 					ourBefore: true,
 					ourAfter:  false,
 				},
 				{
-					ourCidr:   cidrMustParse("::/0"),
-					theirCidr: cidrMustParse("4000::/2"),
+					ourCidr:   CidrMustParse("::/0"),
+					theirCidr: CidrMustParse("4000::/2"),
 					ourBefore: false,
 					ourAfter:  false,
 				},
 				{
-					ourCidr:   cidrMustParse("4000::/2"),
-					theirCidr: cidrMustParse("::/0"),
+					ourCidr:   CidrMustParse("4000::/2"),
+					theirCidr: CidrMustParse("::/0"),
 					ourBefore: false,
 					ourAfter:  false,
 				},
 				{
-					ourCidr:   cidrMustParse("4000::/128"),
-					theirCidr: cidrMustParse("4000::/128"),
+					ourCidr:   CidrMustParse("4000::/128"),
+					theirCidr: CidrMustParse("4000::/128"),
 					ourBefore: false,
 					ourAfter:  false,
 				},
@@ -351,11 +351,11 @@ var _ = Describe("CIDR operations", func() {
 
 	Context("When two CIDRs are compared", func() {
 		It("Should not be possible to determine if they are equal or not", func() {
-			Expect(cidrMustParse("4000::/128").Equal(cidrMustParse("4000::/128"))).To(BeTrue())
-			Expect(cidrMustParse("::/0").Equal(cidrMustParse("4000::/128"))).To(BeFalse())
-			Expect(cidrMustParse("10.0.0.0/8").Equal(cidrMustParse("10.0.0.0/8"))).To(BeTrue())
-			Expect(cidrMustParse("10.0.0.0/8").Equal(cidrMustParse("192.168.0.0/24"))).To(BeFalse())
-			Expect(cidrMustParse("::/0").Equal(cidrMustParse("0.0.0.0/0"))).To(BeFalse())
+			Expect(CidrMustParse("4000::/128").Equal(CidrMustParse("4000::/128"))).To(BeTrue())
+			Expect(CidrMustParse("::/0").Equal(CidrMustParse("4000::/128"))).To(BeFalse())
+			Expect(CidrMustParse("10.0.0.0/8").Equal(CidrMustParse("10.0.0.0/8"))).To(BeTrue())
+			Expect(CidrMustParse("10.0.0.0/8").Equal(CidrMustParse("192.168.0.0/24"))).To(BeFalse())
+			Expect(CidrMustParse("::/0").Equal(CidrMustParse("0.0.0.0/0"))).To(BeFalse())
 		})
 	})
 })

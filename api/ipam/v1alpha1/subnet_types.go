@@ -41,16 +41,16 @@ type SubnetSpec struct {
 }
 
 const (
-	CIPv6SubnetType SubnetAddressType = "IPv6"
-	CIPv4SubnetType SubnetAddressType = "IPv4"
+	IPv6SubnetType SubnetAddressType = "IPv6"
+	IPv4SubnetType SubnetAddressType = "IPv4"
 
-	CLocalSubnetLocalityType         SubnetLocalityType = "Local"
-	CRegionalSubnetLocalityType      SubnetLocalityType = "Regional"
-	CMultiregionalSubnetLocalityType SubnetLocalityType = "Multiregional"
+	LocalSubnetLocalityType         SubnetLocalityType = "Local"
+	RegionalSubnetLocalityType      SubnetLocalityType = "Regional"
+	MultiregionalSubnetLocalityType SubnetLocalityType = "Multiregional"
 
-	CFailedSubnetState     SubnetState = "Failed"
-	CProcessingSubnetState SubnetState = "Processing"
-	CFinishedSubnetState   SubnetState = "Finished"
+	FailedSubnetState     SubnetState = "Failed"
+	ProcessingSubnetState SubnetState = "Processing"
+	FinishedSubnetState   SubnetState = "Finished"
 )
 
 type Region struct {
@@ -111,7 +111,6 @@ type SubnetStatus struct {
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`,description="State"
 // +kubebuilder:printcolumn:name="Message",type=string,JSONPath=`.status.message`,description="Message"
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +genclient
 
 // Subnet is the Schema for the subnets API
 type Subnet struct {
@@ -138,7 +137,7 @@ func init() {
 
 // PopulateStatus fills status subresource with default values
 func (in *Subnet) PopulateStatus() {
-	in.Status.State = CProcessingSubnetState
+	in.Status.State = ProcessingSubnetState
 	in.Status.Message = ""
 
 	regionCount := len(in.Spec.Regions)
@@ -152,19 +151,19 @@ func (in *Subnet) PopulateStatus() {
 	azCount := len(in.Spec.Regions[0].AvailabilityZones)
 
 	if azCount == 1 && regionCount == 1 {
-		in.Status.Locality = CLocalSubnetLocalityType
+		in.Status.Locality = LocalSubnetLocalityType
 	} else if azCount > 1 && regionCount == 1 {
-		in.Status.Locality = CRegionalSubnetLocalityType
+		in.Status.Locality = RegionalSubnetLocalityType
 	} else {
-		in.Status.Locality = CMultiregionalSubnetLocalityType
+		in.Status.Locality = MultiregionalSubnetLocalityType
 	}
 }
 
 func (in *Subnet) FillStatusFromCidr(cidr *CIDR) {
 	if cidr.IsIPv4() {
-		in.Status.Type = CIPv4SubnetType
+		in.Status.Type = IPv4SubnetType
 	} else {
-		in.Status.Type = CIPv6SubnetType
+		in.Status.Type = IPv6SubnetType
 	}
 
 	in.Status.Message = ""
@@ -174,7 +173,7 @@ func (in *Subnet) FillStatusFromCidr(cidr *CIDR) {
 	capacityString := cidr.AddressCapacity().String()
 	in.Status.Capacity = resource.MustParse(capacityString)
 	in.Status.CapacityLeft = in.Status.Capacity.DeepCopy()
-	in.Status.State = CFinishedSubnetState
+	in.Status.State = FinishedSubnetState
 }
 
 func (in *Subnet) ProposeForCapacity(capacity *resource.Quantity) (*CIDR, error) {

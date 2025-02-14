@@ -25,7 +25,6 @@ type NetworkCounterStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +genclient
 
 // NetworkCounter is the Schema for the networkcounters API
 type NetworkCounter struct {
@@ -51,52 +50,52 @@ func init() {
 }
 
 const (
-	CGENEVENetworkType NetworkType = "GENEVE"
-	CVXLANNetworkType  NetworkType = "VXLAN"
-	CMPLSNetworkType   NetworkType = "MPLS"
+	GENEVENetworkType NetworkType = "GENEVE"
+	VXLANNetworkType  NetworkType = "VXLAN"
+	MPLSNetworkType   NetworkType = "MPLS"
 )
 
 // NetworkType is a type of network id is assigned to.
 type NetworkType string
 
 // First 100 addresses (0-99) are reserved
-var CVXLANFirstAvaliableID = NetworkIDFromBytes([]byte{99 + 1})
-var CVXLANMaxID = NetworkIDFromBytes([]byte{255, 255, 255})
+var VXLANFirstAvaliableID = NetworkIDFromBytes([]byte{99 + 1})
+var VXLANMaxID = NetworkIDFromBytes([]byte{255, 255, 255})
 
-var CGENEVEFirstAvaliableID = CVXLANFirstAvaliableID
-var CGENEVEMaxID = CVXLANMaxID
+var GENEVEFirstAvaliableID = VXLANFirstAvaliableID
+var GENEVEMaxID = VXLANMaxID
 
 // First 16 addresses (0-15) are reserved
-var CMPLSFirstAvailableID = NetworkIDFromBytes([]byte{15 + 1})
-var CIncrement = big.NewInt(1)
+var MPLSFirstAvailableID = NetworkIDFromBytes([]byte{15 + 1})
+var Increment = big.NewInt(1)
 
 func NewNetworkCounterSpec(typ NetworkType) *NetworkCounterSpec {
 	switch typ {
-	case CVXLANNetworkType:
+	case VXLANNetworkType:
 		return &NetworkCounterSpec{
 			Vacant: []NetworkIDInterval{
 				{
-					Begin: CVXLANFirstAvaliableID,
+					Begin: VXLANFirstAvaliableID,
 					// VXLAN ID consists of 24 bits
-					End: CVXLANMaxID,
+					End: VXLANMaxID,
 				},
 			},
 		}
-	case CGENEVENetworkType:
+	case GENEVENetworkType:
 		return &NetworkCounterSpec{
 			Vacant: []NetworkIDInterval{
 				{
-					Begin: CGENEVEFirstAvaliableID,
+					Begin: GENEVEFirstAvaliableID,
 					// GENEVE ID consists of 24 bits
-					End: CGENEVEMaxID,
+					End: GENEVEMaxID,
 				},
 			},
 		}
-	case CMPLSNetworkType:
+	case MPLSNetworkType:
 		return &NetworkCounterSpec{
 			Vacant: []NetworkIDInterval{
 				{
-					Begin: CMPLSFirstAvailableID,
+					Begin: MPLSFirstAvailableID,
 					// Don't have end here, since MPLS label potentially may be expanded
 					// unlimited amount of times with 20 bit blocks
 				},

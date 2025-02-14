@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	CFailedIPState     IPState = "Failed"
-	CProcessingIPState IPState = "Processing"
-	CFinishedIPState   IPState = "Finished"
+	FailedIPState     IPState = "Failed"
+	ProcessingIPState IPState = "Processing"
+	FinishedIPState   IPState = "Finished"
 )
 
 // IPState is a processing state of IP resource
@@ -50,7 +50,6 @@ type IPStatus struct {
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`,description="Processing state"
 // +kubebuilder:printcolumn:name="Message",type=string,JSONPath=`.status.message`,description="Message"
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +genclient
 
 // IP is the Schema for the ips API
 type IP struct {
