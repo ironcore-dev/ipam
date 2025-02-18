@@ -1,0 +1,16 @@
+version = 1
+SPDX-PackageName = "ipam"
+SPDX-PackageSupplier = "IronCore authors <ospo@sap.com>"
+SPDX-PackageDownloadLocation = "https://github.com/ironcore-dev/ipam"
+
+[[annotations]]
+path = [".github/**", ".gitignore", ".dockerignore", "Dockerfile", "Makefile", "PROJECT", "README.md", "api/**", "charts/**", "config/**", "controllers/**", "clientset/**", "clientgo/**", "go.mod", "go.sum", "hack/**", "main.go"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024 SAP SE or an SAP affiliate company and IronCore contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ["docs/**", "README.md"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024 SAP SE or an SAP affiliate company and IronCore contributors"
+SPDX-License-Identifier = "Apache-2.0"
