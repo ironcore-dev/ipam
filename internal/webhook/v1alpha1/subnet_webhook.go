@@ -60,7 +60,7 @@ func SetupSubnetWebhookWithManager(mgr ctrl.Manager) error {
 		}
 		state := ip.Status.State
 		parentSubnet := ip.Spec.Subnet.Name
-		if state != v1alpha1.FinishedIPState {
+		if state != v1alpha1.IPStateAllocated {
 			return nil
 		}
 		return []string{parentSubnet}

@@ -294,7 +294,7 @@ func (r *SubnetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		if parentSubnet == "" {
 			return nil
 		}
-		if state != v1alpha1.FailedIPState {
+		if state != v1alpha1.IPStateFailed {
 			return nil
 		}
 		return []string{parentSubnet}
@@ -432,7 +432,7 @@ func (r *SubnetReconciler) requeueFailedIPs(ctx context.Context, log logr.Logger
 	}
 
 	for _, ip := range ips.Items {
-		ip.Status.State = v1alpha1.ProcessingIPState
+		ip.Status.State = v1alpha1.IPStatePending
 		ip.Status.Message = ""
 		if err := r.Status().Update(ctx, &ip); err != nil {
 			log.Error(err, "unable to update child ips", "name", types.NamespacedName{Namespace: subnet.Namespace, Name: subnet.Name}, "subnet", subnet.Name)

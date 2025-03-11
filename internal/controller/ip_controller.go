@@ -109,13 +109,13 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 		return ctrl.Result{}, err
 	}
 
-	if ip.Status.State == v1alpha1.FinishedIPState ||
-		ip.Status.State == v1alpha1.FailedIPState {
+	if ip.Status.State == v1alpha1.IPStateAllocated ||
+		ip.Status.State == v1alpha1.IPStateFailed {
 		return ctrl.Result{}, nil
 	}
 
 	if ip.Status.State == "" {
-		ip.Status.State = v1alpha1.ProcessingIPState
+		ip.Status.State = v1alpha1.IPStatePending
 		ip.Status.Message = ""
 		if err := r.Status().Update(ctx, ip); err != nil {
 			log.Error(err, "unable to update ip resource status", "name", req.NamespacedName, "currentStatus", ip.Status.State, "targetStatus", v1alpha1.CProcessingNetworkState)
@@ -140,7 +140,7 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 	} else {
 		cidr, err := subnet.ProposeForCapacity(resource.NewScaledQuantity(1, 0))
 		if err != nil {
-			ip.Status.State = v1alpha1.FailedIPState
+			ip.Status.State = v1alpha1.IPStateFailed
 			ip.Status.Message = err.Error()
 			if err := r.Status().Update(ctx, ip); err != nil {
 				log.Error(err, "unable to update ip status", "name", req.NamespacedName)
@@ -152,7 +152,7 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 	}
 
 	if err := subnet.Reserve(ipCidrToReserve); err != nil {
-		ip.Status.State = v1alpha1.FailedIPState
+		ip.Status.State = v1alpha1.IPStateFailed
 		ip.Status.Message = err.Error()
 		if err := r.Status().Update(ctx, ip); err != nil {
 			log.Error(err, "unable to update ip status", "name", req.NamespacedName)
@@ -167,7 +167,7 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 		return ctrl.Result{}, err
 	}
 
-	ip.Status.State = v1alpha1.FinishedIPState
+	ip.Status.State = v1alpha1.IPStateAllocated
 	ip.Status.Message = ""
 	ip.Status.Reserved = ipCidrToReserve.AsIPAddr()
 	if err := r.Status().Update(ctx, ip); err != nil {

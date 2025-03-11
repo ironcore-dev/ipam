@@ -187,7 +187,7 @@ var _ = Describe("IP controller", func() {
 				if err != nil {
 					return false
 				}
-				if createdIP.Status.State != v1alpha1.FinishedIPState {
+				if createdIP.Status.State != v1alpha1.IPStateAllocated {
 					return false
 				}
 				return true
@@ -224,7 +224,7 @@ var _ = Describe("IP controller", func() {
 				if err != nil {
 					return false
 				}
-				if ipCopy.Status.State != v1alpha1.FailedIPState {
+				if ipCopy.Status.State != v1alpha1.IPStateFailed {
 					return false
 				}
 				return true
@@ -244,7 +244,7 @@ var _ = Describe("IP controller", func() {
 				if err != nil {
 					return false
 				}
-				if ipCopy.Status.State != v1alpha1.FinishedIPState {
+				if ipCopy.Status.State != v1alpha1.IPStateAllocated {
 					return false
 				}
 				if !ipCopy.Status.Reserved.Equal(testIP) {
