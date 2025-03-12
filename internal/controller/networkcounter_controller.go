@@ -18,11 +18,11 @@ import (
 )
 
 const (
-	CVXLANCounterName  = "k8s-vxlan-network-counter"
-	CGENEVECounterName = "k8s-geneve-network-counter"
-	CMPLSCounterName   = "k8s-mpls-network-counter"
+	VXLANCounterName  = "k8s-vxlan-network-counter"
+	GENEVECounterName = "k8s-geneve-network-counter"
+	MPLSCounterName   = "k8s-mpls-network-counter"
 
-	CFailedNetworkOfTypeIndexKey = "failedNetworkOfType"
+	FailedNetworkOfTypeIndexKey = "failedNetworkOfType"
 )
 
 // NetworkCounterReconciler reconciles a NetworkCounter object
@@ -58,7 +58,7 @@ func (r *NetworkCounterReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 
 	matchingFields := client.MatchingFields{
-		CFailedNetworkOfTypeIndexKey: string(netType),
+		FailedNetworkOfTypeIndexKey: string(netType),
 	}
 
 	networks := &v1alpha1.NetworkList{}
@@ -68,7 +68,7 @@ func (r *NetworkCounterReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 
 	for _, network := range networks.Items {
-		network.Status.State = v1alpha1.CProcessingNetworkState
+		network.Status.State = v1alpha1.NetworkStatePending
 		network.Status.Message = ""
 		if err := r.Status().Update(ctx, &network); err != nil {
 			log.Error(err, "unable to update network", "name", req.NamespacedName, "network", network.Name)
@@ -91,14 +91,14 @@ func (r *NetworkCounterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		if netType == "" {
 			return nil
 		}
-		if state != v1alpha1.CFailedNetworkState {
+		if state != v1alpha1.NetworkStateFailed {
 			return nil
 		}
 		return []string{string(netType)}
 	}
 
 	if err := mgr.GetFieldIndexer().IndexField(
-		context.Background(), &v1alpha1.Network{}, CFailedNetworkOfTypeIndexKey, createFailedNetworkOfTypeIndexValue); err != nil {
+		context.Background(), &v1alpha1.Network{}, FailedNetworkOfTypeIndexKey, createFailedNetworkOfTypeIndexValue); err != nil {
 		return err
 	}
 
@@ -111,11 +111,11 @@ func (r *NetworkCounterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *NetworkCounterReconciler) counterNameToType(name string) (v1alpha1.NetworkType, error) {
 	var counterType v1alpha1.NetworkType
 	switch name {
-	case CVXLANCounterName:
+	case VXLANCounterName:
 		counterType = v1alpha1.VXLANNetworkType
-	case CGENEVECounterName:
+	case GENEVECounterName:
 		counterType = v1alpha1.GENEVENetworkType
-	case CMPLSCounterName:
+	case MPLSCounterName:
 		counterType = v1alpha1.MPLSNetworkType
 	default:
 		return "", errors.Errorf("unknown network counter %s", name)

@@ -111,7 +111,7 @@ var _ = Describe("IP controller", func() {
 				if err != nil {
 					return false
 				}
-				if createdNetwork.Status.State != v1alpha1.CFinishedNetworkState {
+				if createdNetwork.Status.State != v1alpha1.NetworkStateAllocated {
 					return false
 				}
 				return true

@@ -28,9 +28,9 @@ type NetworkSpec struct {
 }
 
 const (
-	CFailedNetworkState     NetworkState = "Failed"
-	CProcessingNetworkState NetworkState = "Processing"
-	CFinishedNetworkState   NetworkState = "Finished"
+	NetworkStateFailed    NetworkState = "Failed"
+	NetworkStatePending   NetworkState = "Pending"
+	NetworkStateAllocated NetworkState = "Allocated"
 )
 
 type NetworkState string

@@ -17,7 +17,7 @@ var _ = Describe("NetworkCounter controller", func() {
 	ns := SetupTest()
 
 	const (
-		NetworkCounterName = CVXLANCounterName
+		NetworkCounterName = VXLANCounterName
 		NetworkName        = "test-network"
 	)
 
@@ -116,7 +116,7 @@ var _ = Describe("NetworkCounter controller", func() {
 			if err != nil {
 				return false
 			}
-			if updatedNetwork.Status.State != v1alpha1.CFailedNetworkState {
+			if updatedNetwork.Status.State != v1alpha1.NetworkStateFailed {
 				return false
 			}
 			return true
@@ -140,7 +140,7 @@ var _ = Describe("NetworkCounter controller", func() {
 			if err != nil {
 				return false
 			}
-			if updatedNetwork.Status.State != v1alpha1.CFinishedNetworkState {
+			if updatedNetwork.Status.State != v1alpha1.NetworkStateAllocated {
 				return false
 			}
 			if updatedNetwork.Status.Reserved == nil {
