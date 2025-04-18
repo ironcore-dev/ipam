@@ -23,16 +23,26 @@ spec:
         control-plane: controller-manager
     spec:
       securityContext:
+        # Projects are configured by default to adhere to the "restricted" Pod Security Standards.
+        # This ensures that deployments meet the highest security requirements for Kubernetes.
+        # For more details, see: https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted
         runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - command:
         - /manager
         args:
-        - --leader-elect
+          - --leader-elect
+          - --health-probe-bind-address=:8081
         image: controller:latest
         name: manager
+        ports: []
         securityContext:
           allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - "ALL"
         livenessProbe:
           httpGet:
             path: /healthz
@@ -52,5 +62,7 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
+        volumeMounts: []
+      volumes: []
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
