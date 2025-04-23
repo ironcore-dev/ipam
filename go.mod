@@ -11,7 +11,7 @@ require (
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
 	gopkg.in/inf.v0 v0.9.1
 	k8s.io/api v0.32.2
-	k8s.io/apimachinery v0.32.2
+	k8s.io/apimachinery v0.32.4
 	k8s.io/client-go v0.32.2
 	k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738
 	sigs.k8s.io/controller-runtime v0.20.3
