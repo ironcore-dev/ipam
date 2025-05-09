@@ -25,7 +25,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
-	_ "sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 const (
@@ -205,7 +204,7 @@ func (v *SubnetCustomValidator) ValidateUpdate(ctx context.Context, oldObj, newO
 
 	subnetlog.Info("validate update", "name", oldSubnet.Name)
 
-	if !(oldSubnet.Spec.CIDR == nil && newSubnet.Spec.CIDR == nil) {
+	if oldSubnet.Spec.CIDR != nil || newSubnet.Spec.CIDR != nil {
 		if oldSubnet.Spec.CIDR == nil || newSubnet.Spec.CIDR == nil ||
 			!oldSubnet.Spec.CIDR.Equal(newSubnet.Spec.CIDR) {
 			allErrs = append(allErrs,
@@ -214,14 +213,14 @@ func (v *SubnetCustomValidator) ValidateUpdate(ctx context.Context, oldObj, newO
 		}
 	}
 
-	if !(oldSubnet.Spec.PrefixBits == nil && newSubnet.Spec.PrefixBits == nil) {
+	if oldSubnet.Spec.PrefixBits != nil || newSubnet.Spec.PrefixBits != nil {
 		if oldSubnet.Spec.PrefixBits == nil || newSubnet.Spec.PrefixBits == nil ||
 			*oldSubnet.Spec.PrefixBits != *newSubnet.Spec.PrefixBits {
 			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.hostIdentifierBits"), newSubnet.Spec.PrefixBits, "Host identifier bits change is disallowed"))
 		}
 	}
 
-	if !(oldSubnet.Spec.Capacity == nil && newSubnet.Spec.Capacity == nil) {
+	if oldSubnet.Spec.Capacity != nil || newSubnet.Spec.Capacity != nil {
 		if oldSubnet.Spec.Capacity == nil || newSubnet.Spec.Capacity == nil ||
 			!oldSubnet.Spec.Capacity.Equal(*newSubnet.Spec.Capacity) {
 			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.capacity"), newSubnet.Spec.Capacity, "Capacity change is disallowed"))
