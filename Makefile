@@ -62,6 +62,29 @@ vet: ## Run go vet against code.
 test: manifests generate fmt vet setup-envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test $$(go list ./... | grep -v /e2e) -coverprofile cover.out
 
+# TODO(user): To use a different vendor for e2e tests, modify the setup under 'tests/e2e'.
+# The default setup assumes Kind is pre-installed and builds/loads the Manager Docker image locally.
+# CertManager is installed by default; skip with:
+# - CERT_MANAGER_INSTALL_SKIP=true
+KIND_CLUSTER ?= ipam
+
+.PHONY: setup-test-e2e
+setup-test-e2e: ## Set up a Kind cluster for e2e tests if it does not exist
+	@command -v $(KIND) >/dev/null 2>&1 || { \
+		echo "Kind is not installed. Please install Kind manually."; \
+		exit 1; \
+	}
+	$(KIND) create cluster --name $(KIND_CLUSTER)
+
+.PHONY: test-e2e
+test-e2e: setup-test-e2e manifests generate fmt vet ## Run the e2e tests. Expected an isolated environment using Kind.
+	KIND_CLUSTER=$(KIND_CLUSTER) go test ./test/e2e/ -v -ginkgo.v
+	$(MAKE) cleanup-test-e2e
+
+.PHONY: cleanup-test-e2e
+cleanup-test-e2e: ## Tear down the Kind cluster used for e2e tests
+	@$(KIND) delete cluster --name $(KIND_CLUSTER)
+
 .PHONY: add-license
 add-license: addlicense ## Add license headers to all go files.
 	find . -name '*.go' -exec $(ADDLICENSE) -f hack/license-header.txt {} +
@@ -96,7 +119,7 @@ run: manifests generate fmt vet ## Run a controller from your host.
 # (i.e. docker build --platform linux/arm64 ). However, you must enable docker buildKit for it.
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 .PHONY: docker-build
-docker-build: test ## Build docker image with the manager.
+docker-build: ## Build docker image with the manager.
 	docker build -t ${IMG} .
 
 .PHONY: docker-push
@@ -158,6 +181,7 @@ $(LOCALBIN):
 
 ## Tool Binaries
 KUBECTL ?= kubectl
+KIND ?= kind
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
