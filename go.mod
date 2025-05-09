@@ -2,11 +2,13 @@ module github.com/ironcore-dev/ipam
 
 go 1.23.0
 
+toolchain go1.24.1
+
 require (
 	github.com/go-logr/logr v1.4.2
 	github.com/google/addlicense v1.1.1
 	github.com/onsi/ginkgo/v2 v2.23.4
-	github.com/onsi/gomega v1.36.3
+	github.com/onsi/gomega v1.37.0
 	github.com/pkg/errors v0.9.1
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
 	gopkg.in/inf.v0 v0.9.1
