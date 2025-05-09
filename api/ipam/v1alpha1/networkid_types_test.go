@@ -52,10 +52,9 @@ var _ = Describe("NetworkID marshalling and unmarshalling", func() {
 			}
 
 			By("Deserializing null to empty struct values")
-			nullStringJson := `null`
 			id := NetworkID{}
 
-			Expect(json.Unmarshal([]byte(nullStringJson), &id)).Should(Succeed())
+			Expect(json.Unmarshal([]byte(nullString), &id)).Should(Succeed())
 			Expect(id).To(Equal(NetworkID{}))
 		})
 	})

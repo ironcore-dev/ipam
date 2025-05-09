@@ -190,9 +190,9 @@ var _ = Describe("Network operations", func() {
 			Expect(network.CanRelease(v6Cidr)).To(BeTrue())
 			Expect(network.Release(v6Cidr)).To(Succeed())
 
-			Expect(network.Status.IPv4Ranges).To(HaveLen(0))
+			Expect(network.Status.IPv4Ranges).To(BeEmpty())
 			Expect(network.Status.IPv4Capacity.IsZero()).To(BeTrue())
-			Expect(network.Status.IPv6Ranges).To(HaveLen(0))
+			Expect(network.Status.IPv6Ranges).To(BeEmpty())
 			Expect(network.Status.IPv6Capacity.IsZero()).To(BeTrue())
 		})
 	})

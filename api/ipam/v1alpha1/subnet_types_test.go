@@ -453,12 +453,12 @@ var _ = Describe("Subnet operations", func() {
 				proposedForCapacity, err := testCase.subnet.ProposeForCapacity(testCase.capacity)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(proposedForCapacity.Equal(testCase.expectedCidr)).To(BeTrue())
-				Expect(testCase.subnet.CanReserve(proposedForCapacity))
+				Expect(testCase.subnet.CanReserve(proposedForCapacity)).To(BeTrue())
 
 				proposedForBits, err := testCase.subnet.ProposeForBits(testCase.bits)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(proposedForBits.Equal(testCase.expectedCidr)).To(BeTrue())
-				Expect(testCase.subnet.CanReserve(proposedForBits))
+				Expect(testCase.subnet.CanReserve(proposedForBits)).To(BeTrue())
 			}
 		})
 	})

@@ -7,6 +7,7 @@ SPDX-PackageDownloadLocation = "https://github.com/ironcore-dev/ipam"
 path = [
     ".github/**",
     ".gitignore",
+    ".golangci.yml",
     ".dockerignore",
     "Dockerfile",
     "Makefile",
