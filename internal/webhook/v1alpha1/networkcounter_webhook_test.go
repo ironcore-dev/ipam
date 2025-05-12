@@ -26,7 +26,7 @@ var _ = Describe("NetworkCounter webhook", func() {
 			}
 
 			id, err := networkCounter.Spec.Propose()
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(networkCounter.Spec.Reserve(id)).To(Succeed())
 
 			Expect(k8sClient.Create(ctx, networkCounter)).To(Succeed())

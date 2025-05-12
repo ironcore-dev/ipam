@@ -48,7 +48,7 @@ func (in *NetworkID) Eq(r *NetworkID) bool {
 	if in == nil || r == nil {
 		return false
 	}
-	return in.Int.Cmp(&r.Int) == 0
+	return in.Cmp(&r.Int) == 0
 }
 
 func (in NetworkID) MarshalJSON() ([]byte, error) {
@@ -57,7 +57,7 @@ func (in NetworkID) MarshalJSON() ([]byte, error) {
 
 func (in *NetworkID) UnmarshalJSON(b []byte) error {
 	stringVal := string(b)
-	if stringVal == "null" {
+	if stringVal == nullString {
 		return nil
 	}
 	// If it starts with quote, it is expected to be numeric string

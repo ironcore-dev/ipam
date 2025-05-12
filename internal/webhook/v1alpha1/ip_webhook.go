@@ -125,7 +125,7 @@ func (v *IPCustomValidator) ValidateUpdate(ctx context.Context, oldObj, newObj r
 
 	var allErrs field.ErrorList
 
-	if !(oldIP.Spec.IP == nil && newIP.Spec.IP == nil) {
+	if oldIP.Spec.IP != nil || newIP.Spec.IP != nil {
 		if oldIP.Spec.IP == nil || newIP.Spec.IP == nil ||
 			!oldIP.Spec.IP.Equal(newIP.Spec.IP) {
 			allErrs = append(allErrs, field.Invalid(

@@ -11,6 +11,8 @@ import (
 	"go4.org/netipx"
 )
 
+const nullString = "null"
+
 // +kubebuilder:validation:Type=string
 type CIDR struct {
 	Net netip.Prefix `json:"-"`
@@ -27,7 +29,7 @@ func (in *CIDR) MarshalJSON() ([]byte, error) {
 
 func (in *CIDR) UnmarshalJSON(b []byte) error {
 	stringVal := string(b)
-	if stringVal == "null" {
+	if stringVal == nullString {
 		return nil
 	}
 	if err := json.Unmarshal(b, &stringVal); err != nil {
@@ -252,7 +254,7 @@ func (in *CIDR) Reserve(cidr *CIDR) []CIDR {
 	onesDiff := theirOnes - ourOnes
 	nets := make([]CIDR, onesDiff)
 	leftInsertIdx := 0
-	rightInsertIdx := int(onesDiff) - 1
+	rightInsertIdx := onesDiff - 1
 	splitOnes := ourOnes + 1
 
 	isIPv6 := in.IsIPv6()

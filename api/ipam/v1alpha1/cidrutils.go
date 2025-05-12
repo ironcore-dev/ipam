@@ -5,8 +5,6 @@ package v1alpha1
 
 import (
 	"net/netip"
-
-	. "github.com/onsi/gomega"
 )
 
 func IPMustParse(ipString string) *IPAddr {
@@ -19,7 +17,9 @@ func IPMustParse(ipString string) *IPAddr {
 
 func CidrMustParse(s string) *CIDR {
 	cidr, err := CIDRFromString(s)
-	Expect(err).NotTo(HaveOccurred())
+	if err != nil {
+		return nil
+	}
 	return cidr
 }
 func SubnetFromCidrs(mainCidr string, cidrStrings ...string) *Subnet {
