@@ -14,6 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/ironcore-dev/ipam/api/ipam/v1alpha1"
+	. "sigs.k8s.io/controller-runtime/pkg/envtest/komega"
 )
 
 var _ = Describe("Subnet controller", func() {
@@ -144,13 +145,14 @@ var _ = Describe("Subnet controller", func() {
 		}).Should(BeTrue())
 
 		By("Subnet has updated status")
-		Expect(createdSubnet.Status.Capacity.Value()).To(Equal(testCidr.AddressCapacity().Int64()))
-		Expect(createdSubnet.Status.CapacityLeft.Value()).To(Equal(testCidr.AddressCapacity().Int64()))
-		Expect(createdSubnet.Status.Locality).To(Equal(v1alpha1.LocalSubnetLocalityType))
-		Expect(createdSubnet.Status.Vacant).To(HaveLen(1))
-		Expect(createdSubnet.Status.Vacant[0].Equal(testCidr)).To(BeTrue())
-		Expect(createdSubnet.Status.Type).To(Equal(v1alpha1.IPv4SubnetType))
-		Expect(createdSubnet.Status.Message).To(BeZero())
+		Eventually(Object(&createdSubnet)).Should(SatisfyAll(
+			HaveField("Status.Capacity.Value()", testCidr.AddressCapacity().Int64()),
+			HaveField("Status.CapacityLeft.Value()", testCidr.AddressCapacity().Int64()),
+			HaveField("Status.Locality", v1alpha1.LocalSubnetLocalityType),
+			HaveField("Status.Vacant", HaveLen(1)),
+			HaveField("Status.Vacant", ContainElement(*testCidr)),
+			HaveField("Status.Type", v1alpha1.IPv4SubnetType),
+			HaveField("Status.Message", BeEmpty())))
 
 		By("Subnet CIDR is reserved in Network")
 		Eventually(func() bool {
