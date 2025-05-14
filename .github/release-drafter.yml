@@ -1,20 +1,24 @@
 name-template: 'v$RESOLVED_VERSION'
 tag-template: 'v$RESOLVED_VERSION'
 categories:
-  - title: 'Features'
+  - title: '⚠️ Breaking'
+    labels:
+      - 'breaking'
+  - title: '🚀 Features'
     labels:
       - 'feature'
       - 'enhancement'
-  - title: 'Bug Fixes'
+      - 'api-change'
+  - title: '🐛 Bug Fixes'
     labels:
       - 'fix'
       - 'bugfix'
       - 'bug'
-  - title: 'Maintenance'
+  - title: '🧰 Maintenance'
     labels:
       - 'chore'
       - 'dependencies'
-      - 'documentation'
+      - 'marketing'
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
 change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
 version-resolver:
@@ -33,16 +37,10 @@ exclude-labels:
 autolabeler:
   - label: 'api-change'
     files:
-      - '/apis/*'
-  - label: 'compute'
-    files:
-      - '/controllers/compute/*'
-  - label: 'storage'
-    files:
-      - '/controllers/storage/*'
+      - '/api/*'
   - label: 'documentation'
     files:
-      - '**/*.md'
+      - '*.md'
     branch:
       - '/docs{0,1}\/.+/'
   - label: 'bug'
@@ -55,6 +53,12 @@ autolabeler:
       - '/feature\/.+/'
     body:
       - '/JIRA-[0-9]{1,4}/'
+  - label: 'enhancement'
+    branch:
+      - '/enh\/.+/'
+  - label: 'chore'
+    branch:
+      - '/chore\/.+/'
 template: |
   ## Changes
   $CHANGES
