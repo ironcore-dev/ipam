@@ -21,14 +21,14 @@ import (
 )
 
 const (
-	CNetworkFinalizer = "network.ipam.metal.ironcore.dev/finalizer"
+	NetworkFinalizer = "network.ipam.metal.ironcore.dev/finalizer"
 
-	CNetworkIDProposalFailureReason    = "NetworkIDProposalFailure"
-	CNetworkIDReservationFailureReason = "NetworkIDReservationFailure"
-	CNetworkIDReservationSuccessReason = "NetworkIDReservationSuccess"
-	CNetworkIDReleaseSuccessReason     = "NetworkIDReleaseSuccess"
+	NetworkIDProposalFailure    = "NetworkIDProposalFailure"
+	NetworkIDReservationFailure = "NetworkIDReservationFailure"
+	NetworkIDReservationSuccess = "NetworkIDReservationSuccess"
+	NetworkIDReleaseSuccess     = "NetworkIDReleaseSuccess"
 
-	CFailedTopLevelSubnetIndexKey = "failedTopLevelSubnet"
+	FailedTopLevelSubnetIndexKey = "failedTopLevelSubnet"
 )
 
 // NetworkReconciler reconciles a Network object
@@ -64,13 +64,13 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	if network.GetDeletionTimestamp() != nil {
-		if controllerutil.ContainsFinalizer(network, CNetworkFinalizer) {
+		if controllerutil.ContainsFinalizer(network, NetworkFinalizer) {
 			if err := r.finalizeNetwork(ctx, log, network); err != nil {
 				log.Error(err, "unable to finalize network resource", "name", req.NamespacedName)
 				return ctrl.Result{}, err
 			}
 
-			controllerutil.RemoveFinalizer(network, CNetworkFinalizer)
+			controllerutil.RemoveFinalizer(network, NetworkFinalizer)
 			err := r.Update(ctx, network)
 			if err != nil {
 				log.Error(err, "unable to update network resource on finalizer removal", "name", req.NamespacedName)
@@ -80,8 +80,8 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
-	if !controllerutil.ContainsFinalizer(network, CNetworkFinalizer) {
-		controllerutil.AddFinalizer(network, CNetworkFinalizer)
+	if !controllerutil.ContainsFinalizer(network, NetworkFinalizer) {
+		controllerutil.AddFinalizer(network, NetworkFinalizer)
 		err = r.Update(ctx, network)
 		if err != nil {
 			log.Error(err, "unable to update network resource with finalizer", "name", req.NamespacedName)
@@ -90,20 +90,20 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
-	if network.Status.State == machinev1alpha1.CFinishedNetworkState &&
+	if network.Status.State == machinev1alpha1.NetworkStateAllocated &&
 		network.Status.Reserved == nil &&
 		network.Spec.Type != "" {
-		network.Status.State = machinev1alpha1.CProcessingNetworkState
+		network.Status.State = machinev1alpha1.NetworkStatePending
 		network.Status.Message = ""
 		if err := r.Status().Update(ctx, network); err != nil {
-			log.Error(err, "unable to update network resource status", "name", req.NamespacedName, "currentStatus", network.Status.State, "targetStatus", machinev1alpha1.CProcessingNetworkState)
+			log.Error(err, "unable to update network resource status", "name", req.NamespacedName, "currentStatus", network.Status.State, "targetStatus", machinev1alpha1.NetworkStatePending)
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
 	}
 
-	if network.Status.State == machinev1alpha1.CFinishedNetworkState ||
-		network.Status.State == machinev1alpha1.CFailedNetworkState {
+	if network.Status.State == machinev1alpha1.NetworkStateAllocated ||
+		network.Status.State == machinev1alpha1.NetworkStateFailed {
 		if err := r.requeueFailedSubnets(ctx, log, network); err != nil {
 			log.Error(err, "unable to requeue top level subnets", "name", req.NamespacedName)
 			return ctrl.Result{}, err
@@ -112,10 +112,10 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	if network.Status.State == "" {
-		network.Status.State = machinev1alpha1.CProcessingNetworkState
+		network.Status.State = machinev1alpha1.NetworkStatePending
 		network.Status.Message = ""
 		if err := r.Status().Update(ctx, network); err != nil {
-			log.Error(err, "unable to update network resource status", "name", req.NamespacedName, "currentStatus", network.Status.State, "targetStatus", machinev1alpha1.CProcessingNetworkState)
+			log.Error(err, "unable to update network resource status", "name", req.NamespacedName, "currentStatus", network.Status.State, "targetStatus", machinev1alpha1.NetworkStatePending)
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
@@ -123,7 +123,7 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	if network.Spec.Type == "" {
 		log.Info("network does not specify type, nothing to do for now", "name", req.NamespacedName)
-		network.Status.State = machinev1alpha1.CFinishedNetworkState
+		network.Status.State = machinev1alpha1.NetworkStateAllocated
 		network.Status.Message = ""
 		if err := r.Status().Update(ctx, network); err != nil {
 			log.Error(err, "unable to update network status", "name", req.NamespacedName)
@@ -161,13 +161,13 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if networkIdToReserve == nil {
 		networkId, err := counter.Spec.Propose()
 		if err != nil {
-			network.Status.State = machinev1alpha1.CFailedNetworkState
+			network.Status.State = machinev1alpha1.NetworkStateFailed
 			network.Status.Message = err.Error()
 			if err := r.Status().Update(ctx, network); err != nil {
 				log.Error(err, "unable to update network status", "name", req.NamespacedName)
 				return ctrl.Result{}, err
 			}
-			r.EventRecorder.Event(network, v1.EventTypeWarning, CNetworkIDProposalFailureReason, network.Status.Message)
+			r.EventRecorder.Event(network, v1.EventTypeWarning, NetworkIDProposalFailure, network.Status.Message)
 			log.Error(err, "unable to get network id", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
@@ -175,13 +175,13 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	if err := counter.Spec.Reserve(networkIdToReserve); err != nil {
-		network.Status.State = machinev1alpha1.CFailedNetworkState
+		network.Status.State = machinev1alpha1.NetworkStateFailed
 		network.Status.Message = err.Error()
 		if err := r.Status().Update(ctx, network); err != nil {
 			log.Error(err, "unable to update network status", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
-		r.EventRecorder.Event(network, v1.EventTypeWarning, CNetworkIDReservationFailureReason, network.Status.Message)
+		r.EventRecorder.Event(network, v1.EventTypeWarning, NetworkIDReservationFailure, network.Status.Message)
 		log.Error(err, "unable to reserve network id", "name", req.NamespacedName, "network id", network.Spec.ID)
 		return ctrl.Result{}, err
 	}
@@ -190,9 +190,9 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		log.Error(err, "unable to update counter state", "name", req.NamespacedName, "counter name", counterNamespacedName)
 		return ctrl.Result{}, err
 	}
-	r.EventRecorder.Eventf(network, v1.EventTypeNormal, CNetworkIDReservationSuccessReason, "ID %s for type %s reserved successfully", networkIdToReserve, network.Spec.Type)
+	r.EventRecorder.Eventf(network, v1.EventTypeNormal, NetworkIDReservationSuccess, "ID %s for type %s reserved successfully", networkIdToReserve, network.Spec.Type)
 
-	network.Status.State = machinev1alpha1.CFinishedNetworkState
+	network.Status.State = machinev1alpha1.NetworkStateAllocated
 	network.Status.Message = ""
 	network.Status.Reserved = networkIdToReserve
 	if err := r.Status().Update(ctx, network); err != nil {
@@ -205,7 +205,7 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 func (r *NetworkReconciler) requeueFailedSubnets(ctx context.Context, log logr.Logger, network *machinev1alpha1.Network) error {
 	matchingFields := client.MatchingFields{
-		CFailedTopLevelSubnetIndexKey: network.Name,
+		FailedTopLevelSubnetIndexKey: network.Name,
 	}
 
 	subnets := &machinev1alpha1.SubnetList{}
@@ -272,7 +272,7 @@ func (r *NetworkReconciler) finalizeNetwork(ctx context.Context, log logr.Logger
 		log.Error(err, "unexpected error while updating counter", "counter name", counterNamespacedName)
 		return err
 	}
-	r.EventRecorder.Eventf(network, v1.EventTypeNormal, CNetworkIDReleaseSuccessReason, "ID %s for type %s released successfully", network.Status.Reserved, network.Spec.Type)
+	r.EventRecorder.Eventf(network, v1.EventTypeNormal, NetworkIDReleaseSuccess, "ID %s for type %s released successfully", network.Status.Reserved, network.Spec.Type)
 
 	return nil
 }
@@ -281,11 +281,11 @@ func (r *NetworkReconciler) typeToCounterName(networkType machinev1alpha1.Networ
 	counterName := ""
 	switch networkType {
 	case machinev1alpha1.VXLANNetworkType:
-		counterName = CVXLANCounterName
+		counterName = VXLANCounterName
 	case machinev1alpha1.GENEVENetworkType:
-		counterName = CGENEVECounterName
+		counterName = GENEVECounterName
 	case machinev1alpha1.MPLSNetworkType:
-		counterName = CMPLSCounterName
+		counterName = MPLSCounterName
 	default:
 		return "", errors.Errorf("unsupported network type %s", networkType)
 	}
@@ -313,7 +313,7 @@ func (r *NetworkReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	if err := mgr.GetFieldIndexer().IndexField(
-		context.Background(), &machinev1alpha1.Subnet{}, CFailedTopLevelSubnetIndexKey, createFailedSubnetIndexValue); err != nil {
+		context.Background(), &machinev1alpha1.Subnet{}, FailedTopLevelSubnetIndexKey, createFailedSubnetIndexValue); err != nil {
 		return err
 	}
 
