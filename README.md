@@ -16,6 +16,7 @@ With this operator it is possible to:
 To find out more, please refer to: 
 - [installation and deployment](/docs/installation.md)
 - [usage](/docs/usage.md)
+- [ipamctl](/docs/ipamctl.md)
 - [consuming api](docs/consuming_api.md)
 - [development](/docs/development.md)
 - [contribution guide](/docs/contribution.md)
