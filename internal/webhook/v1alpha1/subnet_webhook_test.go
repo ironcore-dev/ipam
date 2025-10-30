@@ -581,7 +581,7 @@ var _ = Describe("Subnet webhook", func() {
 				return err == nil
 			}, Timeout, Interval).Should(BeTrue())
 
-			childIP.Status.State = v1alpha1.FinishedIPState
+			childIP.Status.State = v1alpha1.IPStateAllocated
 			Expect(k8sClient.Status().Update(ctx, &childIP)).Should(Succeed())
 			Eventually(func() bool {
 				childIPsMatchingFields := client.MatchingFields{
