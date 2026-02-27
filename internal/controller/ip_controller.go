@@ -22,12 +22,12 @@ import (
 )
 
 const (
-	CIPFinalizer = "ip.ipam.metal.ironcore.dev/finalizer"
+	IPFinalizer = "ip.ipam.metal.ironcore.dev/finalizer"
 
-	CIPReservationFailureReason = "IPReservationFailure"
-	CIPProposalFailureReason    = "IPProposalFailure"
-	CIPReservationSuccessReason = "IPReservationSuccess"
-	CIPReleaseSuccessReason     = "IPReleaseSuccess"
+	IPReservationFailure = "IPReservationFailure"
+	IPProposalFailure    = "IPProposalFailure"
+	IPReservationSuccess = "IPReservationSuccess"
+	IPReleaseSuccess     = "IPReleaseSuccess"
 
 	IPFamilyLabelKey = "ip.ipam.metal.ironcore.dev/ip-family"
 )
@@ -64,14 +64,14 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 	}
 
 	if ip.GetDeletionTimestamp() != nil {
-		if controllerutil.ContainsFinalizer(ip, CIPFinalizer) {
+		if controllerutil.ContainsFinalizer(ip, IPFinalizer) {
 			// Free IP on resource deletion
 			if err := r.finalizeIP(ctx, log, ip); err != nil {
 				log.Error(err, "unable to finalize ip resource", "name", req.NamespacedName)
 				return ctrl.Result{}, err
 			}
 
-			controllerutil.RemoveFinalizer(ip, CIPFinalizer)
+			controllerutil.RemoveFinalizer(ip, IPFinalizer)
 			err := r.Update(ctx, ip)
 			if err != nil {
 				log.Error(err, "unable to update ip resource on finalizer removal", "name", req.NamespacedName)
@@ -81,8 +81,8 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 		return ctrl.Result{}, nil
 	}
 
-	if !controllerutil.ContainsFinalizer(ip, CIPFinalizer) {
-		controllerutil.AddFinalizer(ip, CIPFinalizer)
+	if !controllerutil.ContainsFinalizer(ip, IPFinalizer) {
+		controllerutil.AddFinalizer(ip, IPFinalizer)
 		err = r.Update(ctx, ip)
 		if err != nil {
 			log.Error(err, "unable to update ip resource with finalizer", "name", req.NamespacedName)
@@ -109,16 +109,16 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 		return ctrl.Result{}, err
 	}
 
-	if ip.Status.State == v1alpha1.FinishedIPState ||
-		ip.Status.State == v1alpha1.FailedIPState {
+	if ip.Status.State == v1alpha1.IPStateAllocated ||
+		ip.Status.State == v1alpha1.IPStateFailed {
 		return ctrl.Result{}, nil
 	}
 
 	if ip.Status.State == "" {
-		ip.Status.State = v1alpha1.ProcessingIPState
+		ip.Status.State = v1alpha1.IPStatePending
 		ip.Status.Message = ""
 		if err := r.Status().Update(ctx, ip); err != nil {
-			log.Error(err, "unable to update ip resource status", "name", req.NamespacedName, "currentStatus", ip.Status.State, "targetStatus", v1alpha1.CProcessingNetworkState)
+			log.Error(err, "unable to update ip resource status", "name", req.NamespacedName, "currentStatus", ip.Status.State, "targetStatus", v1alpha1.NetworkStatePending)
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
@@ -140,25 +140,25 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 	} else {
 		cidr, err := subnet.ProposeForCapacity(resource.NewScaledQuantity(1, 0))
 		if err != nil {
-			ip.Status.State = v1alpha1.FailedIPState
+			ip.Status.State = v1alpha1.IPStateFailed
 			ip.Status.Message = err.Error()
 			if err := r.Status().Update(ctx, ip); err != nil {
 				log.Error(err, "unable to update ip status", "name", req.NamespacedName)
 				return ctrl.Result{}, err
 			}
-			r.EventRecorder.Eventf(ip, v1.EventTypeWarning, CIPProposalFailureReason, ip.Status.Message)
+			r.EventRecorder.Eventf(ip, v1.EventTypeWarning, IPProposalFailure, ip.Status.Message)
 		}
 		ipCidrToReserve = cidr
 	}
 
 	if err := subnet.Reserve(ipCidrToReserve); err != nil {
-		ip.Status.State = v1alpha1.FailedIPState
+		ip.Status.State = v1alpha1.IPStateFailed
 		ip.Status.Message = err.Error()
 		if err := r.Status().Update(ctx, ip); err != nil {
 			log.Error(err, "unable to update ip status", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
-		r.EventRecorder.Eventf(ip, v1.EventTypeWarning, CIPReservationFailureReason, ip.Status.Message)
+		r.EventRecorder.Eventf(ip, v1.EventTypeWarning, IPReservationFailure, ip.Status.Message)
 		return ctrl.Result{}, err
 	}
 
@@ -167,14 +167,14 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 		return ctrl.Result{}, err
 	}
 
-	ip.Status.State = v1alpha1.FinishedIPState
+	ip.Status.State = v1alpha1.IPStateAllocated
 	ip.Status.Message = ""
 	ip.Status.Reserved = ipCidrToReserve.AsIPAddr()
 	if err := r.Status().Update(ctx, ip); err != nil {
 		log.Error(err, "unable to update ip status after ip reservation", "name", req.NamespacedName, "subnet name", subnetNamespacedName)
 		return ctrl.Result{}, err
 	}
-	r.EventRecorder.Eventf(ip, v1.EventTypeNormal, CIPReservationSuccessReason, "IP %s reserved", ipCidrToReserve.String())
+	r.EventRecorder.Eventf(ip, v1.EventTypeNormal, IPReservationSuccess, "IP %s reserved", ipCidrToReserve.String())
 
 	return ctrl.Result{}, nil
 }
@@ -217,7 +217,7 @@ func (r *IPReconciler) finalizeIP(ctx context.Context, log logr.Logger, ip *v1al
 		return err
 	}
 
-	r.EventRecorder.Eventf(ip, v1.EventTypeNormal, CIPReleaseSuccessReason, "IP %s released", ipCidr.String())
+	r.EventRecorder.Eventf(ip, v1.EventTypeNormal, IPReleaseSuccess, "IP %s released", ipCidr.String())
 
 	return nil
 }

@@ -89,7 +89,7 @@ var _ = Describe("Network controller", func() {
 			network     *v1alpha1.Network
 		}{
 			{
-				counterName: CVXLANCounterName,
+				counterName: VXLANCounterName,
 				firstId:     v1alpha1.VXLANFirstAvaliableID,
 				network: &v1alpha1.Network{
 					ObjectMeta: metav1.ObjectMeta{
@@ -102,7 +102,7 @@ var _ = Describe("Network controller", func() {
 				},
 			},
 			{
-				counterName: CGENEVECounterName,
+				counterName: GENEVECounterName,
 				firstId:     v1alpha1.GENEVEFirstAvaliableID,
 				network: &v1alpha1.Network{
 					ObjectMeta: metav1.ObjectMeta{
@@ -115,7 +115,7 @@ var _ = Describe("Network controller", func() {
 				},
 			},
 			{
-				counterName: CMPLSCounterName,
+				counterName: MPLSCounterName,
 				firstId:     v1alpha1.MPLSFirstAvailableID,
 				network: &v1alpha1.Network{
 					ObjectMeta: metav1.ObjectMeta{
@@ -138,10 +138,10 @@ var _ = Describe("Network controller", func() {
 				if err != nil {
 					return false
 				}
-				if !controllerutil.ContainsFinalizer(testNetwork, CNetworkFinalizer) {
+				if !controllerutil.ContainsFinalizer(testNetwork, NetworkFinalizer) {
 					return false
 				}
-				if testNetwork.Status.State != v1alpha1.CFinishedNetworkState {
+				if testNetwork.Status.State != v1alpha1.NetworkStateAllocated {
 					return false
 				}
 				if testNetwork.Status.Reserved == nil {
@@ -183,7 +183,7 @@ var _ = Describe("Network controller", func() {
 				if err != nil {
 					return false
 				}
-				if testNetworkCopy.Status.State != v1alpha1.CFailedNetworkState {
+				if testNetworkCopy.Status.State != v1alpha1.NetworkStateFailed {
 					return false
 				}
 				return true
