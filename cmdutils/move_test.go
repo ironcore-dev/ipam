@@ -64,7 +64,7 @@ var _ = Describe("ipamctl move", func() {
 		targetIP := namedObj(&ipamv1alphav1.IP{}, sourceIP.Name)
 
 		// TEST
-		crsSchema := []schema.GroupVersionKind{}
+		crsSchema := make([]schema.GroupVersionKind, 0, 3)
 		for _, crdKind := range []string{"Network", "Subnet", "IP"} {
 			crsSchema = append(crsSchema,
 				schema.GroupVersionKind{Group: "ipam.metal.ironcore.dev", Version: "v1alpha1", Kind: crdKind})

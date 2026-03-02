@@ -12,7 +12,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -36,7 +36,7 @@ type NetworkReconciler struct {
 	client.Client
 	Log           logr.Logger
 	Scheme        *runtime.Scheme
-	EventRecorder record.EventRecorder
+	EventRecorder events.EventRecorder
 }
 
 // +kubebuilder:rbac:groups=ipam.metal.ironcore.dev,resources=networkcounters,verbs=get;list;watch;create;update;patch;delete
@@ -167,7 +167,7 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 				log.Error(err, "unable to update network status", "name", req.NamespacedName)
 				return ctrl.Result{}, err
 			}
-			r.EventRecorder.Event(network, v1.EventTypeWarning, CNetworkIDProposalFailureReason, network.Status.Message)
+			r.EventRecorder.Eventf(network, nil, v1.EventTypeWarning, CNetworkIDProposalFailureReason, "NetworkIDProposal", network.Status.Message)
 			log.Error(err, "unable to get network id", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
@@ -181,7 +181,7 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			log.Error(err, "unable to update network status", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
-		r.EventRecorder.Event(network, v1.EventTypeWarning, CNetworkIDReservationFailureReason, network.Status.Message)
+		r.EventRecorder.Eventf(network, nil, v1.EventTypeWarning, CNetworkIDReservationFailureReason, "NetworkIDReservation", network.Status.Message)
 		log.Error(err, "unable to reserve network id", "name", req.NamespacedName, "network id", network.Spec.ID)
 		return ctrl.Result{}, err
 	}
@@ -190,7 +190,7 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		log.Error(err, "unable to update counter state", "name", req.NamespacedName, "counter name", counterNamespacedName)
 		return ctrl.Result{}, err
 	}
-	r.EventRecorder.Eventf(network, v1.EventTypeNormal, CNetworkIDReservationSuccessReason, "ID %s for type %s reserved successfully", networkIdToReserve, network.Spec.Type)
+	r.EventRecorder.Eventf(network, nil, v1.EventTypeNormal, CNetworkIDReservationSuccessReason, "NetworkIDReservation", "ID %s for type %s reserved successfully", networkIdToReserve, network.Spec.Type)
 
 	network.Status.State = machinev1alpha1.CFinishedNetworkState
 	network.Status.Message = ""
@@ -272,7 +272,7 @@ func (r *NetworkReconciler) finalizeNetwork(ctx context.Context, log logr.Logger
 		log.Error(err, "unexpected error while updating counter", "counter name", counterNamespacedName)
 		return err
 	}
-	r.EventRecorder.Eventf(network, v1.EventTypeNormal, CNetworkIDReleaseSuccessReason, "ID %s for type %s released successfully", network.Status.Reserved, network.Spec.Type)
+	r.EventRecorder.Eventf(network, nil, v1.EventTypeNormal, CNetworkIDReleaseSuccessReason, "NetworkIDRelease", "ID %s for type %s released successfully", network.Status.Reserved, network.Spec.Type)
 
 	return nil
 }
@@ -317,7 +317,7 @@ func (r *NetworkReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		return err
 	}
 
-	r.EventRecorder = mgr.GetEventRecorderFor("network-controller")
+	r.EventRecorder = mgr.GetEventRecorder("network-controller")
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&machinev1alpha1.Network{}).
 		Complete(r)

@@ -17,14 +17,12 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
 const (
@@ -75,38 +73,12 @@ func SetupSubnetWebhookWithManager(mgr ctrl.Manager) error {
 		return err
 	}
 
-	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.Subnet{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.Subnet{}).
 		WithValidator(&SubnetCustomValidator{mgr.GetClient()}).
-		WithDefaulter(&SubnetCustomDefaulter{}).
 		Complete()
 }
 
 // +kubebuilder:webhook:path=/mutate-ipam-metal-ironcore-dev-v1alpha1-subnet,mutating=true,failurePolicy=fail,sideEffects=None,groups=ipam.metal.ironcore.dev,resources=subnets,verbs=create;update,versions=v1,name=msubnet-v1alpha1.kb.io,admissionReviewVersions=v1
-
-// SubnetCustomDefaulter struct is responsible for setting default values on the custom resource of the
-// Kind Subnet when those are created or updated.
-//
-// NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
-// as it is used only for temporary operations and does not need to be deeply copied.
-type SubnetCustomDefaulter struct {
-	// TODO(user): Add more fields as needed for defaulting
-}
-
-var _ webhook.CustomDefaulter = &SubnetCustomDefaulter{}
-
-// Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind Subnet
-func (d *SubnetCustomDefaulter) Default(ctx context.Context, obj runtime.Object) error {
-	subnet, ok := obj.(*v1alpha1.Subnet)
-
-	if !ok {
-		return fmt.Errorf("expected an Subnet object but got %T", obj)
-	}
-	iplog.Info("Defaulting for Subnet", "name", subnet.GetName())
-
-	// TODO(user): fill in your defaulting logic.
-
-	return nil
-}
 
 // +kubebuilder:webhook:path=/validate-ipam-metal-ironcore-dev-v1alpha1-subnet,mutating=false,failurePolicy=fail,sideEffects=None,groups=ipam.metal.ironcore.dev,resources=subnets,verbs=create;update;delete,versions=v1alpha1,name=vsubnet.kb.io,admissionReviewVersions={v1,v1beta1}
 
@@ -119,21 +91,14 @@ type SubnetCustomValidator struct {
 	client.Client
 }
 
-var _ webhook.CustomValidator = &SubnetCustomValidator{}
-
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (v *SubnetCustomValidator) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+func (v *SubnetCustomValidator) ValidateCreate(ctx context.Context, obj *v1alpha1.Subnet) (admission.Warnings, error) {
 	var allErrs field.ErrorList
 	var warnings admission.Warnings
 
-	subnet, ok := obj.(*v1alpha1.Subnet)
-	if !ok {
-		return warnings, apierrors.NewInternalError(
-			errors.New("cannot cast previous object version to Subnet CR type"))
-	}
-	subnetlog.Info("validate create", "name", subnet.GetName())
+	subnetlog.Info("validate create", "name", obj.GetName())
 
-	rulesCount := countCIDRReservationRules(subnet)
+	rulesCount := countCIDRReservationRules(obj)
 	rulesPaths := []string{"spec.cidr", "spec.capacity", "spec.hostIdentifierBits"}
 	minQuantity := resource.NewQuantity(1, resource.DecimalSI)
 	maxQuantity, err := resource.ParseQuantity("340282366920938463463374607431768211456")
@@ -144,99 +109,88 @@ func (v *SubnetCustomValidator) ValidateCreate(ctx context.Context, obj runtime.
 	if rulesCount == 0 || rulesCount > 1 {
 		errMsg := fmt.Sprintf("value should be set for the one of the following fields: %s", strings.Join(rulesPaths, ", "))
 		for _, path := range rulesPaths {
-			allErrs = append(allErrs, field.Invalid(field.NewPath(path), subnet.Spec.CIDR, errMsg))
+			allErrs = append(allErrs, field.Invalid(field.NewPath(path), obj.Spec.CIDR, errMsg))
 		}
 	}
 
-	if subnet.Spec.Consumer != nil {
-		if _, err := schema.ParseGroupVersion(subnet.Spec.Consumer.APIVersion); err != nil {
-			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer.apiVersion"), subnet.Spec.Consumer, err.Error()))
+	if obj.Spec.Consumer != nil {
+		if _, err := schema.ParseGroupVersion(obj.Spec.Consumer.APIVersion); err != nil {
+			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer.apiVersion"), obj.Spec.Consumer, err.Error()))
 		}
 	}
 
-	if subnet.Spec.ParentSubnet.Name == "" &&
-		subnet.Spec.CIDR == nil {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.cidr"), subnet.Spec.CIDR, "cidr should be set explicitly if a top level subnet (without parent subnet) is created"))
+	if obj.Spec.ParentSubnet.Name == "" &&
+		obj.Spec.CIDR == nil {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.cidr"), obj.Spec.CIDR, "cidr should be set explicitly if a top level subnet (without parent subnet) is created"))
 	}
 
-	if subnet.Spec.Capacity != nil && maxQuantity.Cmp(*subnet.Spec.Capacity) < 0 &&
-		minQuantity.Cmp(*subnet.Spec.Capacity) > 0 {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.capacity"), subnet.Spec.CIDR, "if set, capacity value should be between 1 and 2^128"))
+	if obj.Spec.Capacity != nil && maxQuantity.Cmp(*obj.Spec.Capacity) < 0 &&
+		minQuantity.Cmp(*obj.Spec.Capacity) > 0 {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.capacity"), obj.Spec.CIDR, "if set, capacity value should be between 1 and 2^128"))
 	}
 
-	if !uniqueRegionSet(subnet) {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.regions"), subnet.Spec.Regions, "region values should be unique"))
+	if !uniqueRegionSet(obj) {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.regions"), obj.Spec.Regions, "region values should be unique"))
 	}
 
-	for i, region := range subnet.Spec.Regions {
+	for i, region := range obj.Spec.Regions {
 		if !uniqueAZSet(region.AvailabilityZones) {
 			allErrs = append(allErrs, field.Invalid(field.NewPath(fmt.Sprintf("spec.regions[%d].availabilityZones", i)), region.AvailabilityZones, "availability zone values should be unique"))
 		}
 	}
 
 	if len(allErrs) > 0 {
-		gvk := subnet.GroupVersionKind()
+		gvk := obj.GroupVersionKind()
 		gk := schema.GroupKind{
 			Group: gvk.Group,
 			Kind:  gvk.Kind,
 		}
-		return warnings, apierrors.NewInvalid(gk, subnet.Name, allErrs)
+		return warnings, apierrors.NewInvalid(gk, obj.Name, allErrs)
 	}
 
 	return warnings, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (v *SubnetCustomValidator) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+func (v *SubnetCustomValidator) ValidateUpdate(ctx context.Context, oldObj, newObj *v1alpha1.Subnet) (admission.Warnings, error) {
 	var warnings admission.Warnings
 	var allErrs field.ErrorList
 
-	oldSubnet, ok := oldObj.(*v1alpha1.Subnet)
-	if !ok {
-		return warnings, apierrors.NewInternalError(
-			errors.New("cannot cast previous object version to Subnet CR type"))
-	}
-	newSubnet, ok := newObj.(*v1alpha1.Subnet)
-	if !ok {
-		return warnings, apierrors.NewInternalError(
-			errors.New("cannot cast previous object version to Subnet CR type"))
-	}
+	subnetlog.Info("validate update", "name", oldObj.Name)
 
-	subnetlog.Info("validate update", "name", oldSubnet.Name)
-
-	if oldSubnet.Spec.CIDR != nil || newSubnet.Spec.CIDR != nil {
-		if oldSubnet.Spec.CIDR == nil || newSubnet.Spec.CIDR == nil ||
-			!oldSubnet.Spec.CIDR.Equal(newSubnet.Spec.CIDR) {
+	if oldObj.Spec.CIDR != nil || newObj.Spec.CIDR != nil {
+		if oldObj.Spec.CIDR == nil || newObj.Spec.CIDR == nil ||
+			!oldObj.Spec.CIDR.Equal(newObj.Spec.CIDR) {
 			allErrs = append(allErrs,
 				field.Invalid(
-					field.NewPath("spec.cidr"), newSubnet.Spec.CIDR, "CIDR change is disallowed"))
+					field.NewPath("spec.cidr"), newObj.Spec.CIDR, "CIDR change is disallowed"))
 		}
 	}
 
-	if oldSubnet.Spec.PrefixBits != nil || newSubnet.Spec.PrefixBits != nil {
-		if oldSubnet.Spec.PrefixBits == nil || newSubnet.Spec.PrefixBits == nil ||
-			*oldSubnet.Spec.PrefixBits != *newSubnet.Spec.PrefixBits {
-			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.hostIdentifierBits"), newSubnet.Spec.PrefixBits, "Host identifier bits change is disallowed"))
+	if oldObj.Spec.PrefixBits != nil || newObj.Spec.PrefixBits != nil {
+		if oldObj.Spec.PrefixBits == nil || newObj.Spec.PrefixBits == nil ||
+			*oldObj.Spec.PrefixBits != *newObj.Spec.PrefixBits {
+			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.hostIdentifierBits"), newObj.Spec.PrefixBits, "Host identifier bits change is disallowed"))
 		}
 	}
 
-	if oldSubnet.Spec.Capacity != nil || newSubnet.Spec.Capacity != nil {
-		if oldSubnet.Spec.Capacity == nil || newSubnet.Spec.Capacity == nil ||
-			!oldSubnet.Spec.Capacity.Equal(*newSubnet.Spec.Capacity) {
-			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.capacity"), newSubnet.Spec.Capacity, "Capacity change is disallowed"))
+	if oldObj.Spec.Capacity != nil || newObj.Spec.Capacity != nil {
+		if oldObj.Spec.Capacity == nil || newObj.Spec.Capacity == nil ||
+			!oldObj.Spec.Capacity.Equal(*newObj.Spec.Capacity) {
+			allErrs = append(allErrs, field.Invalid(field.NewPath("spec.capacity"), newObj.Spec.Capacity, "Capacity change is disallowed"))
 		}
 	}
 
-	if oldSubnet.Spec.ParentSubnet.Name != newSubnet.Spec.ParentSubnet.Name {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.parentSubnet.name"), newSubnet.Spec.CIDR, "Parent Subnet change is disallowed"))
+	if oldObj.Spec.ParentSubnet.Name != newObj.Spec.ParentSubnet.Name {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.parentSubnet.name"), newObj.Spec.CIDR, "Parent Subnet change is disallowed"))
 	}
 
-	if oldSubnet.Spec.Network.Name != newSubnet.Spec.Network.Name {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.network.name"), newSubnet.Spec.CIDR, "Network change is disallowed"))
+	if oldObj.Spec.Network.Name != newObj.Spec.Network.Name {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.network.name"), newObj.Spec.CIDR, "Network change is disallowed"))
 	}
 
-	if !reflect.DeepEqual(oldSubnet.Spec.Regions, newSubnet.Spec.Regions) {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.regions"), newSubnet.Spec.CIDR, "Regions change is disallowed"))
+	if !reflect.DeepEqual(oldObj.Spec.Regions, newObj.Spec.Regions) {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec.regions"), newObj.Spec.CIDR, "Regions change is disallowed"))
 	}
 
 	if len(allErrs) > 0 {
@@ -244,42 +198,36 @@ func (v *SubnetCustomValidator) ValidateUpdate(ctx context.Context, oldObj, newO
 			schema.GroupKind{
 				Group: v1alpha1.SchemeGroupVersion.Group,
 				Kind:  "Subnet",
-			}, newSubnet.Name, allErrs)
+			}, newObj.Name, allErrs)
 	}
 
 	return warnings, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (v *SubnetCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+func (v *SubnetCustomValidator) ValidateDelete(ctx context.Context, obj *v1alpha1.Subnet) (admission.Warnings, error) {
 	var allErrs field.ErrorList
 	var warnings admission.Warnings
 
-	subnet, ok := obj.(*v1alpha1.Subnet)
-	if !ok {
-		return warnings, apierrors.NewInternalError(
-			errors.New("cannot cast previous object version to Subnet CR type"))
-	}
+	subnetlog.Info("validate delete", "name", obj.Name)
 
-	subnetlog.Info("validate delete", "name", subnet.Name)
-
-	if subnet.Spec.Consumer != nil {
+	if obj.Spec.Consumer != nil {
 		unstruct := &unstructured.Unstructured{}
-		gv, err := schema.ParseGroupVersion(subnet.Spec.Consumer.APIVersion)
+		gv, err := schema.ParseGroupVersion(obj.Spec.Consumer.APIVersion)
 		if err != nil {
 			message := fmt.Sprintf(
 				"unable to parse APIVersion of consumer resource, therefore allowing to delete Subnet."+
-					" name: %s, api version: %s", subnet.Name, subnet.Spec.Consumer.APIVersion)
+					" name: %s, api version: %s", obj.Name, obj.Spec.Consumer.APIVersion)
 			subnetlog.Error(
 				err, message)
 			return append(warnings, message), nil
 		}
 
-		gvk := gv.WithKind(subnet.Spec.Consumer.Kind)
+		gvk := gv.WithKind(obj.Spec.Consumer.Kind)
 		unstruct.SetGroupVersionKind(gvk)
 		namespacedName := types.NamespacedName{
-			Namespace: subnet.Namespace,
-			Name:      subnet.Spec.Consumer.Name,
+			Namespace: obj.Namespace,
+			Name:      obj.Spec.Consumer.Name,
 		}
 		ctx := context.Background()
 
@@ -289,22 +237,22 @@ func (v *SubnetCustomValidator) ValidateDelete(ctx context.Context, obj runtime.
 			deletionTimestamp, _, err := unstructured.NestedString(consumerUnstruct, "metadata", "deletionTimestamp")
 			switch {
 			case err != nil:
-				allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), subnet.Spec.Consumer, err.Error()))
+				allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), obj.Spec.Consumer, err.Error()))
 			case deletionTimestamp == "":
-				allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), subnet.Spec.Consumer, "Consumer is not deleted"))
+				allErrs = append(allErrs, field.Invalid(field.NewPath("spec.consumer"), obj.Spec.Consumer, "Consumer is not deleted"))
 			}
 		}
 	}
 
 	childSubnetsMatchingFields := client.MatchingFields{
-		FinishedChildSubnetToSubnetIndexKey: subnet.Name,
+		FinishedChildSubnetToSubnetIndexKey: obj.Name,
 	}
 
 	subnets := &v1alpha1.SubnetList{}
-	if err := v.List(context.Background(), subnets, client.InNamespace(subnet.Namespace), childSubnetsMatchingFields, client.Limit(1)); err != nil {
+	if err := v.List(context.Background(), subnets, client.InNamespace(obj.Namespace), childSubnetsMatchingFields, client.Limit(1)); err != nil {
 		wrappedErr := errors.Wrap(err, "unable to get connected child subnets")
 		subnetlog.Error(wrappedErr,
-			"", "name", types.NamespacedName{Namespace: subnet.Namespace, Name: subnet.Name})
+			"", "name", types.NamespacedName{Namespace: obj.Namespace, Name: obj.Name})
 		return append(warnings, wrappedErr.Error()), wrappedErr
 	}
 
@@ -315,13 +263,13 @@ func (v *SubnetCustomValidator) ValidateDelete(ctx context.Context, obj runtime.
 	}
 
 	childIPsMatchingFields := client.MatchingFields{
-		FinishedChildIPToSubnetIndexKey: subnet.Name,
+		FinishedChildIPToSubnetIndexKey: obj.Name,
 	}
 
 	ips := &v1alpha1.IPList{}
-	if err := v.List(context.Background(), ips, client.InNamespace(subnet.Namespace), childIPsMatchingFields, client.Limit(1)); err != nil {
+	if err := v.List(context.Background(), ips, client.InNamespace(obj.Namespace), childIPsMatchingFields, client.Limit(1)); err != nil {
 		wrappedErr := errors.Wrap(err, "unable to get connected child ips")
-		subnetlog.Error(wrappedErr, "", "name", types.NamespacedName{Namespace: subnet.Namespace, Name: subnet.Name})
+		subnetlog.Error(wrappedErr, "", "name", types.NamespacedName{Namespace: obj.Namespace, Name: obj.Name})
 		return append(warnings, wrappedErr.Error()), wrappedErr
 	}
 
@@ -334,7 +282,7 @@ func (v *SubnetCustomValidator) ValidateDelete(ctx context.Context, obj runtime.
 			schema.GroupKind{
 				Group: v1alpha1.SchemeGroupVersion.Group,
 				Kind:  "Subnet",
-			}, subnet.Name, allErrs)
+			}, obj.Name, allErrs)
 	}
 
 	return warnings, nil
