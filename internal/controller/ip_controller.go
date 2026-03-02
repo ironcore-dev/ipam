@@ -10,7 +10,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/ironcore-dev/ipam/api/ipam/v1alpha1"
@@ -37,7 +37,7 @@ type IPReconciler struct {
 	client.Client
 	Log           logr.Logger
 	Scheme        *runtime.Scheme
-	EventRecorder record.EventRecorder
+	EventRecorder events.EventRecorder
 }
 
 // +kubebuilder:rbac:groups=*,resources=*,verbs=get;list;watch
@@ -146,7 +146,7 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 				log.Error(err, "unable to update ip status", "name", req.NamespacedName)
 				return ctrl.Result{}, err
 			}
-			r.EventRecorder.Eventf(ip, v1.EventTypeWarning, CIPProposalFailureReason, ip.Status.Message)
+			r.EventRecorder.Eventf(ip, nil, v1.EventTypeWarning, CIPProposalFailureReason, "IPProposal", ip.Status.Message)
 		}
 		ipCidrToReserve = cidr
 	}
@@ -158,7 +158,7 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 			log.Error(err, "unable to update ip status", "name", req.NamespacedName)
 			return ctrl.Result{}, err
 		}
-		r.EventRecorder.Eventf(ip, v1.EventTypeWarning, CIPReservationFailureReason, ip.Status.Message)
+		r.EventRecorder.Eventf(ip, nil, v1.EventTypeWarning, CIPReservationFailureReason, "IPReservation", ip.Status.Message)
 		return ctrl.Result{}, err
 	}
 
@@ -174,7 +174,7 @@ func (r *IPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 		log.Error(err, "unable to update ip status after ip reservation", "name", req.NamespacedName, "subnet name", subnetNamespacedName)
 		return ctrl.Result{}, err
 	}
-	r.EventRecorder.Eventf(ip, v1.EventTypeNormal, CIPReservationSuccessReason, "IP %s reserved", ipCidrToReserve.String())
+	r.EventRecorder.Eventf(ip, nil, v1.EventTypeNormal, CIPReservationSuccessReason, "IPReservation", "IP %s reserved", ipCidrToReserve.String())
 
 	return ctrl.Result{}, nil
 }
@@ -217,14 +217,14 @@ func (r *IPReconciler) finalizeIP(ctx context.Context, log logr.Logger, ip *v1al
 		return err
 	}
 
-	r.EventRecorder.Eventf(ip, v1.EventTypeNormal, CIPReleaseSuccessReason, "IP %s released", ipCidr.String())
+	r.EventRecorder.Eventf(ip, nil, v1.EventTypeNormal, CIPReleaseSuccessReason, "IPRelease", "IP %s released", ipCidr.String())
 
 	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *IPReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.EventRecorder = mgr.GetEventRecorderFor("ip-controller")
+	r.EventRecorder = mgr.GetEventRecorder("ip-controller")
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.IP{}).
 		Complete(r)

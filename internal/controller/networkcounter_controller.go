@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -30,7 +30,7 @@ type NetworkCounterReconciler struct {
 	client.Client
 	Log           logr.Logger
 	Scheme        *runtime.Scheme
-	EventRecorder record.EventRecorder
+	EventRecorder events.EventRecorder
 }
 
 func (r *NetworkCounterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -102,7 +102,7 @@ func (r *NetworkCounterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		return err
 	}
 
-	r.EventRecorder = mgr.GetEventRecorderFor("networkcounter-controller")
+	r.EventRecorder = mgr.GetEventRecorder("networkcounter-controller")
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.NetworkCounter{}).
 		Complete(r)

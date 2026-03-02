@@ -14,47 +14,22 @@ import (
 
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
 // log is for logging in this package.
 var networklog = logf.Log.WithName("network-resource")
 
 func SetupNetworkWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.Network{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.Network{}).
 		WithValidator(&NetworkCustomValidator{}).
-		WithDefaulter(&NetworkCustomDefaulter{}).
 		Complete()
 }
 
 // +kubebuilder:webhook:path=/mutate-ipam-metal-ironcore-dev-v1alpha1-network,mutating=true,failurePolicy=fail,sideEffects=None,groups=ipam.metal.ironcore.dev,resources=networks,verbs=create;update,versions=v1,name=mnetwork-v1alpha1.kb.io,admissionReviewVersions=v1
-
-// NetworkCustomDefaulter struct is responsible for setting default values on the custom resource of the
-// Kind Network when those are created or updated.
-//
-// NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
-// as it is used only for temporary operations and does not need to be deeply copied.
-type NetworkCustomDefaulter struct {
-}
-
-var _ webhook.CustomDefaulter = &NetworkCustomDefaulter{}
-
-// Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind Network
-func (d *NetworkCustomDefaulter) Default(ctx context.Context, obj runtime.Object) error {
-	net, ok := obj.(*v1alpha1.Network)
-
-	if !ok {
-		return fmt.Errorf("expected an Network object but got %T", obj)
-	}
-	networklog.Info("Defaulting for Network", "name", net.GetName())
-
-	return nil
-}
 
 // +kubebuilder:webhook:path=/validate-ipam-metal-ironcore-dev-v1alpha1-network,mutating=false,failurePolicy=fail,sideEffects=None,groups=ipam.metal.ironcore.dev,resources=networks,verbs=create;update;delete,versions=v1alpha1,name=vnetwork.kb.io,admissionReviewVersions={v1,v1beta1}
 
@@ -66,105 +41,83 @@ func (d *NetworkCustomDefaulter) Default(ctx context.Context, obj runtime.Object
 type NetworkCustomValidator struct {
 }
 
-var _ webhook.CustomValidator = &IPCustomValidator{}
-
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (v *NetworkCustomValidator) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+func (v *NetworkCustomValidator) ValidateCreate(ctx context.Context, obj *v1alpha1.Network) (admission.Warnings, error) {
 	var allErrs field.ErrorList
 	var warnings admission.Warnings
 
-	net, ok := obj.(*v1alpha1.Network)
-	if !ok {
-		return warnings, apierrors.NewInternalError(
-			errors.New("cannot cast previous object version to Network CR type"))
-	}
-	networklog.Info("validate create", "name", net.GetName())
+	networklog.Info("validate create", "name", obj.GetName())
 
-	if net.Spec.Type == "" && net.Spec.ID != nil {
+	if obj.Spec.Type == "" && obj.Spec.ID != nil {
 		allErrs = append(allErrs, field.Invalid(
-			field.NewPath("spec.id"), net.Spec.ID, "setting network ID without type is disallowed"))
+			field.NewPath("spec.id"), obj.Spec.ID, "setting network ID without type is disallowed"))
 	}
 
-	if err := validateID(net); err != nil {
+	if err := validateID(obj); err != nil {
 		allErrs = append(allErrs, err)
 	}
 
 	if len(allErrs) > 0 {
-		gvk := net.GroupVersionKind()
+		gvk := obj.GroupVersionKind()
 		gk := schema.GroupKind{
 			Group: gvk.Group,
 			Kind:  gvk.Kind,
 		}
-		return warnings, apierrors.NewInvalid(gk, net.Name, allErrs)
+		return warnings, apierrors.NewInvalid(gk, obj.Name, allErrs)
 	}
 
 	return warnings, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (v *NetworkCustomValidator) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+func (v *NetworkCustomValidator) ValidateUpdate(ctx context.Context, oldObj, newObj *v1alpha1.Network) (admission.Warnings, error) {
 	var warnings admission.Warnings
 	var allErrs field.ErrorList
 
-	oldNetwork, ok := oldObj.(*v1alpha1.Network)
-	if !ok {
-		return warnings, apierrors.NewInternalError(
-			errors.New("cannot cast previous object version to Network CR type"))
-	}
-	newNetwork, ok := newObj.(*v1alpha1.Network)
-	if !ok {
-		return warnings, apierrors.NewInternalError(
-			errors.New("cannot cast previous object version to Network CR type"))
-	}
-	networklog.Info("validate update", "name", oldNetwork.GetName())
+	networklog.Info("validate update", "name", oldObj.GetName())
 
-	if oldNetwork.Spec.Type != "" &&
-		oldNetwork.Spec.Type != newNetwork.Spec.Type {
+	if oldObj.Spec.Type != "" &&
+		oldObj.Spec.Type != newObj.Spec.Type {
 		allErrs = append(allErrs, field.Invalid(
-			field.NewPath("spec.type"), newNetwork.Spec.Type, "network type change is disallowed; resource should be released (deleted) first"))
+			field.NewPath("spec.type"), newObj.Spec.Type, "network type change is disallowed; resource should be released (deleted) first"))
 	}
 
-	if (oldNetwork.Spec.ID != nil && oldNetwork.Spec.ID.Cmp(&newNetwork.Spec.ID.Int) != 0) ||
-		(oldNetwork.Spec.ID == nil && oldNetwork.Spec.Type != "" && newNetwork.Spec.ID != nil) {
+	if (oldObj.Spec.ID != nil && oldObj.Spec.ID.Cmp(&newObj.Spec.ID.Int) != 0) ||
+		(oldObj.Spec.ID == nil && oldObj.Spec.Type != "" && newObj.Spec.ID != nil) {
 		allErrs = append(allErrs, field.Invalid(
-			field.NewPath("spec.id"), newNetwork.Spec.ID,
+			field.NewPath("spec.id"), newObj.Spec.ID,
 			"network ID change after assignment is disallowed; resource should be released (deleted) first"))
 	}
 
-	if err := validateID(newNetwork); err != nil {
+	if err := validateID(newObj); err != nil {
 		allErrs = append(allErrs, err)
 	}
 
 	if len(allErrs) > 0 {
-		gvk := newNetwork.GroupVersionKind()
+		gvk := newObj.GroupVersionKind()
 		gk := schema.GroupKind{
 			Group: gvk.Group,
 			Kind:  gvk.Kind,
 		}
-		return warnings, apierrors.NewInvalid(gk, newNetwork.Name, allErrs)
+		return warnings, apierrors.NewInvalid(gk, newObj.Name, allErrs)
 	}
 
 	return warnings, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (v *NetworkCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+func (v *NetworkCustomValidator) ValidateDelete(ctx context.Context, obj *v1alpha1.Network) (admission.Warnings, error) {
 	var allErrs field.ErrorList
 	var warnings admission.Warnings
 
-	network, ok := obj.(*v1alpha1.Network)
-	if !ok {
-		return warnings, apierrors.NewInternalError(
-			errors.New("cannot cast previous object version to Network CR type"))
-	}
-	networklog.Info("validate delete", "name", network.Name)
+	networklog.Info("validate delete", "name", obj.Name)
 
-	if len(network.Status.IPv4Ranges) > 0 {
+	if len(obj.Status.IPv4Ranges) > 0 {
 		allErrs = append(allErrs, field.InternalError(
 			field.NewPath("metadata.name"), errors.New("Network has active IPv4 subnets")))
 	}
 
-	if len(network.Status.IPv6Ranges) > 0 {
+	if len(obj.Status.IPv6Ranges) > 0 {
 		allErrs = append(allErrs, field.InternalError(
 			field.NewPath("metadata.name"), errors.New("Network has active IPv6 subnets")))
 	}
@@ -174,7 +127,7 @@ func (v *NetworkCustomValidator) ValidateDelete(ctx context.Context, obj runtime
 			schema.GroupKind{
 				Group: v1alpha1.SchemeGroupVersion.Group,
 				Kind:  "Network",
-			}, network.Name, allErrs)
+			}, obj.Name, allErrs)
 	}
 
 	return warnings, nil
