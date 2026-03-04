@@ -46,7 +46,7 @@ jobs:
         flavor: |
           latest=${{ github.ref == 'refs/heads/main' }}
     - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
+      uses: docker/setup-qemu-action@v4
       with:
         platforms: all
     # workaround for self-hosted runner
@@ -63,7 +63,7 @@ jobs:
         endpoint: builders # self-hosted
     - name: Login to GHCR
       if: github.event_name != 'pull_request'
-      uses: docker/login-action@v3
+      uses: docker/login-action@v4
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
