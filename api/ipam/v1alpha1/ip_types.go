@@ -6,6 +6,7 @@ package v1alpha1
 import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const (
@@ -70,5 +71,8 @@ type IPList struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&IP{}, &IPList{})
+	SchemeBuilder.Register(func(s *runtime.Scheme) error {
+		s.AddKnownTypes(SchemeGroupVersion, &IP{}, &IPList{})
+		return nil
+	})
 }

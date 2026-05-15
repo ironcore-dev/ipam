@@ -11,6 +11,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // SubnetSpec defines the desired state of Subnet
@@ -132,7 +133,10 @@ type SubnetList struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&Subnet{}, &SubnetList{})
+	SchemeBuilder.Register(func(s *runtime.Scheme) error {
+		s.AddKnownTypes(SchemeGroupVersion, &Subnet{}, &SubnetList{})
+		return nil
+	})
 }
 
 // PopulateStatus fills status subresource with default values
