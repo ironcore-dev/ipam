@@ -8,6 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // NetworkCounterSpec stores the state of assigned IDs for network type.
@@ -46,7 +47,10 @@ type NetworkCounterList struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&NetworkCounter{}, &NetworkCounterList{})
+	SchemeBuilder.Register(func(s *runtime.Scheme) error {
+		s.AddKnownTypes(SchemeGroupVersion, &NetworkCounter{}, &NetworkCounterList{})
+		return nil
+	})
 }
 
 const (

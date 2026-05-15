@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // NetworkSpec defines the desired state of Network
@@ -83,7 +84,10 @@ type NetworkList struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&Network{}, &NetworkList{})
+	SchemeBuilder.Register(func(s *runtime.Scheme) error {
+		s.AddKnownTypes(SchemeGroupVersion, &Network{}, &NetworkList{})
+		return nil
+	})
 }
 
 func (in *Network) Release(cidr *CIDR) error {
